@@ -18,6 +18,9 @@ public class ObjectField {
   @NonNull
   private final Type type;
 
+  @Builder.Default
+  private final boolean identifier = false;
+
   @NonNull
   @Builder.Default
   private final Cardinality cardinality = Cardinality.OPTIONAL;
