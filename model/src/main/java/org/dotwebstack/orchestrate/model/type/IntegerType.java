@@ -1,20 +1,17 @@
 package org.dotwebstack.orchestrate.model.type;
 
-import java.math.BigInteger;
 import lombok.ToString;
 
 @ToString
-public class IntegerType implements ScalarType<BigInteger> {
-
-  private static final String NAME = "Integer";
+public class IntegerType implements ScalarType<Integer> {
 
   @Override
-  public Class<BigInteger> getJavaType() {
-    return BigInteger.class;
+  public Class<Integer> getJavaType() {
+    return Integer.class;
   }
 
   @Override
   public String getName() {
-    return NAME;
+    return Integer.class.getSimpleName();
   }
 }

@@ -8,8 +8,6 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 public class StringType implements ScalarType<String> {
 
-  private static final String NAME = "String";
-
   @Override
   public Class<String> getJavaType() {
     return String.class;
@@ -17,6 +15,6 @@ public class StringType implements ScalarType<String> {
 
   @Override
   public String getName() {
-    return NAME;
+    return String.class.getSimpleName();
   }
 }
