@@ -23,24 +23,24 @@ public class ObjectType implements Type {
 
   @Valid
   @NotEmpty
-  private final List<ObjectField> fields;
+  private final List<Field> fields;
 
-  private final List<ObjectField> identityFields;
+  private final List<Field> identityFields;
 
-  private final Map<String, ObjectField> fieldMap;
+  private final Map<String, Field> fieldMap;
 
   @Builder(toBuilder = true)
-  private ObjectType(String name, @Singular List<ObjectField> fields) {
+  private ObjectType(String name, @Singular List<Field> fields) {
     this.name = name;
     this.fields = Collections.unmodifiableList(fields);
     fieldMap = fields.stream()
-        .collect(Collectors.toUnmodifiableMap(ObjectField::getName, Function.identity()));
+        .collect(Collectors.toUnmodifiableMap(Field::getName, Function.identity()));
     identityFields = fields.stream()
-        .filter(ObjectField::isIdentifier)
+        .filter(Field::isIdentifier)
         .toList();
   }
 
-  public Optional<ObjectField> getField(String name) {
+  public Optional<Field> getField(String name) {
     return Optional.ofNullable(fieldMap.get(name));
   }
 

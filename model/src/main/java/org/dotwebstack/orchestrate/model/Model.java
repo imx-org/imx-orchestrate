@@ -11,7 +11,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import lombok.ToString;
-import org.dotwebstack.orchestrate.model.types.ObjectField;
+import org.dotwebstack.orchestrate.model.types.Field;
 import org.dotwebstack.orchestrate.model.types.ObjectType;
 import org.dotwebstack.orchestrate.model.types.TypeRef;
 
@@ -42,14 +42,14 @@ public final class Model {
             .clearFields()
             .fields(objectType.getFields()
                 .stream()
-                .map(objectField -> resolveTypeRefs(objectTypes, objectField))
+                .map(field -> resolveTypeRefs(objectTypes, field))
                 .toList())
             .build())
         .toList();
   }
 
-  private static ObjectField resolveTypeRefs(List<ObjectType> objectTypes, ObjectField objectField) {
-    var type = objectField.getType();
+  private static Field resolveTypeRefs(List<ObjectType> objectTypes, Field field) {
+    var type = field.getType();
 
     if (type instanceof TypeRef) {
       var objectType = objectTypes.stream()
@@ -58,11 +58,11 @@ public final class Model {
           .findAny()
           .orElseThrow(() -> new ModelException(String.format("Object type '%s' not found.", type.getName())));
 
-      return objectField.toBuilder()
+      return field.toBuilder()
           .type(objectType)
           .build();
     }
 
-    return objectField;
+    return field;
   }
 }

@@ -11,7 +11,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @Builder(toBuilder = true)
-public class ObjectField {
+public class Field {
 
   @NotBlank
   private final String name;
