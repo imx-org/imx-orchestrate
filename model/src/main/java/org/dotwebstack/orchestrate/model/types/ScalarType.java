@@ -1,4 +1,4 @@
-package org.dotwebstack.orchestrate.model.type;
+package org.dotwebstack.orchestrate.model.types;
 
 public interface ScalarType<T> extends Type {
 

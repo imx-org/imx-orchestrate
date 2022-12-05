@@ -11,9 +11,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import lombok.ToString;
-import org.dotwebstack.orchestrate.model.type.ObjectField;
-import org.dotwebstack.orchestrate.model.type.ObjectType;
-import org.dotwebstack.orchestrate.model.type.TypeRef;
+import org.dotwebstack.orchestrate.model.types.ObjectField;
+import org.dotwebstack.orchestrate.model.types.ObjectType;
+import org.dotwebstack.orchestrate.model.types.TypeRef;
 
 @Getter
 @ToString(exclude = {"objectTypeMap"})

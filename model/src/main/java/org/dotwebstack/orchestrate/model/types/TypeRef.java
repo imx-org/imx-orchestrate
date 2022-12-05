@@ -1,4 +1,4 @@
-package org.dotwebstack.orchestrate.model.type;
+package org.dotwebstack.orchestrate.model.types;
 
 import lombok.AccessLevel;
 import lombok.Getter;

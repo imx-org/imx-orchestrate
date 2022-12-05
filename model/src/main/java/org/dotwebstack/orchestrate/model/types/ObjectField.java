@@ -1,4 +1,4 @@
-package org.dotwebstack.orchestrate.model.type;
+package org.dotwebstack.orchestrate.model.types;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

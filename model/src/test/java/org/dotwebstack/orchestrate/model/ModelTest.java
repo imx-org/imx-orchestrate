@@ -2,11 +2,11 @@ package org.dotwebstack.orchestrate.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.dotwebstack.orchestrate.model.type.ObjectField;
-import org.dotwebstack.orchestrate.model.type.ObjectField.Cardinality;
-import org.dotwebstack.orchestrate.model.type.ObjectType;
-import org.dotwebstack.orchestrate.model.type.ScalarTypes;
-import org.dotwebstack.orchestrate.model.type.TypeRef;
+import org.dotwebstack.orchestrate.model.types.ObjectField;
+import org.dotwebstack.orchestrate.model.types.ObjectField.Cardinality;
+import org.dotwebstack.orchestrate.model.types.ObjectType;
+import org.dotwebstack.orchestrate.model.types.ScalarTypes;
+import org.dotwebstack.orchestrate.model.types.TypeRef;
 import org.junit.jupiter.api.Test;
 
 class ModelTest {
