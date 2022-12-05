@@ -1,5 +1,7 @@
 package org.dotwebstack.orchestrate.model;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,13 +19,15 @@ import org.dotwebstack.orchestrate.model.type.TypeRef;
 @ToString(exclude = {"objectTypeMap"})
 public final class Model {
 
+  @Valid
+  @NotEmpty
   private final List<ObjectType> objectTypes;
 
   private final Map<String, ObjectType> objectTypeMap;
 
   @Builder(toBuilder = true)
   private Model(@Singular List<ObjectType> objectTypes) {
-    this.objectTypes = resolveRefs(objectTypes);
+    this.objectTypes = resolveTypeRefs(objectTypes);
     objectTypeMap = this.objectTypes.stream()
         .collect(Collectors.toUnmodifiableMap(ObjectType::getName, Function.identity()));
   }
@@ -32,19 +36,19 @@ public final class Model {
     return Optional.ofNullable(objectTypeMap.get(name));
   }
 
-  private static List<ObjectType> resolveRefs(List<ObjectType> objectTypes) {
+  private static List<ObjectType> resolveTypeRefs(List<ObjectType> objectTypes) {
     return objectTypes.stream()
         .map(objectType -> objectType.toBuilder()
             .clearFields()
             .fields(objectType.getFields()
                 .stream()
-                .map(objectField -> resolveFieldRef(objectTypes, objectField))
+                .map(objectField -> resolveTypeRefs(objectTypes, objectField))
                 .toList())
             .build())
         .toList();
   }
 
-  private static ObjectField resolveFieldRef(List<ObjectType> objectTypes, ObjectField objectField) {
+  private static ObjectField resolveTypeRefs(List<ObjectType> objectTypes, ObjectField objectField) {
     var type = objectField.getType();
 
     if (type instanceof TypeRef) {

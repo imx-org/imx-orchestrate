@@ -1,5 +1,7 @@
 package org.dotwebstack.orchestrate.model.type;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +21,8 @@ public class ObjectType implements Type {
   @NonNull
   private final String name;
 
+  @Valid
+  @NotEmpty
   private final List<ObjectField> fields;
 
   private final List<ObjectField> identityFields;

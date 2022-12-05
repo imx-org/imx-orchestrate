@@ -17,6 +17,7 @@
         <reactor.version>2022.0.0</reactor.version>
         <slf4j.version>2.0.5</slf4j.version>
         <java-dataloader.version>3.2.0</java-dataloader.version>
+        <jakarta.validation-api.version>3.0.2</jakarta.validation-api.version>
         <lombok.version>1.18.24</lombok.version>
         <junit.version>5.9.1</junit.version>
         <assertj.version>3.23.1</assertj.version>
@@ -77,6 +78,11 @@
                 <groupId>com.graphql-java</groupId>
                 <artifactId>java-dataloader</artifactId>
                 <version>${java-dataloader.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.validation</groupId>
+                <artifactId>jakarta.validation-api</artifactId>
+                <version>${jakarta.validation-api.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.projectlombok</groupId>

@@ -1,27 +1,28 @@
 package org.dotwebstack.orchestrate.model.type;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
 @Getter
-@Builder(toBuilder = true)
 @ToString
+@Builder(toBuilder = true)
 public class ObjectField {
 
-  @NonNull
+  @NotBlank
   private final String name;
 
-  @NonNull
+  @NotNull
   private final Type type;
 
   @Builder.Default
   private final boolean identifier = false;
 
-  @NonNull
+  @NotNull
   @Builder.Default
   private final Cardinality cardinality = Cardinality.OPTIONAL;
 
