@@ -1,6 +1,7 @@
 package org.dotwebstack.orchestrate.model.type;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import java.util.Collections;
 import java.util.List;
@@ -10,7 +11,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.Singular;
 import lombok.ToString;
 
@@ -18,7 +18,7 @@ import lombok.ToString;
 @ToString(exclude = {"fieldMap"})
 public class ObjectType implements Type {
 
-  @NonNull
+  @NotBlank
   private final String name;
 
   @Valid
