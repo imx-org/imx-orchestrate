@@ -25,7 +25,7 @@ public class ObjectType implements Type {
 
   private final Map<String, ObjectField> fieldMap;
 
-  @Builder
+  @Builder(toBuilder = true)
   private ObjectType(String name, @Singular List<ObjectField> fields) {
     this.name = name;
     this.fields = Collections.unmodifiableList(fields);
