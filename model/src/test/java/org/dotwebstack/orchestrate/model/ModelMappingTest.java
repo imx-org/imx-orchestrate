@@ -17,7 +17,7 @@ class ModelMappingTest {
         .sourceModel("src", sourceModel)
         .objectTypeMapping("Area", ObjectTypeMapping.builder()
             .sourceRoot(SourceRoot.fromString("src:City"))
-            .fieldMapping("id", FieldMapping.builder()
+            .fieldMapping("code", FieldMapping.builder()
                 .sourcePath(FieldPath.fromString("id"))
                 .build())
             .fieldMapping("manager", FieldMapping.builder()
