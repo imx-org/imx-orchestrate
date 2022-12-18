@@ -13,7 +13,7 @@ import lombok.Singular;
 public final class ObjectTypeMapping {
 
   @NotNull
-  private final SourceRoot sourceRoot;
+  private final SourceTypeRef sourceRoot;
 
   @Valid
   @NotEmpty

@@ -7,7 +7,7 @@ import org.dotwebstack.orchestrate.model.FieldPath;
 import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectTypeMapping;
-import org.dotwebstack.orchestrate.model.SourceRoot;
+import org.dotwebstack.orchestrate.model.SourceTypeRef;
 import org.dotwebstack.orchestrate.model.types.Field;
 import org.dotwebstack.orchestrate.model.types.ObjectType;
 import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
@@ -71,7 +71,7 @@ public final class EngineTestFixtures {
         .targetModel(targetModel)
         .sourceModel("src", sourceModel)
         .objectTypeMapping("Area", ObjectTypeMapping.builder()
-            .sourceRoot(SourceRoot.fromString("src:City"))
+            .sourceRoot(SourceTypeRef.fromString("src:City"))
             .fieldMapping("code", FieldMapping.builder()
                 .sourcePath(FieldPath.fromString("id"))
                 .build())

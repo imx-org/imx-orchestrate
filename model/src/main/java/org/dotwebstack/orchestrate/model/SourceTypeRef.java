@@ -9,7 +9,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public final class SourceRoot {
+public final class SourceTypeRef {
 
   private static final Pattern PATTERN = Pattern.compile("^(\\w+):(\\w+)$");
 
@@ -17,11 +17,11 @@ public final class SourceRoot {
 
   private final String objectType;
 
-  public static SourceRoot fromString(String input) {
+  public static SourceTypeRef fromString(String input) {
     var matcher = PATTERN.matcher(input);
 
     if (matcher.find()) {
-      return new SourceRoot(matcher.group(1), matcher.group(2));
+      return new SourceTypeRef(matcher.group(1), matcher.group(2));
     }
 
     throw new IllegalArgumentException("Object type references must match pattern: " + PATTERN);

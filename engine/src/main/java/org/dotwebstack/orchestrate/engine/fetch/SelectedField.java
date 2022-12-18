@@ -7,10 +7,10 @@ import lombok.Singular;
 
 @Getter
 @Builder(toBuilder = true)
-public final class FetchRequest {
+public final class SelectedField {
 
-  private final String objectType;
+  private final String name;
 
   @Singular
-  private final List<SelectedField> selectedFields;
+  private final List<SelectedField> nestedFields;
 }
