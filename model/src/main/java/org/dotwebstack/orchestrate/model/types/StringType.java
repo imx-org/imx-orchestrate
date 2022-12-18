@@ -6,7 +6,7 @@ import lombok.ToString;
 
 @ToString
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
-public class StringType implements ScalarType<String> {
+public final class StringType implements ScalarType<String> {
 
   @Override
   public Class<String> getJavaType() {

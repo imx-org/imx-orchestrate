@@ -1,4 +1,4 @@
-package org.dotwebstack.orchestrate.model.mapping;
+package org.dotwebstack.orchestrate.model;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -9,7 +9,7 @@ import lombok.Singular;
 
 @Getter
 @Builder(toBuilder = true)
-public class FieldMapping {
+public final class FieldMapping {
 
   @Valid
   @NotEmpty

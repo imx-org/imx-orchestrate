@@ -1,9 +1,8 @@
-package org.dotwebstack.orchestrate.model.mapping;
+package org.dotwebstack.orchestrate.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import org.dotwebstack.orchestrate.model.Model;
 import org.junit.jupiter.api.Test;
 
 class ModelMappingTest {
@@ -17,7 +16,7 @@ class ModelMappingTest {
         .targetModel(targetModel)
         .sourceModel("src", sourceModel)
         .objectTypeMapping("Area", ObjectTypeMapping.builder()
-            .sourceRoot(ObjectTypeRef.fromString("src:City"))
+            .sourceRoot(SourceRoot.fromString("src:City"))
             .fieldMapping("id", FieldMapping.builder()
                 .sourcePath(FieldPath.fromString("id"))
                 .build())

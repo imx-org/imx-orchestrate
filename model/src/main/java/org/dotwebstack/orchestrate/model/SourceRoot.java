@@ -1,4 +1,4 @@
-package org.dotwebstack.orchestrate.model.mapping;
+package org.dotwebstack.orchestrate.model;
 
 import java.util.regex.Pattern;
 import lombok.AccessLevel;
@@ -9,19 +9,19 @@ import lombok.ToString;
 @Getter
 @ToString
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class ObjectTypeRef {
+public final class SourceRoot {
 
   private static final Pattern PATTERN = Pattern.compile("^(\\w+):(\\w+)$");
 
-  private final String sourceAlias;
+  private final String modelAlias;
 
-  private final String name;
+  private final String objectType;
 
-  public static ObjectTypeRef fromString(String input) {
+  public static SourceRoot fromString(String input) {
     var matcher = PATTERN.matcher(input);
 
     if (matcher.find()) {
-      return new ObjectTypeRef(matcher.group(1), matcher.group(2));
+      return new SourceRoot(matcher.group(1), matcher.group(2));
     }
 
     throw new IllegalArgumentException("Object type references must match pattern: " + PATTERN);

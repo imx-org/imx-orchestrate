@@ -1,4 +1,4 @@
-package org.dotwebstack.orchestrate.model.mapping;
+package org.dotwebstack.orchestrate.model;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -10,10 +10,10 @@ import lombok.Singular;
 
 @Getter
 @Builder(toBuilder = true)
-public class ObjectTypeMapping {
+public final class ObjectTypeMapping {
 
   @NotNull
-  private final ObjectTypeRef sourceRoot;
+  private final SourceRoot sourceRoot;
 
   @Valid
   @NotEmpty

@@ -8,11 +8,11 @@ import lombok.ToString;
 @Getter
 @ToString
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class TypeRef implements Type {
+public final class ObjectTypeRef implements Type {
 
   private final String name;
 
-  public static TypeRef forType(String name) {
-    return new TypeRef(name);
+  public static ObjectTypeRef forType(String name) {
+    return new ObjectTypeRef(name);
   }
 }

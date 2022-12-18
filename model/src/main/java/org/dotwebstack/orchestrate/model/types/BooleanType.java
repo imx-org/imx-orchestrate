@@ -3,7 +3,7 @@ package org.dotwebstack.orchestrate.model.types;
 import lombok.ToString;
 
 @ToString
-public class BooleanType implements ScalarType<Boolean> {
+public final class BooleanType implements ScalarType<Boolean> {
 
   @Override
   public Class<Boolean> getJavaType() {

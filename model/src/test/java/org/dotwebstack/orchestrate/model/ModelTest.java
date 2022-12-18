@@ -6,7 +6,7 @@ import org.dotwebstack.orchestrate.model.types.Field;
 import org.dotwebstack.orchestrate.model.types.Field.Cardinality;
 import org.dotwebstack.orchestrate.model.types.ObjectType;
 import org.dotwebstack.orchestrate.model.types.ScalarTypes;
-import org.dotwebstack.orchestrate.model.types.TypeRef;
+import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 import org.junit.jupiter.api.Test;
 
 class ModelTest {
@@ -42,7 +42,7 @@ class ModelTest {
                 .build())
             .field(Field.builder()
                 .name("mayor")
-                .type(TypeRef.forType("Person"))
+                .type(ObjectTypeRef.forType("Person"))
                 .build())
             .build())
         .build();

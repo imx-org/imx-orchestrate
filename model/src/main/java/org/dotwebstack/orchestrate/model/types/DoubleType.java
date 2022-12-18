@@ -3,7 +3,7 @@ package org.dotwebstack.orchestrate.model.types;
 import lombok.ToString;
 
 @ToString
-public class DoubleType implements ScalarType<Double> {
+public final class DoubleType implements ScalarType<Double> {
 
   @Override
   public Class<Double> getJavaType() {

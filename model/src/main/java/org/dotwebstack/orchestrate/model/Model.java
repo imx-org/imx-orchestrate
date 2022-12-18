@@ -13,7 +13,7 @@ import lombok.Singular;
 import lombok.ToString;
 import org.dotwebstack.orchestrate.model.types.Field;
 import org.dotwebstack.orchestrate.model.types.ObjectType;
-import org.dotwebstack.orchestrate.model.types.TypeRef;
+import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 
 @Getter
 @ToString(exclude = {"objectTypeMap"})
@@ -51,7 +51,7 @@ public final class Model {
   private static Field resolveTypeRefs(List<ObjectType> objectTypes, Field field) {
     var type = field.getType();
 
-    if (type instanceof TypeRef) {
+    if (type instanceof ObjectTypeRef) {
       var objectType = objectTypes.stream()
           .filter(o -> o.getName()
               .equals(type.getName()))

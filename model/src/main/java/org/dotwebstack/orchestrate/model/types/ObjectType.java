@@ -16,7 +16,7 @@ import lombok.ToString;
 
 @Getter
 @ToString(exclude = {"fieldMap"})
-public class ObjectType implements Type {
+public final class ObjectType implements Type {
 
   @NotBlank
   private final String name;

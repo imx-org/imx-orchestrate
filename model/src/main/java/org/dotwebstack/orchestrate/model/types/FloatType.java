@@ -3,7 +3,7 @@ package org.dotwebstack.orchestrate.model.types;
 import lombok.ToString;
 
 @ToString
-public class FloatType implements ScalarType<Float> {
+public final class FloatType implements ScalarType<Float> {
 
   @Override
   public Class<Float> getJavaType() {

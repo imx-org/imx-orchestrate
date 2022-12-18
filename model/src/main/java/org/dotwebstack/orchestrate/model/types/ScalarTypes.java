@@ -4,7 +4,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ScalarTypes {
+public final class ScalarTypes {
 
   public static final BooleanType BOOLEAN = new BooleanType();
 

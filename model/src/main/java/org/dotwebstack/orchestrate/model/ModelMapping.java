@@ -1,4 +1,4 @@
-package org.dotwebstack.orchestrate.model.mapping;
+package org.dotwebstack.orchestrate.model;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -7,11 +7,10 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
-import org.dotwebstack.orchestrate.model.Model;
 
 @Getter
 @Builder(toBuilder = true)
-public class ModelMapping {
+public final class ModelMapping {
 
   @Valid
   @NotNull

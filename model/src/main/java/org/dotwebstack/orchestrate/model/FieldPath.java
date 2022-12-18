@@ -1,4 +1,4 @@
-package org.dotwebstack.orchestrate.model.mapping;
+package org.dotwebstack.orchestrate.model;
 
 import jakarta.validation.constraints.NotEmpty;
 import java.util.Arrays;
@@ -9,7 +9,7 @@ import lombok.Singular;
 
 @Getter
 @Builder(toBuilder = true)
-public class FieldPath {
+public final class FieldPath {
 
   private static final String PATH_SEPARATOR = "/";
 

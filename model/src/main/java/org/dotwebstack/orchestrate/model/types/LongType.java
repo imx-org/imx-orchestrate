@@ -3,7 +3,7 @@ package org.dotwebstack.orchestrate.model.types;
 import lombok.ToString;
 
 @ToString
-public class LongType implements ScalarType<Long> {
+public final class LongType implements ScalarType<Long> {
 
   @Override
   public Class<Long> getJavaType() {
