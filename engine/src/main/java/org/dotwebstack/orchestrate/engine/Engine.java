@@ -1,16 +1,23 @@
 package org.dotwebstack.orchestrate.engine;
 
-import org.dotwebstack.orchestrate.engine.execution.ExecutionInput;
-import org.dotwebstack.orchestrate.engine.execution.ExecutionPlan;
-import org.dotwebstack.orchestrate.engine.execution.ExecutionResult;
+import lombok.Builder;
+import org.dotwebstack.orchestrate.engine.fetch.FetchRequest;
+import org.dotwebstack.orchestrate.engine.execution.ExecutionPlanner;
+import org.dotwebstack.orchestrate.engine.fetch.FetchResult;
+import org.dotwebstack.orchestrate.model.ModelMapping;
 import reactor.core.publisher.Mono;
 
+@Builder(toBuilder = true)
 public final class Engine {
 
-  public Mono<ExecutionResult> fetch() {
-    var plan = new ExecutionPlan();
-    var input = new ExecutionInput();
+  private final ModelMapping modelMapping;
 
-    return plan.execute(input);
+  @Builder.Default
+  private final ExecutionPlanner executionPlanner = ExecutionPlanner.builder()
+      .build();
+
+  public Mono<FetchResult> fetch(FetchRequest request) {
+    return executionPlanner.plan(modelMapping, request)
+        .execute();
   }
 }
