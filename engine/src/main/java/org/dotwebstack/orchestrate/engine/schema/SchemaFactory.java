@@ -1,5 +1,6 @@
 package org.dotwebstack.orchestrate.engine.schema;
 
+import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_TYPE;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaUtil.toLowerCamelCase;
 
 import graphql.language.FieldDefinition;
@@ -22,7 +23,7 @@ public final class SchemaFactory {
     var typeDefinitionRegistry = new TypeDefinitionRegistry();
     var codeRegistryBuilder = GraphQLCodeRegistry.newCodeRegistry();
     var queryTypeBuilder = ObjectTypeDefinition.newObjectTypeDefinition()
-        .name("Query");
+        .name(QUERY_TYPE);
 
     modelMapping.getTargetModel()
         .getObjectTypes()

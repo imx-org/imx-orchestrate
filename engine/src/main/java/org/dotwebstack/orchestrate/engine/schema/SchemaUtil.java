@@ -1,6 +1,9 @@
 package org.dotwebstack.orchestrate.engine.schema;
 
+import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_TYPE;
+
 import com.google.common.base.CaseFormat;
+import graphql.schema.FieldCoordinates;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -11,5 +14,9 @@ public final class SchemaUtil {
     return CaseFormat.UPPER_UNDERSCORE
         .converterTo(CaseFormat.LOWER_CAMEL)
         .convert(input);
+  }
+
+  public static FieldCoordinates queryField(String name) {
+    return FieldCoordinates.coordinates(QUERY_TYPE, name);
   }
 }
