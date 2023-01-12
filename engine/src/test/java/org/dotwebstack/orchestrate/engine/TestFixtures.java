@@ -14,7 +14,7 @@ import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.types.ScalarTypes;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class EngineTestFixtures {
+public final class TestFixtures {
 
   public static ModelMapping createModelMapping() {
     var targetModel = Model.builder()
@@ -27,7 +27,7 @@ public final class EngineTestFixtures {
                 .identifier(true)
                 .build())
             .field(Field.builder()
-                .name("name")
+                .name("manager")
                 .type(ScalarTypes.STRING)
                 .build())
             .build())

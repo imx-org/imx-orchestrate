@@ -22,11 +22,15 @@
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.graphql-java</groupId>
-            <artifactId>java-dataloader</artifactId>
-        </dependency>
-        <!-- Test dependencies -->
+       <dependency>
+          <groupId>org.springframework.graphql</groupId>
+          <artifactId>spring-graphql</artifactId>
+       </dependency>
+       <dependency>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+       </dependency>
+       <!-- Test dependencies -->
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-test</artifactId>
