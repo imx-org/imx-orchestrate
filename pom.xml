@@ -28,7 +28,6 @@
     <modules>
         <module>engine</module>
         <module>model</module>
-        <module>source</module>
     </modules>
 
     <dependencies>
