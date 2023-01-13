@@ -44,10 +44,6 @@ public final class ObjectType implements Type {
     return Optional.ofNullable(fieldMap.get(name));
   }
 
-  public boolean containsField(String name) {
-    return fieldMap.containsKey(name);
-  }
-
   public boolean hasIdentity() {
     return !identityFields.isEmpty();
   }

@@ -20,15 +20,16 @@ public final class SchemaVisitor extends GraphQLTypeVisitorStub {
   private final ModelMapping modelMapping;
 
   @Override
-  public TraversalControl visitGraphQLObjectType(GraphQLObjectType objectType,
+  public TraversalControl visitGraphQLObjectType(GraphQLObjectType node,
       TraverserContext<GraphQLSchemaElement> context) {
-    var targetModel = modelMapping.getTargetModel();
     var codeRegistryBuilder = context.getVarFromParents(GraphQLCodeRegistry.Builder.class);
+    var objectTypeName = node.getName();
 
-    if (targetModel.containsObjectType(objectType.getName())) {
-      var queryField = queryField(toLowerCamelCase(objectType.getName()));
-      codeRegistryBuilder.dataFetcher(queryField, new ObjectFetcher());
-    }
+    modelMapping.getObjectTypeMapping(objectTypeName)
+        .ifPresent(objectTypeMapping -> {
+          var queryField = queryField(toLowerCamelCase(objectTypeName));
+          codeRegistryBuilder.dataFetcher(queryField, new ObjectFetcher(modelMapping, objectTypeMapping));
+        });
 
     return CONTINUE;
   }

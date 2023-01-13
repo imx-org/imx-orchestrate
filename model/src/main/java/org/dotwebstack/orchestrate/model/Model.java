@@ -36,10 +36,6 @@ public final class Model {
     return Optional.ofNullable(objectTypeMap.get(name));
   }
 
-  public boolean containsObjectType(String name) {
-    return objectTypeMap.containsKey(name);
-  }
-
   private static List<ObjectType> resolveTypeRefs(List<ObjectType> objectTypes) {
     return objectTypes.stream()
         .map(objectType -> objectType.toBuilder()
