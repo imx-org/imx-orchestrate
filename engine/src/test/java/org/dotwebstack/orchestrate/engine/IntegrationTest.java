@@ -25,9 +25,11 @@ class IntegrationTest {
 
     var request = new DefaultExecutionGraphQlRequest("""
         query {
-          area {
-            code
-            manager
+          town {
+            id
+            name
+            municipality
+            province
           }
         }
         """, null, Map.of(), Map.of(), randomUUID().toString(), null);

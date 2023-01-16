@@ -28,7 +28,7 @@ public final class SchemaVisitor extends GraphQLTypeVisitorStub {
     modelMapping.getObjectTypeMapping(objectTypeName)
         .ifPresent(objectTypeMapping -> {
           var queryField = queryField(toLowerCamelCase(objectTypeName));
-          codeRegistryBuilder.dataFetcher(queryField, new ObjectFetcher(modelMapping, objectTypeMapping));
+          codeRegistryBuilder.dataFetcher(queryField, new ObjectFetcher(modelMapping));
         });
 
     return CONTINUE;
