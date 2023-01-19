@@ -1,10 +1,9 @@
-package org.dotwebstack.orchestrate.engine.source;
+package org.dotwebstack.orchestrate.source;
 
 import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Singular;
 import org.dotwebstack.orchestrate.model.types.ObjectType;
 
 @Getter
@@ -15,6 +14,5 @@ public final class ObjectRequest implements DataRequest {
 
   private final Map<String, Object> objectKey;
 
-  @Singular
-  private final List<SelectedField> selectedFields;
+  private final List<SelectedField> selection;
 }

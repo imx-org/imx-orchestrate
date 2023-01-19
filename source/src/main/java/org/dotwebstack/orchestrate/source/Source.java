@@ -1,4 +1,4 @@
-package org.dotwebstack.orchestrate.engine.source;
+package org.dotwebstack.orchestrate.source;
 
 import lombok.Builder;
 import lombok.Getter;

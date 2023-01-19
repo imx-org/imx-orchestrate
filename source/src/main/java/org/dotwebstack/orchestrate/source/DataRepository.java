@@ -1,4 +1,4 @@
-package org.dotwebstack.orchestrate.engine.source;
+package org.dotwebstack.orchestrate.source;
 
 import java.util.Map;
 import reactor.core.publisher.Mono;

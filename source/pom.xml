@@ -10,7 +10,7 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>orchestrate-engine</artifactId>
+    <artifactId>orchestrate-source</artifactId>
 
     <dependencies>
         <dependency>
@@ -19,27 +19,8 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.dotwebstack.orchestrate</groupId>
-            <artifactId>orchestrate-source</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-core</artifactId>
-        </dependency>
-       <dependency>
-          <groupId>org.springframework.graphql</groupId>
-          <artifactId>spring-graphql</artifactId>
-       </dependency>
-       <dependency>
-          <groupId>com.google.guava</groupId>
-          <artifactId>guava</artifactId>
-       </dependency>
-       <!-- Test dependencies -->
-        <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-test</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

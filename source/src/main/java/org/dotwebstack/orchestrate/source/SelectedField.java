@@ -1,9 +1,9 @@
-package org.dotwebstack.orchestrate.engine.source;
+package org.dotwebstack.orchestrate.source;
 
-import graphql.language.ObjectField;
 import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
+import org.dotwebstack.orchestrate.model.types.Field;
 
 @Getter
 @Builder(toBuilder = true)
@@ -11,7 +11,7 @@ public final class SelectedField {
 
   private final String name;
 
-  private final ObjectField objectField;
+  private final Field field;
 
   private final List<SelectedField> childFields;
 }
