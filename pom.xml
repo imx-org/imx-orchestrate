@@ -20,7 +20,7 @@
         <jakarta.validation-api.version>3.0.2</jakarta.validation-api.version>
         <guava.version>31.1-jre</guava.version>
         <lombok.version>1.18.24</lombok.version>
-        <junit.version>5.9.1</junit.version>
+        <junit.version>5.9.2</junit.version>
         <assertj.version>3.24.1</assertj.version>
         <mockito.version>5.0.0</mockito.version>
     </properties>
