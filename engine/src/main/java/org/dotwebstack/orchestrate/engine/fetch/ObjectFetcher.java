@@ -8,6 +8,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.ModelMapping;
+import org.dotwebstack.orchestrate.source.DataRepository;
 import org.dotwebstack.orchestrate.source.ObjectRequest;
 import org.dotwebstack.orchestrate.source.SelectedField;
 import org.dotwebstack.orchestrate.source.Source;
@@ -50,12 +51,12 @@ public class ObjectFetcher implements DataFetcher<Mono<Map<String, Object>>> {
   }
 
   private Source createSource() {
-    var data = Map.of("id", 123, "name", "Ugchelen", "municipality",
-        Map.of("name", "Apeldoorn", "province",
-            Map.of("name", "Gelderland")));
+    return () -> (DataRepository) objectRequest -> {
+      var data = Map.of("id", 123, "name", "Ugchelen", "municipality",
+          Map.of("name", "Apeldoorn", "province",
+              Map.of("name", "Gelderland")));
 
-    return Source.builder()
-        .dataRepository(objectRequest -> Mono.just(data))
-        .build();
+      return Mono.just(data);
+    };
   }
 }

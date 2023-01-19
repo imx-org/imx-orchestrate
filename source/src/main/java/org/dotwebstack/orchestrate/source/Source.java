@@ -1,11 +1,6 @@
 package org.dotwebstack.orchestrate.source;
 
-import lombok.Builder;
-import lombok.Getter;
+public interface Source {
 
-@Getter
-@Builder(toBuilder = true)
-public final class Source {
-
-  private final DataRepository dataRepository;
+  DataRepository getDataRepository();
 }
