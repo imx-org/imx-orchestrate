@@ -1,7 +1,7 @@
 package org.dotwebstack.orchestrate.engine.schema;
 
+import static org.apache.commons.lang3.StringUtils.uncapitalize;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_TYPE;
-import static org.dotwebstack.orchestrate.engine.schema.SchemaUtil.toLowerCamelCase;
 
 import graphql.language.FieldDefinition;
 import graphql.language.ObjectTypeDefinition;
@@ -32,7 +32,7 @@ public final class SchemaFactory {
         .forEach(objectTypeDefinition -> {
           typeDefinitionRegistry.add(objectTypeDefinition);
           queryTypeBuilder.fieldDefinition(FieldDefinition.newFieldDefinition()
-              .name(toLowerCamelCase(objectTypeDefinition.getName()))
+              .name(uncapitalize(objectTypeDefinition.getName()))
               .type(new TypeName(objectTypeDefinition.getName()))
               .build());
         });
