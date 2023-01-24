@@ -5,9 +5,13 @@ import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLObjectType;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.ModelMapping;
+import org.dotwebstack.orchestrate.model.types.Field;
+import org.dotwebstack.orchestrate.model.types.ObjectType;
 import org.dotwebstack.orchestrate.source.ObjectRequest;
 import org.dotwebstack.orchestrate.source.SelectedField;
 import org.dotwebstack.orchestrate.source.Source;
@@ -25,16 +29,26 @@ public class ObjectFetcher implements DataFetcher<Mono<Map<String, Object>>> {
     var graphQLOutputType = environment.getFieldType();
 
     if (graphQLOutputType instanceof GraphQLObjectType) {
-      return handleObjectType();
+      return handleObjectType(Map.of("identificatie", "0200200000075716"));
     }
 
     throw new OrchestrateException("The object fetcher only supports object types, no unions or interfaces (yet).");
   }
 
-  private Mono<Map<String, Object>> handleObjectType() {
-    return retrieveNum(Map.of("identificatie", "0200200000075716"))
-        .flatMap(numResult -> retrieveOpr(Map.of("identificatie", "0200300022472362"))
-            .flatMap(oprResult -> retrieveWpl(Map.of("identificatie", "3560"))
+  private Mono<Map<String, Object>> handleObjectType(Map<String, Object> objectKey) {
+    var sourceModel = modelMapping.getSourceModel("bag")
+        .orElseThrow();
+
+    var oprKeyExtractor = keyExtractor(sourceModel.getObjectType("OpenbareRuimte")
+        .orElseThrow());
+
+    var wplKeyExtractor = keyExtractor(sourceModel.getObjectType("Woonplaats")
+        .orElseThrow());
+
+    return Mono.just(objectKey)
+        .flatMap(this::retrieveNum)
+        .flatMap(numResult -> retrieveOpr(oprKeyExtractor.apply(numResult))
+            .flatMap(oprResult -> retrieveWpl(wplKeyExtractor.apply(oprResult))
                 .map(wplResult -> mapResult(numResult, oprResult, wplResult))));
   }
 
@@ -79,7 +93,7 @@ public class ObjectFetcher implements DataFetcher<Mono<Map<String, Object>>> {
 
     return source.getDataRepository()
         .findOne(numObjectRequest)
-        .log("NUM");
+        .log(numSourceType.getName());
   }
 
   private Mono<Map<String, Object>> retrieveOpr(Map<String, Object> objectKey) {
@@ -119,7 +133,7 @@ public class ObjectFetcher implements DataFetcher<Mono<Map<String, Object>>> {
 
     return source.getDataRepository()
         .findOne(objectRequest)
-        .log("OPR");
+        .log(oprSourceType.getName());
   }
 
   private Mono<Map<String, Object>> retrieveWpl(Map<String, Object> objectKey) {
@@ -147,7 +161,7 @@ public class ObjectFetcher implements DataFetcher<Mono<Map<String, Object>>> {
 
     return source.getDataRepository()
         .findOne(objectRequest)
-        .log("WPL");
+        .log(wplSourceType.getName());
   }
 
   private Map<String, Object> mapResult(Map<String, Object> numResult, Map<String, Object> oprResult, Map<String,
@@ -158,5 +172,11 @@ public class ObjectFetcher implements DataFetcher<Mono<Map<String, Object>>> {
         "postcode", numResult.get("postcode"),
         "straatnaam", oprResult.get("naam"),
         "plaatsnaam", wplResult.get("naam"));
+  }
+
+  private static UnaryOperator<Map<String, Object>> keyExtractor(ObjectType objectType) {
+    return data -> objectType.getIdentityFields()
+        .stream()
+        .collect(Collectors.toMap(Field::getName, field -> data.get(field.getName())));
   }
 }
