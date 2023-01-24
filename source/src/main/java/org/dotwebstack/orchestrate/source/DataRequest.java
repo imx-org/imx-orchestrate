@@ -7,5 +7,5 @@ public interface DataRequest {
 
   ObjectType getObjectType();
 
-  List<SelectedField> getSelection();
+  List<SelectedField> getSelectedFields();
 }

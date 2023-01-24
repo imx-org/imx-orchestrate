@@ -8,7 +8,6 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.ModelMapping;
-import org.dotwebstack.orchestrate.source.DataRepository;
 import org.dotwebstack.orchestrate.source.ObjectRequest;
 import org.dotwebstack.orchestrate.source.SelectedField;
 import org.dotwebstack.orchestrate.source.Source;
@@ -19,44 +18,102 @@ public class ObjectFetcher implements DataFetcher<Mono<Map<String, Object>>> {
 
   private final ModelMapping modelMapping;
 
+  private final Map<String, Source> sourceMap;
+
   @Override
   public Mono<Map<String, Object>> get(DataFetchingEnvironment environment) {
-    var fieldType = environment.getFieldType();
+    var graphQLOutputType = environment.getFieldType();
 
-    if (!(fieldType instanceof GraphQLObjectType)) {
-      throw new OrchestrateException("The object fetcher only supports object types, no unions or interfaces (yet).");
+    if (graphQLOutputType instanceof GraphQLObjectType) {
+      return handleObjectType();
     }
 
-    var objectRequest = createObjectRequest((GraphQLObjectType) fieldType);
-
-    return createSource()
-        .getDataRepository()
-        .findOne(objectRequest);
+    throw new OrchestrateException("The object fetcher only supports object types, no unions or interfaces (yet).");
   }
 
-  private ObjectRequest createObjectRequest(GraphQLObjectType fieldType) {
-    var typeName = fieldType.getName();
-    var selection = createSelection();
+  private Mono<Map<String, Object>> handleObjectType() {
+    return retrieveNum(Map.of("identificatie", "0200200000075716"))
+        .flatMap(numResult -> retrieveOpr(Map.of("identificatie", "0200300022472362"))
+            .map(oprResult -> mapResult(numResult, oprResult)));
+  }
 
-    return ObjectRequest.builder()
-        .objectType(modelMapping.getTargetModel()
-            .getObjectType(typeName)
-            .orElseThrow())
-        .selection(selection)
+  private Mono<Map<String, Object>> retrieveNum(Map<String, Object> objectKey) {
+    var source = sourceMap.get("bag");
+
+    var sourceModel = modelMapping.getSourceModel("bag")
+        .orElseThrow();
+
+    var numSourceType = sourceModel.getObjectType("Nummeraanduiding")
+        .orElseThrow();
+
+    var oprSourceType = sourceModel.getObjectType("OpenbareRuimte")
+        .orElseThrow();
+
+    var numObjectRequest = ObjectRequest.builder()
+        .objectType(numSourceType)
+        .objectKey(objectKey)
+        .selectedFields(List.of(
+            SelectedField.builder()
+                .field(numSourceType.getField("identificatie")
+                    .orElseThrow())
+                .build(),
+            SelectedField.builder()
+                .field(numSourceType.getField("huisnummer")
+                    .orElseThrow())
+                .build(),
+            SelectedField.builder()
+                .field(numSourceType.getField("postcode")
+                    .orElseThrow())
+                .build(),
+            SelectedField.builder()
+                .field(numSourceType.getField("ligtAan")
+                    .orElseThrow())
+                .selectedFields(List.of(
+                    SelectedField.builder()
+                        .field(oprSourceType.getField("identificatie")
+                            .orElseThrow())
+                        .build()))
+                .build()))
         .build();
+
+    return source.getDataRepository()
+        .findOne(numObjectRequest)
+        .log();
   }
 
-  private List<SelectedField> createSelection() {
-    return List.of();
+  private Mono<Map<String, Object>> retrieveOpr(Map<String, Object> objectKey) {
+    var source = sourceMap.get("bag");
+
+    var sourceModel = modelMapping.getSourceModel("bag")
+        .orElseThrow();
+
+    var oprSourceType = sourceModel.getObjectType("OpenbareRuimte")
+        .orElseThrow();
+
+    var objectRequest = ObjectRequest.builder()
+        .objectType(oprSourceType)
+        .objectKey(objectKey)
+        .selectedFields(List.of(
+            SelectedField.builder()
+                .field(oprSourceType.getField("identificatie")
+                    .orElseThrow())
+                .build(),
+            SelectedField.builder()
+                .field(oprSourceType.getField("naam")
+                    .orElseThrow())
+                .build()))
+        .build();
+
+    return source.getDataRepository()
+        .findOne(objectRequest)
+        .log();
   }
 
-  private Source createSource() {
-    return () -> (DataRepository) objectRequest -> {
-      var data = Map.of("id", 123, "name", "Ugchelen", "municipality",
-          Map.of("name", "Apeldoorn", "province",
-              Map.of("name", "Gelderland")));
-
-      return Mono.just(data);
-    };
+  private Map<String, Object> mapResult(Map<String, Object> numResult, Map<String, Object> oprResult) {
+    return Map.of(
+        "identificatie", numResult.get("identificatie"),
+        "huisnummer", numResult.get("huisnummer"),
+        "postcode", numResult.get("postcode"),
+        "straatnaam", oprResult.get("naam"));
   }
 }

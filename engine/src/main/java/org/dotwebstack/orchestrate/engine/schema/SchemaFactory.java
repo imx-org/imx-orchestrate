@@ -2,8 +2,10 @@ package org.dotwebstack.orchestrate.engine.schema;
 
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_TYPE;
+import static org.dotwebstack.orchestrate.model.types.Field.Cardinality.REQUIRED;
 
 import graphql.language.FieldDefinition;
+import graphql.language.NonNullType;
 import graphql.language.ObjectTypeDefinition;
 import graphql.language.Type;
 import graphql.language.TypeName;
@@ -13,13 +15,15 @@ import graphql.schema.SchemaTransformer;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
+import java.util.Map;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.types.Field;
 import org.dotwebstack.orchestrate.model.types.ObjectType;
+import org.dotwebstack.orchestrate.source.Source;
 
 public final class SchemaFactory {
 
-  public GraphQLSchema create(ModelMapping modelMapping) {
+  public GraphQLSchema create(ModelMapping modelMapping, Map<String, Source> sourceMap) {
     var typeDefinitionRegistry = new TypeDefinitionRegistry();
     var codeRegistryBuilder = GraphQLCodeRegistry.newCodeRegistry();
     var queryTypeBuilder = ObjectTypeDefinition.newObjectTypeDefinition()
@@ -46,7 +50,7 @@ public final class SchemaFactory {
     var schema = new SchemaGenerator()
         .makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
 
-    return SchemaTransformer.transformSchema(schema, new SchemaVisitor(modelMapping));
+    return SchemaTransformer.transformSchema(schema, new SchemaVisitor(modelMapping, sourceMap));
   }
 
   private ObjectTypeDefinition createObjectTypeDefinition(ObjectType objectType) {
@@ -72,10 +76,12 @@ public final class SchemaFactory {
     var typeName = field.getType()
         .getName();
 
-    return switch (typeName) {
+    var type = switch (typeName) {
       case "Integer" -> new TypeName("Int");
       case "String" -> new TypeName(typeName);
       default -> throw new RuntimeException("Type unknown: " + typeName);
     };
+
+    return REQUIRED.equals(field.getCardinality()) ? new NonNullType(type) : type;
   }
 }

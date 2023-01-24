@@ -12,9 +12,11 @@ import graphql.schema.GraphQLSchemaElement;
 import graphql.schema.GraphQLTypeVisitorStub;
 import graphql.util.TraversalControl;
 import graphql.util.TraverserContext;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.fetch.ObjectFetcher;
 import org.dotwebstack.orchestrate.model.ModelMapping;
+import org.dotwebstack.orchestrate.source.Source;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -22,6 +24,8 @@ import reactor.core.publisher.Mono;
 public final class SchemaVisitor extends GraphQLTypeVisitorStub {
 
   private final ModelMapping modelMapping;
+
+  private final Map<String, Source> sourceMap;
 
   @Override
   public TraversalControl visitGraphQLObjectType(GraphQLObjectType node,
@@ -32,7 +36,7 @@ public final class SchemaVisitor extends GraphQLTypeVisitorStub {
     modelMapping.getObjectTypeMapping(objectTypeName)
         .ifPresent(objectTypeMapping -> {
           var queryField = queryField(uncapitalize(objectTypeName));
-          var objectFetcher = new ObjectFetcher(modelMapping);
+          var objectFetcher = new ObjectFetcher(modelMapping, sourceMap);
           codeRegistryBuilder.dataFetcher(queryField, wrapDataFetcher(objectFetcher, this::mapResult));
         });
 

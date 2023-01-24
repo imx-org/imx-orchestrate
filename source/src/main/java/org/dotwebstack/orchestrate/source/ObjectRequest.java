@@ -14,5 +14,5 @@ public final class ObjectRequest implements DataRequest {
 
   private final Map<String, Object> objectKey;
 
-  private final List<SelectedField> selection;
+  private final List<SelectedField> selectedFields;
 }

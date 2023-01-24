@@ -9,9 +9,7 @@ import org.dotwebstack.orchestrate.model.types.Field;
 @Builder(toBuilder = true)
 public final class SelectedField {
 
-  private final String name;
-
   private final Field field;
 
-  private final List<SelectedField> childFields;
+  private final List<SelectedField> selectedFields;
 }
