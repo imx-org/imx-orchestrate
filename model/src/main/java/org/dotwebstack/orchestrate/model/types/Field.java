@@ -1,7 +1,5 @@
 package org.dotwebstack.orchestrate.model.types;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,16 +11,13 @@ import lombok.ToString;
 @Builder(toBuilder = true)
 public final class Field {
 
-  @NotBlank
   private final String name;
 
-  @NotNull
   private final Type type;
 
   @Builder.Default
   private final boolean identifier = false;
 
-  @NotNull
   @Builder.Default
   private final Cardinality cardinality = Cardinality.OPTIONAL;
 

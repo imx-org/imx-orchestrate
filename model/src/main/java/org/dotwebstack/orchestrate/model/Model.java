@@ -1,7 +1,5 @@
 package org.dotwebstack.orchestrate.model;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,8 +17,6 @@ import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 @ToString(exclude = {"objectTypeMap"})
 public final class Model {
 
-  @Valid
-  @NotEmpty
   private final List<ObjectType> objectTypes;
 
   private final Map<String, ObjectType> objectTypeMap;

@@ -1,6 +1,5 @@
 package org.dotwebstack.orchestrate.model;
 
-import jakarta.validation.constraints.NotEmpty;
 import java.util.Arrays;
 import java.util.List;
 import lombok.Builder;
@@ -13,7 +12,6 @@ public final class FieldPath {
 
   private static final String PATH_SEPARATOR = "/";
 
-  @NotEmpty
   @Singular
   private final List<String> segments;
 

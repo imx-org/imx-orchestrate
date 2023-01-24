@@ -17,3 +17,4 @@ Specification: https://www.apollographql.com/docs/federation/
 2. Apollo Federation requires every sub model to be aware of its relations to other models. Orchestrate seperates the 
 3. Apollo Federation is not model-first, the model relations are specified as part of the GraphQL schema.
 4. Apollo Federation does not perform data modifications, such as type conversions or aggregations.
+5. Apollo Federation is primarily used for wiring models, where each object type lives (and stays) within its own schema. With orchestrate, you can combine objects by flattening, expanding or zipping multiple objects together.
