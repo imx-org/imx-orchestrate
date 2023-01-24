@@ -40,6 +40,11 @@ public final class TestFixtures {
                 .type(ScalarTypes.STRING)
                 .cardinality(Field.Cardinality.REQUIRED)
                 .build())
+            .field(Field.builder()
+                .name("plaatsnaam")
+                .type(ScalarTypes.STRING)
+                .cardinality(Field.Cardinality.REQUIRED)
+                .build())
             .build())
         .build();
 
@@ -80,6 +85,25 @@ public final class TestFixtures {
                 .type(ScalarTypes.STRING)
                 .cardinality(Field.Cardinality.REQUIRED)
                 .build())
+            .field(Field.builder()
+                .name("ligtIn")
+                .type(ObjectTypeRef.forType("Woonplaats"))
+                .cardinality(Field.Cardinality.REQUIRED)
+                .build())
+            .build())
+        .objectType(ObjectType.builder()
+            .name("Woonplaats")
+            .field(Field.builder()
+                .name("identificatie")
+                .type(ScalarTypes.STRING)
+                .cardinality(Field.Cardinality.REQUIRED)
+                .identifier(true)
+                .build())
+            .field(Field.builder()
+                .name("naam")
+                .type(ScalarTypes.STRING)
+                .cardinality(Field.Cardinality.REQUIRED)
+                .build())
             .build())
         .build();
 
@@ -96,6 +120,9 @@ public final class TestFixtures {
             .build())
         .fieldMapping("straatnaam", FieldMapping.builder()
             .sourcePath(FieldPath.fromString("ligtAan/naam"))
+            .build())
+        .fieldMapping("plaatsnaam", FieldMapping.builder()
+            .sourcePath(FieldPath.fromString("ligtAan/ligtIn/naam"))
             .build())
         .build();
 

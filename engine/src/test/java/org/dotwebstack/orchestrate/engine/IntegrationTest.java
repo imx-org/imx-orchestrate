@@ -29,6 +29,7 @@ class IntegrationTest {
               huisnummer
               postcode
               straatnaam
+              plaatsnaam
             }
           }
         """);
@@ -36,6 +37,11 @@ class IntegrationTest {
     assertThat(result).isNotNull();
     assertThat(result.getErrors()).isEmpty();
     assertThat(result.isDataPresent()).isTrue();
+
+    Map<String, Object> data = result.getData();
+    assertThat(data).isEqualTo(Map.of("adres", Map.of("identificatie", "0200200000075716", "huisnummer", 701,
+        "postcode", "7334DP", "straatnaam", "Laan van Westenenk", "plaatsnaam", "Apeldoorn")));
+
     System.out.println(result);
   }
 
@@ -48,7 +54,10 @@ class IntegrationTest {
         case "Nummeraanduiding" ->
             Mono.just(Map.of("identificatie", "0200200000075716", "huisnummer", 701, "postcode", "7334DP", "ligtAan",
                 Map.of("identificatie", "0200300022472362")));
-        case "OpenbareRuimte" -> Mono.just(Map.of("identificatie", "0200300022472362", "naam", "Laan van Westenenk"));
+        case "OpenbareRuimte" ->
+            Mono.just(Map.of("identificatie", "0200300022472362", "naam", "Laan van Westenenk", "ligtIn", Map.of(
+                "identificatie", "3560")));
+        case "Woonplaats" -> Mono.just(Map.of("identificatie", "3560", "naam", "Apeldoorn"));
         default -> Mono.error(() -> new RuntimeException("Error!"));
       };
     };

@@ -34,7 +34,8 @@ public class ObjectFetcher implements DataFetcher<Mono<Map<String, Object>>> {
   private Mono<Map<String, Object>> handleObjectType() {
     return retrieveNum(Map.of("identificatie", "0200200000075716"))
         .flatMap(numResult -> retrieveOpr(Map.of("identificatie", "0200300022472362"))
-            .map(oprResult -> mapResult(numResult, oprResult)));
+            .flatMap(oprResult -> retrieveWpl(Map.of("identificatie", "3560"))
+                .map(wplResult -> mapResult(numResult, oprResult, wplResult))));
   }
 
   private Mono<Map<String, Object>> retrieveNum(Map<String, Object> objectKey) {
@@ -78,7 +79,7 @@ public class ObjectFetcher implements DataFetcher<Mono<Map<String, Object>>> {
 
     return source.getDataRepository()
         .findOne(numObjectRequest)
-        .log();
+        .log("NUM");
   }
 
   private Mono<Map<String, Object>> retrieveOpr(Map<String, Object> objectKey) {
@@ -88,6 +89,9 @@ public class ObjectFetcher implements DataFetcher<Mono<Map<String, Object>>> {
         .orElseThrow();
 
     var oprSourceType = sourceModel.getObjectType("OpenbareRuimte")
+        .orElseThrow();
+
+    var wplSourceType = sourceModel.getObjectType("Woonplaats")
         .orElseThrow();
 
     var objectRequest = ObjectRequest.builder()
@@ -101,19 +105,58 @@ public class ObjectFetcher implements DataFetcher<Mono<Map<String, Object>>> {
             SelectedField.builder()
                 .field(oprSourceType.getField("naam")
                     .orElseThrow())
+                .build(),
+            SelectedField.builder()
+                .field(oprSourceType.getField("ligtIn")
+                    .orElseThrow())
+                .selectedFields(List.of(
+                    SelectedField.builder()
+                        .field(wplSourceType.getField("identificatie")
+                            .orElseThrow())
+                        .build()))
                 .build()))
         .build();
 
     return source.getDataRepository()
         .findOne(objectRequest)
-        .log();
+        .log("OPR");
   }
 
-  private Map<String, Object> mapResult(Map<String, Object> numResult, Map<String, Object> oprResult) {
+  private Mono<Map<String, Object>> retrieveWpl(Map<String, Object> objectKey) {
+    var source = sourceMap.get("bag");
+
+    var sourceModel = modelMapping.getSourceModel("bag")
+        .orElseThrow();
+
+    var wplSourceType = sourceModel.getObjectType("Woonplaats")
+        .orElseThrow();
+
+    var objectRequest = ObjectRequest.builder()
+        .objectType(wplSourceType)
+        .objectKey(objectKey)
+        .selectedFields(List.of(
+            SelectedField.builder()
+                .field(wplSourceType.getField("identificatie")
+                    .orElseThrow())
+                .build(),
+            SelectedField.builder()
+                .field(wplSourceType.getField("naam")
+                    .orElseThrow())
+                .build()))
+        .build();
+
+    return source.getDataRepository()
+        .findOne(objectRequest)
+        .log("WPL");
+  }
+
+  private Map<String, Object> mapResult(Map<String, Object> numResult, Map<String, Object> oprResult, Map<String,
+      Object> wplResult) {
     return Map.of(
         "identificatie", numResult.get("identificatie"),
         "huisnummer", numResult.get("huisnummer"),
         "postcode", numResult.get("postcode"),
-        "straatnaam", oprResult.get("naam"));
+        "straatnaam", oprResult.get("naam"),
+        "plaatsnaam", wplResult.get("naam"));
   }
 }
