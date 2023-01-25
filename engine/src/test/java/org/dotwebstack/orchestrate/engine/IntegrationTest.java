@@ -16,7 +16,12 @@ class IntegrationTest {
 
   @Test
   void create() {
-    var schema = new SchemaFactory().create(createModelMapping(), Map.of("bag", createSourceMock()));
+    var orchestration = Orchestration.builder()
+        .modelMapping(createModelMapping())
+        .source("bag", createSourceStub())
+        .build();
+
+    var schema = new SchemaFactory().create(orchestration);
     System.out.println(new SchemaPrinter().print(schema));
 
     var graphQL = GraphQL.newGraphQL(schema)
@@ -45,7 +50,7 @@ class IntegrationTest {
     System.out.println(result);
   }
 
-  private Source createSourceMock() {
+  private Source createSourceStub() {
     return () -> (DataRepository) objectRequest -> {
       var typeName = objectRequest.getObjectType()
           .getName();

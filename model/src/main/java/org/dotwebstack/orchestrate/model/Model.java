@@ -28,8 +28,9 @@ public final class Model {
         .collect(Collectors.toUnmodifiableMap(ObjectType::getName, Function.identity()));
   }
 
-  public Optional<ObjectType> getObjectType(String name) {
-    return Optional.ofNullable(objectTypeMap.get(name));
+  public ObjectType getObjectType(String name) {
+    return Optional.ofNullable(objectTypeMap.get(name))
+        .orElseThrow(() -> new ModelException("Object type not found: " + name));
   }
 
   private static List<ObjectType> resolveTypeRefs(List<ObjectType> objectTypes) {

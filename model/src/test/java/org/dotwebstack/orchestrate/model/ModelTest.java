@@ -47,10 +47,8 @@ class ModelTest {
             .build())
         .build();
 
-    var cityType = model.getObjectType("City")
-        .orElseThrow();
-    var mayorField = cityType.getField("mayor")
-        .orElseThrow();
+    var cityType = model.getObjectType("City");
+    var mayorField = cityType.getField("mayor");
 
     assertThat(cityType.getFields()).hasSize(3);
     assertThat(mayorField.getType()).isInstanceOf(ObjectType.class);

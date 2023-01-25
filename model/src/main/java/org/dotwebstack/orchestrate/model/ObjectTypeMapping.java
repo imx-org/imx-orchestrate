@@ -15,7 +15,8 @@ public final class ObjectTypeMapping {
   @Singular
   private final Map<String, FieldMapping> fieldMappings;
 
-  public Optional<FieldMapping> getFieldMapping(String name) {
-    return Optional.ofNullable(fieldMappings.get(name));
+  public FieldMapping getFieldMapping(String name) {
+    return Optional.ofNullable(fieldMappings.get(name))
+        .orElseThrow(() -> new ModelException("Field mapping not found: " + name));
   }
 }

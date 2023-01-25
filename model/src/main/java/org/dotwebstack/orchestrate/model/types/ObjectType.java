@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import lombok.ToString;
+import org.dotwebstack.orchestrate.model.ModelException;
 
 @Getter
 @ToString(exclude = {"fieldMap"})
@@ -34,8 +35,9 @@ public final class ObjectType implements Type {
         .toList();
   }
 
-  public Optional<Field> getField(String name) {
-    return Optional.ofNullable(fieldMap.get(name));
+  public Field getField(String name) {
+    return Optional.ofNullable(fieldMap.get(name))
+        .orElseThrow(() -> new ModelException("Field not found: " + name));
   }
 
   public boolean hasIdentity() {

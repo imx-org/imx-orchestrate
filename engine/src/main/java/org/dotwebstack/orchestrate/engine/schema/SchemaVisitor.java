@@ -3,7 +3,7 @@ package org.dotwebstack.orchestrate.engine.schema;
 import static graphql.schema.DataFetcherFactories.wrapDataFetcher;
 import static graphql.util.TraversalControl.CONTINUE;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
-import static org.dotwebstack.orchestrate.engine.schema.SchemaUtil.queryField;
+import static org.dotwebstack.orchestrate.engine.schema.SchemaUtils.queryField;
 
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLCodeRegistry;
@@ -12,11 +12,9 @@ import graphql.schema.GraphQLSchemaElement;
 import graphql.schema.GraphQLTypeVisitorStub;
 import graphql.util.TraversalControl;
 import graphql.util.TraverserContext;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.fetch.ObjectFetcher;
 import org.dotwebstack.orchestrate.model.ModelMapping;
-import org.dotwebstack.orchestrate.source.Source;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -25,7 +23,7 @@ public final class SchemaVisitor extends GraphQLTypeVisitorStub {
 
   private final ModelMapping modelMapping;
 
-  private final Map<String, Source> sourceMap;
+  private final ObjectFetcher objectFetcher;
 
   @Override
   public TraversalControl visitGraphQLObjectType(GraphQLObjectType node,
@@ -33,12 +31,11 @@ public final class SchemaVisitor extends GraphQLTypeVisitorStub {
     var codeRegistryBuilder = context.getVarFromParents(GraphQLCodeRegistry.Builder.class);
     var objectTypeName = node.getName();
 
-    modelMapping.getObjectTypeMapping(objectTypeName)
-        .ifPresent(objectTypeMapping -> {
-          var queryField = queryField(uncapitalize(objectTypeName));
-          var objectFetcher = new ObjectFetcher(modelMapping, sourceMap);
-          codeRegistryBuilder.dataFetcher(queryField, wrapDataFetcher(objectFetcher, this::mapResult));
-        });
+    if (modelMapping.getObjectTypeMappings()
+        .containsKey(objectTypeName)) {
+      var queryField = queryField(uncapitalize(objectTypeName));
+      codeRegistryBuilder.dataFetcher(queryField, wrapDataFetcher(objectFetcher, this::mapResult));
+    }
 
     return CONTINUE;
   }

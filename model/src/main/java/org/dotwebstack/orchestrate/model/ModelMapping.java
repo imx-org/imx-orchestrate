@@ -18,11 +18,13 @@ public final class ModelMapping {
   @Singular
   private final Map<String, ObjectTypeMapping> objectTypeMappings;
 
-  public Optional<Model> getSourceModel(String key) {
-    return Optional.ofNullable(sourceModels.get(key));
+  public Model getSourceModel(String key) {
+    return Optional.ofNullable(sourceModels.get(key))
+        .orElseThrow(() -> new ModelException("Source model not found: " + key));
   }
 
-  public Optional<ObjectTypeMapping> getObjectTypeMapping(String name) {
-    return Optional.ofNullable(objectTypeMappings.get(name));
+  public ObjectTypeMapping getObjectTypeMapping(String name) {
+    return Optional.ofNullable(objectTypeMappings.get(name))
+        .orElseThrow(() -> new ModelException("Object type mapping not found: " + name));
   }
 }

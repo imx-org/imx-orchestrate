@@ -15,21 +15,22 @@ import graphql.schema.SchemaTransformer;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
-import java.util.Map;
-import org.dotwebstack.orchestrate.model.ModelMapping;
+import org.dotwebstack.orchestrate.engine.Orchestration;
+import org.dotwebstack.orchestrate.engine.fetch.FetchPlanner;
+import org.dotwebstack.orchestrate.engine.fetch.ObjectFetcher;
 import org.dotwebstack.orchestrate.model.types.Field;
 import org.dotwebstack.orchestrate.model.types.ObjectType;
-import org.dotwebstack.orchestrate.source.Source;
 
 public final class SchemaFactory {
 
-  public GraphQLSchema create(ModelMapping modelMapping, Map<String, Source> sourceMap) {
+  public GraphQLSchema create(Orchestration orchestration) {
     var typeDefinitionRegistry = new TypeDefinitionRegistry();
     var codeRegistryBuilder = GraphQLCodeRegistry.newCodeRegistry();
     var queryTypeBuilder = ObjectTypeDefinition.newObjectTypeDefinition()
         .name(QUERY_TYPE);
 
-    modelMapping.getTargetModel()
+    orchestration.getModelMapping()
+        .getTargetModel()
         .getObjectTypes()
         .stream()
         .map(this::createObjectTypeDefinition)
@@ -50,7 +51,10 @@ public final class SchemaFactory {
     var schema = new SchemaGenerator()
         .makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
 
-    return SchemaTransformer.transformSchema(schema, new SchemaVisitor(modelMapping, sourceMap));
+    var fetchPlanner = new FetchPlanner(orchestration.getModelMapping(), orchestration.getSources());
+
+    return SchemaTransformer.transformSchema(schema, new SchemaVisitor(orchestration.getModelMapping(),
+        new ObjectFetcher(fetchPlanner)));
   }
 
   private ObjectTypeDefinition createObjectTypeDefinition(ObjectType objectType) {
