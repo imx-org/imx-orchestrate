@@ -17,6 +17,7 @@
         <reactor.version>2022.0.2</reactor.version>
         <slf4j.version>2.0.6</slf4j.version>
         <graphql-java.version>20.0</graphql-java.version>
+        <spring-boot.version>3.0.2</spring-boot.version>
         <commons-text.version>1.10.0</commons-text.version>
         <lombok.version>1.18.24</lombok.version>
         <junit.version>5.9.2</junit.version>
@@ -26,6 +27,7 @@
 
     <modules>
         <module>engine</module>
+        <module>gateway</module>
         <module>model</module>
         <module>source</module>
     </modules>
@@ -85,6 +87,16 @@
                 <groupId>com.graphql-java</groupId>
                 <artifactId>graphql-java</artifactId>
                 <version>${graphql-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-webflux</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-graphql</artifactId>
+                <version>${spring-boot.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
