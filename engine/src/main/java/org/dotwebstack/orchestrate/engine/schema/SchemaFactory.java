@@ -5,6 +5,7 @@ import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_TY
 import static org.dotwebstack.orchestrate.model.types.Field.Cardinality.REQUIRED;
 
 import graphql.language.FieldDefinition;
+import graphql.language.InputValueDefinition;
 import graphql.language.NonNullType;
 import graphql.language.ObjectTypeDefinition;
 import graphql.language.Type;
@@ -15,6 +16,7 @@ import graphql.schema.SchemaTransformer;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
+import java.util.List;
 import org.dotwebstack.orchestrate.engine.Orchestration;
 import org.dotwebstack.orchestrate.engine.fetch.FetchPlanner;
 import org.dotwebstack.orchestrate.engine.fetch.ObjectFetcher;
@@ -32,13 +34,13 @@ public final class SchemaFactory {
     orchestration.getModelMapping()
         .getTargetModel()
         .getObjectTypes()
-        .stream()
-        .map(this::createObjectTypeDefinition)
-        .forEach(objectTypeDefinition -> {
+        .forEach(objectType -> {
+          var objectTypeDefinition = createObjectTypeDefinition(objectType);
           typeDefinitionRegistry.add(objectTypeDefinition);
           queryTypeBuilder.fieldDefinition(FieldDefinition.newFieldDefinition()
               .name(uncapitalize(objectTypeDefinition.getName()))
               .type(new TypeName(objectTypeDefinition.getName()))
+              .inputValueDefinitions(createIdentityArguments(objectType))
               .build());
         });
 
@@ -55,6 +57,16 @@ public final class SchemaFactory {
 
     return SchemaTransformer.transformSchema(schema, new SchemaVisitor(orchestration.getModelMapping(),
         new ObjectFetcher(fetchPlanner)));
+  }
+
+  private List<InputValueDefinition> createIdentityArguments(ObjectType objectType) {
+    return objectType.getIdentityFields()
+        .stream()
+        .map(field -> InputValueDefinition.newInputValueDefinition()
+            .name(field.getName())
+            .type(mapFieldType(field))
+            .build())
+        .toList();
   }
 
   private ObjectTypeDefinition createObjectTypeDefinition(ObjectType objectType) {

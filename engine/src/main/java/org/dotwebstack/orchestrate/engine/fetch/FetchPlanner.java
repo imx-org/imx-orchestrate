@@ -28,11 +28,8 @@ public final class FetchPlanner {
     var targetType = modelMapping.getTargetModel()
         .getObjectType(outputType.getName());
 
-    // TODO: Extract from arguments
-    var objectKey = Map.<String, Object>of("identificatie", "0200200000075716");
-
     return fetchTargetObject(targetType, environment.getSelectionSet())
-        .execute(objectKey);
+        .execute(environment.getArguments());
   }
 
   private FetchOperation fetchTargetObject(ObjectType targetType, DataFetchingFieldSelectionSet selectionSet) {

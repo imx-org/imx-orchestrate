@@ -29,7 +29,7 @@ class IntegrationTest {
 
     var result = graphQL.execute("""
           query {
-            adres {
+            adres(identificatie: "0200200000075716") {
               identificatie
               huisnummer
               postcode
