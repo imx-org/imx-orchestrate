@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.UnaryOperator;
+import java.util.logging.Level;
 import lombok.Builder;
 import lombok.Singular;
 import org.dotwebstack.orchestrate.model.types.ObjectType;
@@ -12,6 +13,7 @@ import org.dotwebstack.orchestrate.source.SelectedField;
 import org.dotwebstack.orchestrate.source.Source;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.SignalType;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
@@ -39,7 +41,7 @@ public final class FetchOperation {
 
     return source.getDataRepository()
         .findOne(objectRequest)
-        .log(objectType.getName())
+        .log(objectType.getName(), Level.INFO, SignalType.ON_NEXT)
         .flatMap(result -> Flux.fromIterable(nextOperations.entrySet())
             .flatMap(entry -> entry.getValue()
                 .execute(result)
