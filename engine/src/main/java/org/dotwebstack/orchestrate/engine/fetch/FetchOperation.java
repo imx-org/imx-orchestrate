@@ -45,11 +45,15 @@ public final class FetchOperation {
     return source.getDataRepository()
         .findOne(objectRequest)
         .log(objectType.getName(), Level.INFO, SignalType.ON_NEXT)
-        .flatMap(result -> Flux.fromIterable(nextOperations.entrySet())
-            .flatMap(entry -> entry.getValue()
-                .execute(result)
-                .map(nestedResult -> Tuples.of(entry.getKey(), nestedResult)))
-            .collectMap(Tuple2::getT1, Tuple2::getT2, () -> new HashMap<>(result)))
+        .flatMap(this::executeNextOperations)
         .map(resultMapper);
+  }
+
+  private Mono<Map<String, Object>> executeNextOperations(Map<String, Object> input) {
+    return Flux.fromIterable(nextOperations.entrySet())
+        .flatMap(entry -> entry.getValue()
+            .execute(input)
+            .map(nestedResult -> Tuples.of(entry.getKey(), nestedResult)))
+        .collectMap(Tuple2::getT1, Tuple2::getT2, () -> new HashMap<>(input));
   }
 }
