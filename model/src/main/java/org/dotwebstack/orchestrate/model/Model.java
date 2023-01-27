@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import lombok.ToString;
-import org.dotwebstack.orchestrate.model.types.Field;
 import org.dotwebstack.orchestrate.model.types.ObjectType;
 import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 
@@ -23,43 +22,17 @@ public final class Model {
 
   @Builder(toBuilder = true)
   private Model(@Singular List<ObjectType> objectTypes) {
-    this.objectTypes = resolveTypeRefs(objectTypes);
+    this.objectTypes = objectTypes;
     objectTypeMap = this.objectTypes.stream()
         .collect(Collectors.toUnmodifiableMap(ObjectType::getName, Function.identity()));
+  }
+
+  public ObjectType getObjectType(ObjectTypeRef typeRef) {
+    return getObjectType(typeRef.getName());
   }
 
   public ObjectType getObjectType(String name) {
     return Optional.ofNullable(objectTypeMap.get(name))
         .orElseThrow(() -> new ModelException("Object type not found: " + name));
-  }
-
-  private static List<ObjectType> resolveTypeRefs(List<ObjectType> objectTypes) {
-    return objectTypes.stream()
-        .map(objectType -> objectType.toBuilder()
-            .clearFields()
-            .fields(objectType.getFields()
-                .stream()
-                .map(field -> resolveTypeRefs(objectTypes, field))
-                .toList())
-            .build())
-        .toList();
-  }
-
-  private static Field resolveTypeRefs(List<ObjectType> objectTypes, Field field) {
-    var type = field.getType();
-
-    if (type instanceof ObjectTypeRef) {
-      var objectType = objectTypes.stream()
-          .filter(o -> o.getName()
-              .equals(type.getName()))
-          .findAny()
-          .orElseThrow(() -> new ModelException(String.format("Object type '%s' not found.", type.getName())));
-
-      return field.toBuilder()
-          .type(objectType)
-          .build();
-    }
-
-    return field;
   }
 }

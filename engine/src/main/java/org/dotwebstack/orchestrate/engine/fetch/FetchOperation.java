@@ -24,7 +24,7 @@ public final class FetchOperation {
 
   private final ObjectType objectType;
 
-  private final UnaryOperator<Map<String, Object>> objectKeyExtractor;
+  private final UnaryOperator<Map<String, Object>> keyExtractor;
 
   @Builder.Default
   private final UnaryOperator<Map<String, Object>> resultMapper = UnaryOperator.identity();
@@ -38,7 +38,7 @@ public final class FetchOperation {
   public Mono<Map<String, Object>> execute(Map<String, Object> input) {
     var objectRequest = ObjectRequest.builder()
         .objectType(objectType)
-        .objectKey(objectKeyExtractor.apply(input))
+        .objectKey(keyExtractor.apply(input))
         .selectedFields(selectedFields)
         .build();
 

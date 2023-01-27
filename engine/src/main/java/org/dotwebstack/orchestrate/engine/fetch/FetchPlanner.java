@@ -1,11 +1,18 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
+import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.selectFields;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.selectIdentifyFields;
 
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.GraphQLObjectType;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +22,8 @@ import org.dotwebstack.orchestrate.model.FieldPath;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.SourceTypeRef;
 import org.dotwebstack.orchestrate.model.types.ObjectType;
+import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
+import org.dotwebstack.orchestrate.source.SelectedField;
 import org.dotwebstack.orchestrate.source.Source;
 import reactor.core.publisher.Mono;
 
@@ -49,16 +58,38 @@ public final class FetchPlanner {
   }
 
   private FetchOperation fetchSourceObject(SourceTypeRef sourceTypeRef, List<FieldPath> sourcePaths) {
-    var source = sources.get(sourceTypeRef.getModelAlias());
-
     var sourceType = modelMapping.getSourceModels()
         .get(sourceTypeRef.getModelAlias())
         .getObjectType(sourceTypeRef.getObjectType());
 
-    // TODO: Make dynamic
-    // TODO: Extract keys from nested object
+    return fetchSourceObject(sourceType, sourcePaths, sourceTypeRef.getModelAlias());
+  }
+
+  private FetchOperation fetchSourceObject(ObjectType sourceType, List<FieldPath> sourcePaths, String sourceAlias) {
+    var selectedFields = new ArrayList<SelectedField>();
+
+    sourcePaths.stream()
+        .filter(FieldPath::isLeaf)
+        .map(sourcePath -> new SelectedField(sourceType.getField(sourcePath.getFirstSegment())))
+        .forEach(selectedFields::add);
+
+    var nextOperations = new HashMap<String, FetchOperation>();
+
+    sourcePaths.stream()
+        .filter(not(FieldPath::isLeaf))
+        .collect(groupingBy(FieldPath::getFirstSegment, mapping(FieldPath::withoutFirstSegment, toList())))
+        .forEach((fieldName, nestedSourcePaths) -> {
+          var field = sourceType.getField(fieldName);
+
+          // TODO: Differing model aliases & type safety
+          var nestedObjectType = modelMapping.getSourceModel(sourceAlias)
+              .getObjectType((ObjectTypeRef) field.getType());
+
+          selectedFields.add(new SelectedField(field, selectIdentifyFields(nestedObjectType)));
+          nextOperations.put(fieldName, fetchSourceObject(nestedObjectType, nestedSourcePaths, sourceAlias));
+        });
+
     var resultMapper = UnaryOperator.<Map<String, Object>>identity();
-    var nestedSelections = new HashMap<String, FetchOperation>();
 
     if (sourceType.getName().equals("Nummeraanduiding")) {
       resultMapper = result -> {
@@ -72,23 +103,15 @@ public final class FetchPlanner {
             "straatnaam", ligtAan.get("naam"),
             "plaatsnaam", ligtIn.get("naam"));
       };
-
-      nestedSelections.put("ligtAan", fetchSourceObject(SourceTypeRef.fromString("bag:OpenbareRuimte"),
-          List.of(FieldPath.fromString("naam"), FieldPath.fromString("ligtIn/naam"))));
-    }
-
-    if (sourceType.getName().equals("OpenbareRuimte")) {
-      nestedSelections.put("ligtIn", fetchSourceObject(SourceTypeRef.fromString("bag:Woonplaats"),
-          List.of(FieldPath.fromString("naam"))));
     }
 
     return FetchOperation.builder()
-        .source(source)
+        .source(sources.get(sourceAlias))
         .objectType(sourceType)
-        .selectedFields(selectFields(sourceType, sourcePaths))
-        .objectKeyExtractor(keyExtractor(sourceType))
+        .selectedFields(unmodifiableList(selectedFields))
+        .keyExtractor(keyExtractor(sourceType))
         .resultMapper(resultMapper)
-        .nextOperations(nestedSelections)
+        .nextOperations(unmodifiableMap(nextOperations))
         .build();
   }
 }

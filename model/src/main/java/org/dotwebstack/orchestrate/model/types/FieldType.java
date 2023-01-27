@@ -1,6 +1,6 @@
 package org.dotwebstack.orchestrate.model.types;
 
-public interface Type {
+public interface FieldType {
 
   String getName();
 }

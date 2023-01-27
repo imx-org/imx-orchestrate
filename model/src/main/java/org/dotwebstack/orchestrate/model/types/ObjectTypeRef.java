@@ -8,7 +8,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public final class ObjectTypeRef implements Type {
+public final class ObjectTypeRef implements FieldType {
 
   private final String name;
 

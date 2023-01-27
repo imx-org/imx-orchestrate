@@ -14,7 +14,7 @@ import org.dotwebstack.orchestrate.model.ModelException;
 
 @Getter
 @ToString(exclude = {"fieldMap"})
-public final class ObjectType implements Type {
+public final class ObjectType {
 
   private final String name;
 

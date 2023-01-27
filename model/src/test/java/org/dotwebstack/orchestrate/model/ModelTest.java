@@ -51,6 +51,6 @@ class ModelTest {
     var mayorField = cityType.getField("mayor");
 
     assertThat(cityType.getFields()).hasSize(3);
-    assertThat(mayorField.getType()).isInstanceOf(ObjectType.class);
+    assertThat(mayorField.getType()).isInstanceOf(ObjectTypeRef.class);
   }
 }

@@ -13,7 +13,7 @@ public final class Field {
 
   private final String name;
 
-  private final Type type;
+  private final FieldType type;
 
   @Builder.Default
   private final boolean identifier = false;
