@@ -26,6 +26,9 @@ public final class FetchOperation {
 
   private final UnaryOperator<Map<String, Object>> objectKeyExtractor;
 
+  @Builder.Default
+  private final UnaryOperator<Map<String, Object>> resultMapper = UnaryOperator.identity();
+
   @Singular
   private final List<SelectedField> selectedFields;
 
@@ -46,6 +49,7 @@ public final class FetchOperation {
             .flatMap(entry -> entry.getValue()
                 .execute(result)
                 .map(nestedResult -> Tuples.of(entry.getKey(), nestedResult)))
-            .collectMap(Tuple2::getT1, Tuple2::getT2, () -> new HashMap<>(result)));
+            .collectMap(Tuple2::getT1, Tuple2::getT2, () -> new HashMap<>(result)))
+        .map(resultMapper);
   }
 }

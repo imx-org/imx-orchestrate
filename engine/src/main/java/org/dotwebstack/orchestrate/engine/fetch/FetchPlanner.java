@@ -9,6 +9,7 @@ import graphql.schema.GraphQLObjectType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.model.FieldPath;
 import org.dotwebstack.orchestrate.model.ModelMapping;
@@ -56,9 +57,22 @@ public final class FetchPlanner {
 
     // TODO: Make dynamic
     // TODO: Extract keys from nested object
+    var resultMapper = UnaryOperator.<Map<String, Object>>identity();
     var nestedSelections = new HashMap<String, FetchOperation>();
 
     if (sourceType.getName().equals("Nummeraanduiding")) {
+      resultMapper = result -> {
+        var ligtAan = (Map<String, Object>) result.get("ligtAan");
+        var ligtIn = (Map<String, Object>) ligtAan.get("ligtIn");
+
+        return Map.of(
+            "identificatie", result.get("identificatie"),
+            "huisnummer", result.get("huisnummer"),
+            "postcode", result.get("postcode"),
+            "straatnaam", ligtAan.get("naam"),
+            "plaatsnaam", ligtIn.get("naam"));
+      };
+
       nestedSelections.put("ligtAan", fetchSourceObject(SourceTypeRef.fromString("bag:OpenbareRuimte"),
           List.of(FieldPath.fromString("naam"), FieldPath.fromString("ligtIn/naam"))));
     }
@@ -73,6 +87,7 @@ public final class FetchPlanner {
         .objectType(sourceType)
         .selectedFields(selectFields(sourceType, sourcePaths))
         .objectKeyExtractor(keyExtractor(sourceType))
+        .resultMapper(resultMapper)
         .nextOperations(nestedSelections)
         .build();
   }
