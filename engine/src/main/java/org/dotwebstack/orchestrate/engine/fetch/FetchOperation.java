@@ -26,9 +26,6 @@ public final class FetchOperation {
 
   private final UnaryOperator<Map<String, Object>> keyExtractor;
 
-  @Builder.Default
-  private final UnaryOperator<Map<String, Object>> resultMapper = UnaryOperator.identity();
-
   @Singular
   private final List<SelectedField> selectedFields;
 
@@ -45,8 +42,7 @@ public final class FetchOperation {
     return source.getDataRepository()
         .findOne(objectRequest)
         .log(objectType.getName(), Level.INFO, SignalType.ON_NEXT)
-        .flatMap(this::executeNextOperations)
-        .map(resultMapper);
+        .flatMap(this::executeNextOperations);
   }
 
   private Mono<Map<String, Object>> executeNextOperations(Map<String, Object> input) {
