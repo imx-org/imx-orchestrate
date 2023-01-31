@@ -47,9 +47,17 @@ public final class FetchOperation {
 
   private Mono<Map<String, Object>> executeNextOperations(Map<String, Object> input) {
     return Flux.fromIterable(nextOperations.entrySet())
-        .flatMap(entry -> entry.getValue()
-            .execute(input)
-            .map(nestedResult -> Tuples.of(entry.getKey(), nestedResult)))
+        .flatMap(entry -> {
+          var nestedInput = (Map<String, Object>) input.get(entry.getKey());
+
+          if (nestedInput == null) {
+            return Mono.empty();
+          }
+
+          return entry.getValue()
+              .execute(nestedInput)
+              .map(nestedResult -> Tuples.of(entry.getKey(), nestedResult));
+        })
         .collectMap(Tuple2::getT1, Tuple2::getT2, () -> new HashMap<>(input));
   }
 }

@@ -120,6 +120,12 @@ public final class FetchPlanner {
       return result.get(firstSegment);
     }
 
-    return mapFieldResult(sourcePath.withoutFirstSegment(), (Map<String, Object>) result.get(firstSegment));
+    var fieldValue = (Map<String, Object>) result.get(firstSegment);
+
+    if (fieldValue == null) {
+      return null;
+    }
+
+    return mapFieldResult(sourcePath.withoutFirstSegment(), fieldValue);
   }
 }
