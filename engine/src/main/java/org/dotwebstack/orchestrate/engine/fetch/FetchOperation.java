@@ -48,6 +48,7 @@ public final class FetchOperation {
   private Mono<Map<String, Object>> executeNextOperations(Map<String, Object> input) {
     return Flux.fromIterable(nextOperations.entrySet())
         .flatMap(entry -> {
+          @SuppressWarnings("unchecked")
           var nestedInput = (Map<String, Object>) input.get(entry.getKey());
 
           if (nestedInput == null) {

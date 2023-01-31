@@ -120,6 +120,7 @@ public final class FetchPlanner {
       return result.get(firstSegment);
     }
 
+    @SuppressWarnings("unchecked")
     var fieldValue = (Map<String, Object>) result.get(firstSegment);
 
     if (fieldValue == null) {
