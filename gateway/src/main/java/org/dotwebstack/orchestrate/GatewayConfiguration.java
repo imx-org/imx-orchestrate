@@ -58,9 +58,8 @@ public class GatewayConfiguration {
             Mono.just(Map.of("identificatie", "0200200000075716", "huisnummer", 701, "postcode", "7334DP", "ligtAan",
                 Map.of("identificatie", "0200300022472362")));
         case "OpenbareRuimte" ->
-            Mono.just(Map.of("identificatie", "0200300022472362", "naam", "Laan van Westenenk", "ligtIn", Map.of(
-                "identificatie", "3560")));
-        case "Woonplaats" -> Mono.just(Map.of("identificatie", "3560", "naam", "Apeldoorn"));
+            Mono.just(Map.of("naam", "Laan van Westenenk", "ligtIn", Map.of("identificatie", "3560")));
+        case "Woonplaats" -> Mono.just(Map.of("naam", "Apeldoorn"));
         default -> Mono.error(() -> new RuntimeException("Error!"));
       };
     };
