@@ -28,7 +28,7 @@ public class GatewayConfiguration {
         .source("bag", createSourceStub())
         .build();
 
-    var graphQL = GraphQL.newGraphQL(new SchemaFactory().create(orchestration)).build();
+    var graphQL = GraphQL.newGraphQL(SchemaFactory.create(orchestration)).build();
 
     return new GraphQlSource() {
       @Override

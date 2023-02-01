@@ -7,4 +7,6 @@ import lombok.NoArgsConstructor;
 public final class SchemaConstants {
 
   public static final String QUERY_TYPE = "Query";
+
+  public static final String QUERY_COLLECTION_SUFFIX = "Collection";
 }

@@ -27,7 +27,7 @@ class IntegrationTest {
         .source("bag", () -> repositoryStub)
         .build();
 
-    var schema = new SchemaFactory().create(orchestration);
+    var schema = SchemaFactory.create(orchestration);
     System.out.println(new SchemaPrinter().print(schema));
 
     var graphQL = GraphQL.newGraphQL(schema)

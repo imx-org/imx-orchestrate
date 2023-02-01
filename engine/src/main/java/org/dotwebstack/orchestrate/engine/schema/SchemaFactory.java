@@ -1,48 +1,64 @@
 package org.dotwebstack.orchestrate.engine.schema;
 
+import static graphql.language.ObjectTypeDefinition.newObjectTypeDefinition;
+import static graphql.schema.FieldCoordinates.coordinates;
+import static graphql.schema.GraphQLCodeRegistry.newCodeRegistry;
+import static graphql.schema.SchemaTransformer.transformSchema;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
+import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_COLLECTION_SUFFIX;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_TYPE;
 import static org.dotwebstack.orchestrate.model.types.Field.Cardinality.REQUIRED;
 
 import graphql.language.FieldDefinition;
 import graphql.language.InputValueDefinition;
+import graphql.language.ListType;
 import graphql.language.NonNullType;
 import graphql.language.ObjectTypeDefinition;
 import graphql.language.Type;
 import graphql.language.TypeName;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLSchema;
-import graphql.schema.SchemaTransformer;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import java.util.List;
+import java.util.Map;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.Orchestration;
+import org.dotwebstack.orchestrate.engine.fetch.CollectionFetcher;
 import org.dotwebstack.orchestrate.engine.fetch.FetchPlanner;
 import org.dotwebstack.orchestrate.engine.fetch.ObjectFetcher;
+import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.types.Field;
 import org.dotwebstack.orchestrate.model.types.ObjectType;
+import org.dotwebstack.orchestrate.source.Source;
 
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SchemaFactory {
 
-  public GraphQLSchema create(Orchestration orchestration) {
-    var typeDefinitionRegistry = new TypeDefinitionRegistry();
-    var codeRegistryBuilder = GraphQLCodeRegistry.newCodeRegistry();
-    var queryTypeBuilder = ObjectTypeDefinition.newObjectTypeDefinition()
-        .name(QUERY_TYPE);
+  private final TypeDefinitionRegistry typeDefinitionRegistry = new TypeDefinitionRegistry();
 
-    orchestration.getModelMapping()
-        .getTargetModel()
+  private final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
+
+  private final ObjectTypeDefinition.Builder queryTypeBuilder = newObjectTypeDefinition().name(QUERY_TYPE);
+
+  private final ModelMapping modelMapping;
+
+  private final Map<String, Source> sources;
+
+  private final FetchPlanner fetchPlanner;
+
+  public static GraphQLSchema create(Orchestration orchestration) {
+    var fetchPlanner = new FetchPlanner(orchestration.getModelMapping(), orchestration.getSources());
+    return new SchemaFactory(orchestration.getModelMapping(), orchestration.getSources(), fetchPlanner)
+        .create();
+  }
+
+  private GraphQLSchema create() {
+    modelMapping.getTargetModel()
         .getObjectTypes()
-        .forEach(objectType -> {
-          var objectTypeDefinition = createObjectTypeDefinition(objectType);
-          typeDefinitionRegistry.add(objectTypeDefinition);
-          queryTypeBuilder.fieldDefinition(FieldDefinition.newFieldDefinition()
-              .name(uncapitalize(objectTypeDefinition.getName()))
-              .type(new TypeName(objectTypeDefinition.getName()))
-              .inputValueDefinitions(createIdentityArguments(objectType))
-              .build());
-        });
+        .forEach(this::registerObjectType);
 
     typeDefinitionRegistry.add(queryTypeBuilder.build());
 
@@ -53,24 +69,32 @@ public final class SchemaFactory {
     var schema = new SchemaGenerator()
         .makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
 
-    var fetchPlanner = new FetchPlanner(orchestration.getModelMapping(), orchestration.getSources());
-
-    return SchemaTransformer.transformSchema(schema, new SchemaVisitor(orchestration.getModelMapping(),
-        new ObjectFetcher(fetchPlanner)));
+    return transformSchema(schema, new SchemaVisitor());
   }
 
-  private List<InputValueDefinition> createIdentityArguments(ObjectType objectType) {
-    return objectType.getIdentityFields()
-        .stream()
-        .map(field -> InputValueDefinition.newInputValueDefinition()
-            .name(field.getName())
-            .type(mapFieldType(field))
+  private void registerObjectType(ObjectType objectType) {
+    var objectTypeDefinition = createObjectTypeDefinition(objectType);
+    typeDefinitionRegistry.add(objectTypeDefinition);
+
+    var baseName = uncapitalize(objectTypeDefinition.getName());
+    var collectionName = baseName.concat(QUERY_COLLECTION_SUFFIX);
+
+    queryTypeBuilder.fieldDefinition(FieldDefinition.newFieldDefinition()
+            .name(baseName)
+            .type(new TypeName(objectTypeDefinition.getName()))
+            .inputValueDefinitions(createIdentityArguments(objectType))
             .build())
-        .toList();
+        .fieldDefinition(FieldDefinition.newFieldDefinition()
+            .name(collectionName)
+            .type(new NonNullType(new ListType(new NonNullType(new TypeName(objectTypeDefinition.getName())))))
+            .build());
+
+    codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE, baseName), new ObjectFetcher(fetchPlanner))
+        .dataFetcher(coordinates(QUERY_TYPE, collectionName), new CollectionFetcher(fetchPlanner));
   }
 
   private ObjectTypeDefinition createObjectTypeDefinition(ObjectType objectType) {
-    var objectTypeDefinitionBuilder = ObjectTypeDefinition.newObjectTypeDefinition()
+    var objectTypeDefinitionBuilder = newObjectTypeDefinition()
         .name(objectType.getName());
 
     objectType.getFields()
@@ -99,5 +123,15 @@ public final class SchemaFactory {
     };
 
     return REQUIRED.equals(field.getCardinality()) ? new NonNullType(type) : type;
+  }
+
+  private List<InputValueDefinition> createIdentityArguments(ObjectType objectType) {
+    return objectType.getIdentityFields()
+        .stream()
+        .map(field -> InputValueDefinition.newInputValueDefinition()
+            .name(field.getName())
+            .type(mapFieldType(field))
+            .build())
+        .toList();
   }
 }
