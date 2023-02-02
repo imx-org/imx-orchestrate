@@ -11,7 +11,7 @@ import org.dotwebstack.orchestrate.model.types.ObjectType;
 import org.dotwebstack.orchestrate.source.SelectedField;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class FetchUtils {
+final class FetchUtils {
 
   public static UnaryOperator<Map<String, Object>> keyExtractor(ObjectType objectType) {
     return data -> objectType.getIdentityFields()

@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 
 @SuperBuilder(toBuilder = true)
-public final class ObjectFetchOperation extends AbstractFetchOperation {
+final class ObjectFetchOperation extends AbstractFetchOperation {
 
   private final UnaryOperator<Map<String, Object>> keyExtractor;
 

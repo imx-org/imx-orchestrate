@@ -8,7 +8,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.SignalType;
 
 @SuperBuilder(toBuilder = true)
-public final class CollectionFetchOperation extends AbstractFetchOperation {
+final class CollectionFetchOperation extends AbstractFetchOperation {
 
   public Flux<Map<String, Object>> execute(Map<String, Object> input) {
     var collectionRequest = CollectionRequest.builder()

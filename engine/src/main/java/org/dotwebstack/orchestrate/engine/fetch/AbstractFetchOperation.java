@@ -14,7 +14,7 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
 @SuperBuilder(toBuilder = true)
-public abstract class AbstractFetchOperation implements FetchOperation {
+abstract class AbstractFetchOperation implements FetchOperation {
 
   protected final Source source;
 
