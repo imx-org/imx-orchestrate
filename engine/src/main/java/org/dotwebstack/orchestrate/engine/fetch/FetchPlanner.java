@@ -1,5 +1,7 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
+import static graphql.schema.GraphQLTypeUtil.isList;
+import static graphql.schema.GraphQLTypeUtil.unwrapNonNull;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.function.Predicate.not;
@@ -26,6 +28,8 @@ import org.dotwebstack.orchestrate.model.types.ObjectType;
 import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 import org.dotwebstack.orchestrate.source.SelectedField;
 import org.dotwebstack.orchestrate.source.Source;
+import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
@@ -35,7 +39,7 @@ public final class FetchPlanner {
 
   private final Map<String, Source> sources;
 
-  public Mono<Map<String, Object>> fetch(DataFetchingEnvironment environment, GraphQLObjectType outputType) {
+  public Publisher<Map<String, Object>> fetch(DataFetchingEnvironment environment, GraphQLObjectType outputType) {
     var targetType = modelMapping.getTargetModel()
         .getObjectType(outputType.getName());
 
@@ -61,12 +65,22 @@ public final class FetchPlanner {
         .get(sourceRoot.getModelAlias())
         .getObjectType(sourceRoot.getObjectType());
 
-    return fetchSourceObject(sourceType, unmodifiableList(sourcePaths), sourceRoot.getModelAlias())
-        .execute(environment.getArguments())
+    // TODO: Refactor
+    var isCollection = isList(unwrapNonNull(environment.getFieldType()));
+    var fetchPublisher = fetchSourceObject(sourceType, unmodifiableList(sourcePaths), sourceRoot.getModelAlias(),
+        isCollection).execute(environment.getArguments());
+
+    if (fetchPublisher instanceof Mono<?>) {
+      return Mono.from(fetchPublisher)
+          .map(result -> mapResult(unmodifiableMap(fieldMappings), result));
+    }
+
+    return Flux.from(fetchPublisher)
         .map(result -> mapResult(unmodifiableMap(fieldMappings), result));
   }
 
-  private FetchOperation fetchSourceObject(ObjectType sourceType, List<FieldPath> sourcePaths, String sourceAlias) {
+  private FetchOperation fetchSourceObject(ObjectType sourceType, List<FieldPath> sourcePaths, String sourceAlias,
+      boolean isCollection) {
     var selectedFields = new ArrayList<SelectedField>();
 
     sourcePaths.stream()
@@ -87,10 +101,19 @@ public final class FetchPlanner {
               .getObjectType((ObjectTypeRef) field.getType());
 
           selectedFields.add(new SelectedField(field, selectIdentifyFields(nestedObjectType)));
-          nextOperations.put(fieldName, fetchSourceObject(nestedObjectType, nestedSourcePaths, sourceAlias));
+          nextOperations.put(fieldName, fetchSourceObject(nestedObjectType, nestedSourcePaths, sourceAlias, false));
         });
 
-    return FetchOperation.builder()
+    if (isCollection) {
+      return CollectionFetchOperation.builder()
+          .source(sources.get(sourceAlias))
+          .objectType(sourceType)
+          .selectedFields(unmodifiableList(selectedFields))
+          .nextOperations(unmodifiableMap(nextOperations))
+          .build();
+    }
+
+    return ObjectFetchOperation.builder()
         .source(sources.get(sourceAlias))
         .objectType(sourceType)
         .selectedFields(unmodifiableList(selectedFields))

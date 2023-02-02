@@ -22,17 +22,14 @@ import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import java.util.List;
-import java.util.Map;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.Orchestration;
-import org.dotwebstack.orchestrate.engine.fetch.CollectionFetcher;
 import org.dotwebstack.orchestrate.engine.fetch.FetchPlanner;
-import org.dotwebstack.orchestrate.engine.fetch.ObjectFetcher;
+import org.dotwebstack.orchestrate.engine.fetch.GenericDataFetcher;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.types.Field;
 import org.dotwebstack.orchestrate.model.types.ObjectType;
-import org.dotwebstack.orchestrate.source.Source;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SchemaFactory {
@@ -45,14 +42,13 @@ public final class SchemaFactory {
 
   private final ModelMapping modelMapping;
 
-  private final Map<String, Source> sources;
-
-  private final FetchPlanner fetchPlanner;
+  private final GenericDataFetcher genericDataFetcher;
 
   public static GraphQLSchema create(Orchestration orchestration) {
     var fetchPlanner = new FetchPlanner(orchestration.getModelMapping(), orchestration.getSources());
-    return new SchemaFactory(orchestration.getModelMapping(), orchestration.getSources(), fetchPlanner)
-        .create();
+    var genericDataFetcher = new GenericDataFetcher(fetchPlanner);
+
+    return new SchemaFactory(orchestration.getModelMapping(), genericDataFetcher).create();
   }
 
   private GraphQLSchema create() {
@@ -89,8 +85,8 @@ public final class SchemaFactory {
             .type(new NonNullType(new ListType(new NonNullType(new TypeName(objectTypeDefinition.getName())))))
             .build());
 
-    codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE, baseName), new ObjectFetcher(fetchPlanner))
-        .dataFetcher(coordinates(QUERY_TYPE, collectionName), new CollectionFetcher(fetchPlanner));
+    codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE, baseName), genericDataFetcher)
+        .dataFetcher(coordinates(QUERY_TYPE, collectionName), genericDataFetcher);
   }
 
   private ObjectTypeDefinition createObjectTypeDefinition(ObjectType objectType) {
