@@ -22,7 +22,7 @@ final class FetchUtils {
         .collect(Collectors.toMap(Property::getName, property -> data.get(property.getName())));
   }
 
-  public static List<SelectedProperty> selectIdentify(ObjectType objectType) {
+  public static List<SelectedProperty> selectIdentity(ObjectType objectType) {
     return objectType.getIdentityProperties()
         .stream()
         .map(SelectedProperty::new)

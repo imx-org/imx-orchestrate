@@ -10,7 +10,7 @@ import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.selectIdentify;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.selectIdentity;
 
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLObjectType;
@@ -103,7 +103,7 @@ public final class FetchPlanner {
           var nestedObjectType = modelMapping.getSourceModel(sourceAlias)
               .getObjectType(((Relation) property).getTarget());
 
-          selectedProperties.add(new SelectedProperty(property, selectIdentify(nestedObjectType)));
+          selectedProperties.add(new SelectedProperty(property, selectIdentity(nestedObjectType)));
           nextOperations.put(propertyName, fetchSourceObject(nestedObjectType, nestedSourcePaths, sourceAlias, false));
         });
 
