@@ -52,6 +52,7 @@ public final class FetchPlanner {
     environment.getSelectionSet()
         .getImmediateFields()
         .stream()
+        .filter(not(FetchUtils::isIntrospectionField))
         .map(field -> targetType.getField(field.getName()))
         .forEach(field -> {
           var fieldMapping = targetMapping.getFieldMapping(field.getName());

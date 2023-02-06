@@ -1,5 +1,7 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
+import static graphql.introspection.Introspection.INTROSPECTION_SYSTEM_FIELDS;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.UnaryOperator;
@@ -24,5 +26,9 @@ final class FetchUtils {
         .stream()
         .map(SelectedField::new)
         .toList();
+  }
+
+  public static boolean isIntrospectionField(graphql.schema.SelectedField selectedField) {
+    return INTROSPECTION_SYSTEM_FIELDS.contains(selectedField.getName());
   }
 }
