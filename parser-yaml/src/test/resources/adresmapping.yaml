@@ -1,0 +1,17 @@
+
+objectTypeMappings:
+  Adres:
+    sourceRoot: bag:Nummeraanduiding
+    fieldMappings:
+      identificatie:
+        sourcePaths: identificatie
+      huisnummer:
+        sourcePaths: huisnummer
+      postcode:
+        sourcePaths: postcode
+      straatnaam:
+        sourcePaths: ligtAan/naam
+      plaatsnaam:
+        sourcePaths:
+          - ligtIn/naam
+          - ligtAan/ligtIn/naam
