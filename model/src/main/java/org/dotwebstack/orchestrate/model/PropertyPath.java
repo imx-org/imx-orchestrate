@@ -14,7 +14,7 @@ import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 @Getter
 @Builder(toBuilder = true)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public final class FieldPath {
+public final class PropertyPath {
 
   private static final Pattern PATH_PATTERN = Pattern.compile("^(?:(\\w+):)?([\\w/]+)$");
 
@@ -37,11 +37,11 @@ public final class FieldPath {
     return origin != null;
   }
 
-  public FieldPath withoutFirstSegment() {
-    return new FieldPath(segments.subList(1, segments.size()), origin);
+  public PropertyPath withoutFirstSegment() {
+    return new PropertyPath(segments.subList(1, segments.size()), origin);
   }
 
-  public static FieldPath fromString(String path) {
+  public static PropertyPath fromString(String path) {
     var pathMatcher = PATH_PATTERN.matcher(path);
 
     if (pathMatcher.find()) {

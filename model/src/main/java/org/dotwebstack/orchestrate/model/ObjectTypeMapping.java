@@ -13,10 +13,10 @@ public final class ObjectTypeMapping {
   private final SourceTypeRef sourceRoot;
 
   @Singular
-  private final Map<String, FieldMapping> fieldMappings;
+  private final Map<String, PropertyMapping> propertyMappings;
 
-  public FieldMapping getFieldMapping(String name) {
-    return Optional.ofNullable(fieldMappings.get(name))
-        .orElseThrow(() -> new ModelException("Field mapping not found: " + name));
+  public PropertyMapping getPropertyMapping(String name) {
+    return Optional.ofNullable(propertyMappings.get(name))
+        .orElseThrow(() -> new ModelException("Attribute mapping not found: " + name));
   }
 }

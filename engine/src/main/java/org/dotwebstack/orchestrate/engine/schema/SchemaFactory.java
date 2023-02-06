@@ -7,7 +7,7 @@ import static graphql.schema.SchemaTransformer.transformSchema;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_COLLECTION_SUFFIX;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_TYPE;
-import static org.dotwebstack.orchestrate.model.types.Field.Cardinality.REQUIRED;
+import static org.dotwebstack.orchestrate.model.Cardinality.REQUIRED;
 
 import graphql.language.FieldDefinition;
 import graphql.language.InputValueDefinition;
@@ -27,9 +27,9 @@ import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.Orchestration;
 import org.dotwebstack.orchestrate.engine.fetch.FetchPlanner;
 import org.dotwebstack.orchestrate.engine.fetch.GenericDataFetcher;
+import org.dotwebstack.orchestrate.model.Attribute;
 import org.dotwebstack.orchestrate.model.ModelMapping;
-import org.dotwebstack.orchestrate.model.types.Field;
-import org.dotwebstack.orchestrate.model.types.ObjectType;
+import org.dotwebstack.orchestrate.model.ObjectType;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SchemaFactory {
@@ -93,7 +93,7 @@ public final class SchemaFactory {
     var objectTypeDefinitionBuilder = newObjectTypeDefinition()
         .name(objectType.getName());
 
-    objectType.getFields()
+    objectType.getProperties(Attribute.class)
         .stream()
         .map(this::createFieldDefinition)
         .forEach(objectTypeDefinitionBuilder::fieldDefinition);
@@ -101,15 +101,15 @@ public final class SchemaFactory {
     return objectTypeDefinitionBuilder.build();
   }
 
-  private FieldDefinition createFieldDefinition(Field field) {
+  private FieldDefinition createFieldDefinition(Attribute attribute) {
     return FieldDefinition.newFieldDefinition()
-        .name(field.getName())
-        .type(mapFieldType(field))
+        .name(attribute.getName())
+        .type(mapAttributeType(attribute))
         .build();
   }
 
-  private Type<?> mapFieldType(Field field) {
-    var typeName = field.getType()
+  private Type<?> mapAttributeType(Attribute attribute) {
+    var typeName = attribute.getType()
         .getName();
 
     var type = switch (typeName) {
@@ -118,15 +118,15 @@ public final class SchemaFactory {
       default -> throw new RuntimeException("Type unknown: " + typeName);
     };
 
-    return REQUIRED.equals(field.getCardinality()) ? new NonNullType(type) : type;
+    return REQUIRED.equals(attribute.getCardinality()) ? new NonNullType(type) : type;
   }
 
   private List<InputValueDefinition> createIdentityArguments(ObjectType objectType) {
-    return objectType.getIdentityFields()
+    return objectType.getIdentityProperties(Attribute.class)
         .stream()
-        .map(field -> InputValueDefinition.newInputValueDefinition()
-            .name(field.getName())
-            .type(mapFieldType(field))
+        .map(attribute -> InputValueDefinition.newInputValueDefinition()
+            .name(attribute.getName())
+            .type(mapAttributeType(attribute))
             .build())
         .toList();
   }

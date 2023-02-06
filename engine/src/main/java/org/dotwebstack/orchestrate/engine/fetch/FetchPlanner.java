@@ -10,7 +10,7 @@ import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.selectIdentifyFields;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.selectIdentify;
 
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLObjectType;
@@ -20,13 +20,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
-import org.dotwebstack.orchestrate.model.FieldMapping;
-import org.dotwebstack.orchestrate.model.FieldPath;
+import org.dotwebstack.orchestrate.model.Property;
+import org.dotwebstack.orchestrate.model.PropertyPath;
 import org.dotwebstack.orchestrate.model.ModelMapping;
-import org.dotwebstack.orchestrate.model.types.Field;
-import org.dotwebstack.orchestrate.model.types.ObjectType;
-import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
-import org.dotwebstack.orchestrate.source.SelectedField;
+import org.dotwebstack.orchestrate.model.PropertyMapping;
+import org.dotwebstack.orchestrate.model.ObjectType;
+import org.dotwebstack.orchestrate.model.Relation;
+import org.dotwebstack.orchestrate.source.SelectedProperty;
 import org.dotwebstack.orchestrate.source.Source;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
@@ -46,18 +46,18 @@ public final class FetchPlanner {
     var targetMapping = modelMapping.getObjectTypeMappings()
         .get(targetType.getName());
 
-    var fieldMappings = new HashMap<Field, FieldMapping>();
-    var sourcePaths = new ArrayList<FieldPath>();
+    var propertyMappings = new HashMap<Property, PropertyMapping>();
+    var sourcePaths = new ArrayList<PropertyPath>();
 
     environment.getSelectionSet()
         .getImmediateFields()
         .stream()
         .filter(not(FetchUtils::isIntrospectionField))
-        .map(field -> targetType.getField(field.getName()))
-        .forEach(field -> {
-          var fieldMapping = targetMapping.getFieldMapping(field.getName());
-          fieldMappings.put(field, fieldMapping);
-          sourcePaths.addAll(fieldMapping.getSourcePaths());
+        .map(property -> targetType.getProperty(property.getName()))
+        .forEach(property -> {
+          var propertyMapping = targetMapping.getPropertyMapping(property.getName());
+          propertyMappings.put(property, propertyMapping);
+          sourcePaths.addAll(propertyMapping.getSourcePaths());
         });
 
     var sourceRoot = targetMapping.getSourceRoot();
@@ -73,45 +73,45 @@ public final class FetchPlanner {
 
     if (fetchPublisher instanceof Mono<?>) {
       return Mono.from(fetchPublisher)
-          .map(result -> mapResult(unmodifiableMap(fieldMappings), result));
+          .map(result -> mapResult(unmodifiableMap(propertyMappings), result));
     }
 
     return Flux.from(fetchPublisher)
-        .map(result -> mapResult(unmodifiableMap(fieldMappings), result));
+        .map(result -> mapResult(unmodifiableMap(propertyMappings), result));
   }
 
-  private FetchOperation fetchSourceObject(ObjectType sourceType, List<FieldPath> sourcePaths, String sourceAlias,
+  private FetchOperation fetchSourceObject(ObjectType sourceType, List<PropertyPath> sourcePaths, String sourceAlias,
       boolean isCollection) {
-    var selectedFields = new ArrayList<SelectedField>();
+    var selectedProperties = new ArrayList<SelectedProperty>();
 
     sourcePaths.stream()
-        .filter(FieldPath::isLeaf)
-        .filter(not(FieldPath::hasOrigin))
-        .map(sourcePath -> new SelectedField(sourceType.getField(sourcePath.getFirstSegment())))
-        .forEach(selectedFields::add);
+        .filter(PropertyPath::isLeaf)
+        .filter(not(PropertyPath::hasOrigin))
+        .map(sourcePath -> new SelectedProperty(sourceType.getProperty(sourcePath.getFirstSegment())))
+        .forEach(selectedProperties::add);
 
     var nextOperations = new HashMap<String, FetchOperation>();
 
     sourcePaths.stream()
-        .filter(not(FieldPath::isLeaf))
-        .filter(not(FieldPath::hasOrigin))
-        .collect(groupingBy(FieldPath::getFirstSegment, mapping(FieldPath::withoutFirstSegment, toList())))
-        .forEach((fieldName, nestedSourcePaths) -> {
-          var field = sourceType.getField(fieldName);
+        .filter(not(PropertyPath::isLeaf))
+        .filter(not(PropertyPath::hasOrigin))
+        .collect(groupingBy(PropertyPath::getFirstSegment, mapping(PropertyPath::withoutFirstSegment, toList())))
+        .forEach((propertyName, nestedSourcePaths) -> {
+          var property = sourceType.getProperty(propertyName);
 
           // TODO: Differing model aliases & type safety
           var nestedObjectType = modelMapping.getSourceModel(sourceAlias)
-              .getObjectType((ObjectTypeRef) field.getType());
+              .getObjectType(((Relation) property).getTarget());
 
-          selectedFields.add(new SelectedField(field, selectIdentifyFields(nestedObjectType)));
-          nextOperations.put(fieldName, fetchSourceObject(nestedObjectType, nestedSourcePaths, sourceAlias, false));
+          selectedProperties.add(new SelectedProperty(property, selectIdentify(nestedObjectType)));
+          nextOperations.put(propertyName, fetchSourceObject(nestedObjectType, nestedSourcePaths, sourceAlias, false));
         });
 
     if (isCollection) {
       return CollectionFetchOperation.builder()
           .source(sources.get(sourceAlias))
           .objectType(sourceType)
-          .selectedFields(unmodifiableList(selectedFields))
+          .selectedProperties(unmodifiableList(selectedProperties))
           .nextOperations(unmodifiableMap(nextOperations))
           .build();
     }
@@ -119,27 +119,27 @@ public final class FetchPlanner {
     return ObjectFetchOperation.builder()
         .source(sources.get(sourceAlias))
         .objectType(sourceType)
-        .selectedFields(unmodifiableList(selectedFields))
+        .selectedProperties(unmodifiableList(selectedProperties))
         .keyExtractor(keyExtractor(sourceType))
         .nextOperations(unmodifiableMap(nextOperations))
         .build();
   }
 
-  private Map<String, Object> mapResult(Map<Field, FieldMapping> fieldMappings, Map<String, Object> result) {
-    return fieldMappings.entrySet()
+  private Map<String, Object> mapResult(Map<Property, PropertyMapping> propertyMappings, Map<String, Object> result) {
+    return propertyMappings.entrySet()
         .stream()
-        .collect(toMap(entry -> entry.getKey().getName(), entry -> mapFieldResult(entry.getValue(), result)));
+        .collect(toMap(entry -> entry.getKey().getName(), entry -> mapPropertyResult(entry.getValue(), result)));
   }
 
-  private Object mapFieldResult(FieldMapping fieldMapping, Map<String, Object> result) {
-    return fieldMapping.getSourcePaths()
+  private Object mapPropertyResult(PropertyMapping propertyMapping, Map<String, Object> result) {
+    return propertyMapping.getSourcePaths()
         .stream()
-        .map(sourcePath -> mapFieldResult(sourcePath, result))
+        .map(sourcePath -> mapPropertyResult(sourcePath, result))
         .filter(Objects::nonNull)
         .findFirst();
   }
 
-  private Object mapFieldResult(FieldPath sourcePath, Map<String, Object> result) {
+  private Object mapPropertyResult(PropertyPath sourcePath, Map<String, Object> result) {
     var firstSegment = sourcePath.getFirstSegment();
 
     if (sourcePath.isLeaf()) {
@@ -147,12 +147,12 @@ public final class FetchPlanner {
     }
 
     @SuppressWarnings("unchecked")
-    var fieldValue = (Map<String, Object>) result.get(firstSegment);
+    var propertyValue = (Map<String, Object>) result.get(firstSegment);
 
-    if (fieldValue == null) {
+    if (propertyValue == null) {
       return null;
     }
 
-    return mapFieldResult(sourcePath.withoutFirstSegment(), fieldValue);
+    return mapPropertyResult(sourcePath.withoutFirstSegment(), propertyValue);
   }
 }
