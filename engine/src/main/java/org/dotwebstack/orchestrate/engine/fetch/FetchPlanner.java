@@ -86,6 +86,7 @@ public final class FetchPlanner {
 
     sourcePaths.stream()
         .filter(FieldPath::isLeaf)
+        .filter(not(FieldPath::hasOrigin))
         .map(sourcePath -> new SelectedField(sourceType.getField(sourcePath.getFirstSegment())))
         .forEach(selectedFields::add);
 
@@ -93,6 +94,7 @@ public final class FetchPlanner {
 
     sourcePaths.stream()
         .filter(not(FieldPath::isLeaf))
+        .filter(not(FieldPath::hasOrigin))
         .collect(groupingBy(FieldPath::getFirstSegment, mapping(FieldPath::withoutFirstSegment, toList())))
         .forEach((fieldName, nestedSourcePaths) -> {
           var field = sourceType.getField(fieldName);

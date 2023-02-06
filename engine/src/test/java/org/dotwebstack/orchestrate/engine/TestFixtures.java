@@ -1,5 +1,6 @@
 package org.dotwebstack.orchestrate.engine;
 
+import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.dotwebstack.orchestrate.model.FieldMapping;
@@ -8,6 +9,8 @@ import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectTypeMapping;
 import org.dotwebstack.orchestrate.model.SourceTypeRef;
+import org.dotwebstack.orchestrate.model.transforms.Coalesce;
+import org.dotwebstack.orchestrate.model.transforms.TestPredicate;
 import org.dotwebstack.orchestrate.model.types.Field;
 import org.dotwebstack.orchestrate.model.types.ObjectType;
 import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
@@ -43,6 +46,11 @@ public final class TestFixtures {
             .field(Field.builder()
                 .name("plaatsnaam")
                 .type(ScalarTypes.STRING)
+                .cardinality(Field.Cardinality.REQUIRED)
+                .build())
+            .field(Field.builder()
+                .name("isHoofdadres")
+                .type(ScalarTypes.BOOLEAN)
                 .cardinality(Field.Cardinality.REQUIRED)
                 .build())
             .build())
@@ -110,6 +118,25 @@ public final class TestFixtures {
                 .cardinality(Field.Cardinality.REQUIRED)
                 .build())
             .build())
+        .objectType(ObjectType.builder()
+            .name("Verblijfsobject")
+            .field(Field.builder()
+                .name("identificatie")
+                .type(ScalarTypes.STRING)
+                .cardinality(Field.Cardinality.REQUIRED)
+                .identifier(true)
+                .build())
+            .field(Field.builder()
+                .name("heeftAlsHoofdadres")
+                .type(ObjectTypeRef.forType("Nummeraanduiding"))
+                .cardinality(Field.Cardinality.REQUIRED)
+                .build())
+            .field(Field.builder()
+                .name("heeftAlsNevenadres")
+                .type(ObjectTypeRef.forType("Nummeraanduiding"))
+                .cardinality(Field.Cardinality.MULTI)
+                .build())
+            .build())
         .build();
 
     var adresMapping = ObjectTypeMapping.builder()
@@ -129,6 +156,11 @@ public final class TestFixtures {
         .fieldMapping("plaatsnaam", FieldMapping.builder()
             .sourcePath(FieldPath.fromString("ligtIn/naam"))
             .sourcePath(FieldPath.fromString("ligtAan/ligtIn/naam"))
+            .transform(new Coalesce())
+            .build())
+        .fieldMapping("isHoofdadres", FieldMapping.builder()
+            .sourcePath(FieldPath.fromString("Verblijfsobject:heeftAlsHoofdadres/identificatie"))
+            .transform(new TestPredicate(Objects::nonNull))
             .build())
         .build();
 

@@ -114,7 +114,7 @@ public final class SchemaFactory {
 
     var type = switch (typeName) {
       case "Integer" -> new TypeName("Int");
-      case "String" -> new TypeName(typeName);
+      case "String", "Boolean" -> new TypeName(typeName);
       default -> throw new RuntimeException("Type unknown: " + typeName);
     };
 
