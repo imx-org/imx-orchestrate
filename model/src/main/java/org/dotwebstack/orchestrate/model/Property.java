@@ -1,23 +1,10 @@
 package org.dotwebstack.orchestrate.model;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
+public interface Property {
 
-@Getter
-@SuperBuilder(toBuilder = true)
-public abstract class Property {
+  String getName();
 
-  private final String name;
+  boolean isIdentifier();
 
-  @Builder.Default
-  private final boolean identifier = false;
-
-  public boolean isAttribute() {
-    return this instanceof Attribute;
-  }
-
-  public boolean isRelation() {
-    return this instanceof Relation;
-  }
+  Cardinality getCardinality();
 }
