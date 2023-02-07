@@ -82,9 +82,9 @@ public class GatewayConfiguration {
             .get("identificatie");
 
         return switch (typeName) {
-          case "Nummeraanduiding" -> Mono.just(num.get(objectKey));
-          case "OpenbareRuimte" -> Mono.just(opr.get(objectKey));
-          case "Woonplaats" -> Mono.just(wpl.get(objectKey));
+          case "Nummeraanduiding" -> Mono.justOrEmpty(num.get(objectKey));
+          case "OpenbareRuimte" -> Mono.justOrEmpty(opr.get(objectKey));
+          case "Woonplaats" -> Mono.justOrEmpty(wpl.get(objectKey));
           default -> Mono.error(() -> new RuntimeException("Error!"));
         };
       }
