@@ -6,6 +6,10 @@ objectTypeMappings:
         sourcePath: identificatie
       huisnummer:
         sourcePath: huisnummer
+      huisnummertoevoeging:
+        sourcePath: huisnummertoevoeging
+      huisletter:
+        sourcePath: huisletter
       postcode:
         sourcePath: postcode
       straatnaam:

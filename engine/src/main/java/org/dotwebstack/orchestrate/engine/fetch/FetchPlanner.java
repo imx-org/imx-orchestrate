@@ -158,7 +158,8 @@ public final class FetchPlanner {
   private Map<String, Object> mapResult(Map<Property, PropertyMapping> propertyMappings, Map<String, Object> result) {
     return propertyMappings.entrySet()
         .stream()
-        .collect(toMap(entry -> entry.getKey().getName(), entry -> mapPropertyResult(entry.getValue(), result)));
+        .collect(HashMap::new, (acc, entry) -> acc.put(entry.getKey().getName(), mapPropertyResult(entry.getValue(),
+            result)), HashMap::putAll);
   }
 
   private Object mapPropertyResult(PropertyMapping propertyMapping, Map<String, Object> result) {

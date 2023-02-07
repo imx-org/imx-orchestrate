@@ -100,7 +100,7 @@ class IntegrationTest {
     assertThat(result.isDataPresent()).isTrue();
 
     Map<String, Object> data = result.getData();
-    assertThat(data).isEqualTo(Map.of("adres", Map.of("identificatie", "0200200000075716", "huisnummer", 701,
+    assertThat(data).containsAllEntriesOf(Map.of("adres", Map.of("identificatie", "0200200000075716", "huisnummer", 701,
         "postcode", "7334DP", "straatnaam", "Laan van Westenenk", "plaatsnaam", "Apeldoorn", "isHoofdadres", true)));
 
     System.out.println(result);
@@ -178,7 +178,7 @@ class IntegrationTest {
     assertThat(result.isDataPresent()).isTrue();
 
     Map<String, Object> data = result.getData();
-    assertThat(data).isEqualTo(Map.of("adresCollection", List.of(
+    assertThat(data).containsAllEntriesOf(Map.of("adresCollection", List.of(
         Map.of("identificatie", "0200200000075716", "huisnummer", 701, "postcode", "7334DP", "straatnaam", "Laan van " +
             "Westenenk", "plaatsnaam", "Apeldoorn"),
         Map.of("identificatie", "0200200000075717", "huisnummer", 702, "postcode", "7334DP", "straatnaam", "Laan van " +

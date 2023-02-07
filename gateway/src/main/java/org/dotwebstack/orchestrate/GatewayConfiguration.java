@@ -59,7 +59,7 @@ public class GatewayConfiguration {
         "ligtAan", Map.of("identificatie", "0200300022472362")));
     num.put("0200200000075717", Map.of("identificatie", "0200200000075717", "huisnummer", 702, "postcode", "7334DP",
         "ligtAan", Map.of("identificatie", "0200300022472362")));
-    num.put("0200200000075718", Map.of("identificatie", "0200200000075718", "huisnummer", 703, "postcode", "7334DP",
+    num.put("0200200000075718", Map.of("identificatie", "0200200000075718", "huisnummer", 703, "huisnummertoevoeging", "8", "huisletter", "C", "postcode", "7334DP",
         "ligtAan", Map.of("identificatie", "0200300022472362"), "ligtIn", Map.of("identificatie", "2258")));
 
     var vbo = new LinkedHashMap<String, Map<String, Object>>();
