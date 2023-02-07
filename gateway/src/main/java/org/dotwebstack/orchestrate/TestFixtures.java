@@ -3,20 +3,18 @@ package org.dotwebstack.orchestrate;
 import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.dotwebstack.orchestrate.model.Attribute;
 import org.dotwebstack.orchestrate.model.Cardinality;
-import org.dotwebstack.orchestrate.model.PropertyMapping;
-import org.dotwebstack.orchestrate.model.PropertyPath;
 import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.model.ModelMapping;
-import org.dotwebstack.orchestrate.model.ObjectTypeMapping;
+import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.Relation;
-import org.dotwebstack.orchestrate.model.SourceTypeRef;
 import org.dotwebstack.orchestrate.model.transforms.Coalesce;
 import org.dotwebstack.orchestrate.model.transforms.TestPredicate;
-import org.dotwebstack.orchestrate.model.Attribute;
-import org.dotwebstack.orchestrate.model.ObjectType;
+import org.dotwebstack.orchestrate.model.transforms.TransformRegistry;
 import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.types.ScalarTypes;
+import org.dotwebstack.orchestrate.parser.yaml.YamlModelMappingParser;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class TestFixtures {
@@ -145,38 +143,22 @@ public final class TestFixtures {
             .build())
         .build();
 
-    var adresMapping = ObjectTypeMapping.builder()
-        .sourceRoot(SourceTypeRef.fromString("bag:Nummeraanduiding"))
-        .propertyMapping("identificatie", PropertyMapping.builder()
-            .sourcePath(PropertyPath.fromString("identificatie"))
-            .build())
-        .propertyMapping("huisnummer", PropertyMapping.builder()
-            .sourcePath(PropertyPath.fromString("huisnummer"))
-            .build())
-        .propertyMapping("postcode", PropertyMapping.builder()
-            .sourcePath(PropertyPath.fromString("postcode"))
-            .build())
-        .propertyMapping("straatnaam", PropertyMapping.builder()
-            .sourcePath(PropertyPath.fromString("ligtAan/naam"))
-            .build())
-        .propertyMapping("plaatsnaam", PropertyMapping.builder()
-            .sourcePath(PropertyPath.fromString("ligtIn/naam"))
-            .sourcePath(PropertyPath.fromString("ligtAan/ligtIn/naam"))
-            .transform(Coalesce.getInstance())
-            .build())
-        .propertyMapping("isHoofdadres", PropertyMapping.builder()
-            .sourcePath(PropertyPath.fromString("isHoofdadresVan/identificatie"))
-            .transform(TestPredicate.builder()
-                .name("nonNull")
-                .predicate(Objects::nonNull)
-                .build())
+    var transformRegistry = TransformRegistry.builder()
+        .register(Coalesce.getInstance())
+        .register(TestPredicate.builder()
+            .name("nonNull")
+            .predicate(Objects::nonNull)
             .build())
         .build();
 
-    return ModelMapping.builder()
+    var yamlMapper = YamlModelMappingParser.getInstance(transformRegistry);
+    var inputStream = TestFixtures.class.getResourceAsStream("/config/adresmapping.yaml");
+
+    var modelMapping = yamlMapper.parse(inputStream);
+
+    return modelMapping.toBuilder()
         .targetModel(targetModel)
         .sourceModel("bag", sourceModel)
-        .objectTypeMapping("Adres", adresMapping)
         .build();
   }
 }
