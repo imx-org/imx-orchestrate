@@ -9,13 +9,10 @@ import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 @Getter
 @ToString
 @SuperBuilder(toBuilder = true)
-public final class Relation extends Property {
+public final class Relation extends AbstractProperty {
 
   private final ObjectTypeRef target;
 
   @Builder.Default
   private final Cardinality sourceCardinality = Cardinality.MULTI;
-
-  @Builder.Default
-  private final Cardinality targetCardinality = Cardinality.OPTIONAL;
 }
