@@ -1,6 +1,6 @@
 package org.dotwebstack.orchestrate.model;
 
-public final class ModelException extends RuntimeException{
+public final class ModelException extends RuntimeException {
 
   public ModelException(String message) {
     super(message);

@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Map;
 import lombok.Singular;
 import lombok.experimental.SuperBuilder;
-import org.dotwebstack.orchestrate.model.types.ObjectType;
-import org.dotwebstack.orchestrate.source.SelectedField;
+import org.dotwebstack.orchestrate.model.ObjectType;
+import org.dotwebstack.orchestrate.source.SelectedProperty;
 import org.dotwebstack.orchestrate.source.Source;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -21,7 +21,7 @@ abstract class AbstractFetchOperation implements FetchOperation {
   protected final ObjectType objectType;
 
   @Singular
-  protected final List<SelectedField> selectedFields;
+  protected final List<SelectedProperty> selectedProperties;
 
   @Singular
   protected final Map<String, FetchOperation> nextOperations;

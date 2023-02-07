@@ -38,16 +38,16 @@ class IntegrationTest {
 
           return switch (objectType.getName()) {
             case "Nummeraanduiding":
-              assertThat(objectRequest.getSelectedFields()).hasSize(5);
+              assertThat(objectRequest.getSelectedProperties()).hasSize(5);
               assertThat(objectkey).isEqualTo(Map.of("identificatie", "0200200000075716"));
               yield Mono.just(Map.of("identificatie", "0200200000075716", "huisnummer", 701, "postcode", "7334DP",
                   "ligtAan", Map.of("identificatie", "0200300022472362")));
             case "OpenbareRuimte":
-              assertThat(objectRequest.getSelectedFields()).hasSize(2);
+              assertThat(objectRequest.getSelectedProperties()).hasSize(2);
               assertThat(objectkey).isEqualTo(Map.of("identificatie", "0200300022472362"));
               yield Mono.just(Map.of("naam", "Laan van Westenenk", "ligtIn", Map.of("identificatie", "3560")));
             case "Woonplaats":
-              assertThat(objectRequest.getSelectedFields()).hasSize(1);
+              assertThat(objectRequest.getSelectedProperties()).hasSize(1);
               assertThat(objectkey).isEqualTo(Map.of("identificatie", "3560"));
               yield Mono.just(Map.of("naam", "Apeldoorn"));
             default:
@@ -101,11 +101,11 @@ class IntegrationTest {
 
           return switch (objectType.getName()) {
             case "OpenbareRuimte":
-              assertThat(objectRequest.getSelectedFields()).hasSize(2);
+              assertThat(objectRequest.getSelectedProperties()).hasSize(2);
               assertThat(objectkey).isEqualTo(Map.of("identificatie", "0200300022472362"));
               yield Mono.just(Map.of("naam", "Laan van Westenenk", "ligtIn", Map.of("identificatie", "3560")));
             case "Woonplaats":
-              assertThat(objectRequest.getSelectedFields()).hasSize(1);
+              assertThat(objectRequest.getSelectedProperties()).hasSize(1);
               assertThat(objectkey).isEqualTo(Map.of("identificatie", "3560"));
               yield Mono.just(Map.of("naam", "Apeldoorn"));
             default:
@@ -120,7 +120,7 @@ class IntegrationTest {
 
           return switch (objectType.getName()) {
             case "Nummeraanduiding":
-              assertThat(collectionRequest.getSelectedFields()).hasSize(5);
+              assertThat(collectionRequest.getSelectedProperties()).hasSize(5);
               yield Flux.just(Map.of("identificatie", "0200200000075716", "huisnummer", 701, "postcode", "7334DP",
                       "ligtAan", Map.of("identificatie", "0200300022472362")),
                   Map.of("identificatie", "0200200000075717", "huisnummer", 702, "postcode", "7334DP", "ligtAan",

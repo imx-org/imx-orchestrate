@@ -2,11 +2,8 @@ package org.dotwebstack.orchestrate.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.dotwebstack.orchestrate.model.types.Field;
-import org.dotwebstack.orchestrate.model.types.Field.Cardinality;
-import org.dotwebstack.orchestrate.model.types.ObjectType;
-import org.dotwebstack.orchestrate.model.types.ScalarTypes;
 import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
+import org.dotwebstack.orchestrate.model.types.ScalarTypes;
 import org.junit.jupiter.api.Test;
 
 class ModelTest {
@@ -16,41 +13,38 @@ class ModelTest {
     var model = Model.builder()
         .objectType(ObjectType.builder()
             .name("Person")
-            .field(Field.builder()
+            .property(Attribute.builder()
                 .name("id")
                 .type(ScalarTypes.INTEGER)
                 .cardinality(Cardinality.REQUIRED)
                 .identifier(true)
                 .build())
-            .field(Field.builder()
+            .property(Attribute.builder()
                 .name("name")
                 .type(ScalarTypes.STRING)
                 .build())
             .build())
         .objectType(ObjectType.builder()
             .name("City")
-            .field(Field.builder()
+            .property(Attribute.builder()
                 .name("id")
                 .type(ScalarTypes.INTEGER)
                 .cardinality(Cardinality.REQUIRED)
                 .identifier(true)
                 .build())
-            .field(Field.builder()
+            .property(Attribute.builder()
                 .name("name")
                 .type(ScalarTypes.STRING)
                 .cardinality(Cardinality.REQUIRED)
                 .build())
-            .field(Field.builder()
+            .property(Relation.builder()
                 .name("mayor")
-                .type(ObjectTypeRef.forType("Person"))
+                .target(ObjectTypeRef.forType("Person"))
                 .build())
             .build())
         .build();
 
     var cityType = model.getObjectType("City");
-    var mayorField = cityType.getField("mayor");
-
-    assertThat(cityType.getFields()).hasSize(3);
-    assertThat(mayorField.getType()).isInstanceOf(ObjectTypeRef.class);
+    assertThat(cityType.getProperties()).hasSize(3);
   }
 }

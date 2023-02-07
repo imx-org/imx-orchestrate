@@ -13,7 +13,7 @@ final class CollectionFetchOperation extends AbstractFetchOperation {
   public Flux<Map<String, Object>> execute(Map<String, Object> input) {
     var collectionRequest = CollectionRequest.builder()
         .objectType(objectType)
-        .selectedFields(selectedFields)
+        .selectedProperties(selectedProperties)
         .build();
 
     return source.getDataRepository()

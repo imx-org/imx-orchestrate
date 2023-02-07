@@ -8,8 +8,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
-import org.dotwebstack.orchestrate.parser.yaml.model.FieldMappingMixin;
-import org.dotwebstack.orchestrate.model.FieldMapping;
+import org.dotwebstack.orchestrate.model.PropertyMapping;
+import org.dotwebstack.orchestrate.parser.yaml.model.PropertyMappingMixin;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 
 public class YamlModelMappingParser {
@@ -18,7 +18,7 @@ public class YamlModelMappingParser {
 
   public static YamlModelMappingParser getInstance() {
     var module = new SimpleModule();
-    module.setMixInAnnotation(FieldMapping.FieldMappingBuilder.class, FieldMappingMixin.class);
+    module.setMixInAnnotation(PropertyMapping.PropertyMappingBuilder.class, PropertyMappingMixin.class);
     return new YamlModelMappingParser(new YAMLFactory(), Set.of(module));
   }
 

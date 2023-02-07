@@ -17,7 +17,7 @@ final class ObjectFetchOperation extends AbstractFetchOperation {
     var objectRequest = ObjectRequest.builder()
         .objectType(objectType)
         .objectKey(keyExtractor.apply(input))
-        .selectedFields(selectedFields)
+        .selectedProperties(selectedProperties)
         .build();
 
     return source.getDataRepository()
