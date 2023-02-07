@@ -158,11 +158,16 @@ public final class TestFixtures {
         .propertyMapping("plaatsnaam", PropertyMapping.builder()
             .sourcePath(PropertyPath.fromString("ligtIn/naam"))
             .sourcePath(PropertyPath.fromString("ligtAan/ligtIn/naam"))
-            .transform(new Coalesce())
+            .transform(Coalesce.builder()
+                .name("coalesce")
+                .build())
             .build())
         .propertyMapping("isHoofdadres", PropertyMapping.builder()
             .sourcePath(PropertyPath.fromString("Verblijfsobject:heeftAlsHoofdadres/identificatie"))
-            .transform(new TestPredicate(Objects::nonNull))
+            .transform(TestPredicate.builder()
+                .name("nonNull")
+                .predicate(Objects::nonNull)
+                .build())
             .build())
         .build();
 
