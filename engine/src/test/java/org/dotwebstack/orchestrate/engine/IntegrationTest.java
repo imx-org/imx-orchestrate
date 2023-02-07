@@ -55,6 +55,20 @@ class IntegrationTest {
           };
         });
 
+    when(dataRepositoryStub.find(any(CollectionRequest.class)))
+        .thenAnswer(invocation -> {
+          var collectionRequest = (CollectionRequest) invocation.getArgument(0);
+          var objectType = collectionRequest.getObjectType();
+
+          return switch (objectType.getName()) {
+            case "Verblijfsobject":
+              assertThat(collectionRequest.getSelectedProperties()).hasSize(1);
+              yield Flux.just(Map.of("identificatie", "0200010000130331"));
+            default:
+              yield Flux.error(() -> new RuntimeException("Error!"));
+          };
+        });
+
     var orchestration = Orchestration.builder()
         .modelMapping(createModelMapping())
         .source("bag", () -> dataRepositoryStub)
@@ -74,6 +88,7 @@ class IntegrationTest {
               postcode
               straatnaam
               plaatsnaam
+              isHoofdadres
             }
           }
         """);
@@ -86,7 +101,7 @@ class IntegrationTest {
 
     Map<String, Object> data = result.getData();
     assertThat(data).isEqualTo(Map.of("adres", Map.of("identificatie", "0200200000075716", "huisnummer", 701,
-        "postcode", "7334DP", "straatnaam", "Laan van Westenenk", "plaatsnaam", "Apeldoorn")));
+        "postcode", "7334DP", "straatnaam", "Laan van Westenenk", "plaatsnaam", "Apeldoorn", "isHoofdadres", true)));
 
     System.out.println(result);
   }

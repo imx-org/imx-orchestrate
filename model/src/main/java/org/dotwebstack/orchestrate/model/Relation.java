@@ -13,6 +13,8 @@ public final class Relation extends AbstractProperty {
 
   private final ObjectTypeRef target;
 
+  private final String inverseName;
+
   @Builder.Default
-  private final Cardinality sourceCardinality = Cardinality.MULTI;
+  private final Cardinality inverseCardinality = Cardinality.MULTI;
 }

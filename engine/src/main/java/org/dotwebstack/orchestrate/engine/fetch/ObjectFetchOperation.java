@@ -14,9 +14,15 @@ final class ObjectFetchOperation extends AbstractFetchOperation {
   private final UnaryOperator<Map<String, Object>> keyExtractor;
 
   public Mono<Map<String, Object>> execute(Map<String, Object> input) {
+    var mappedInput = inputMapper.apply(input);
+
+    if (mappedInput == null) {
+      return Mono.empty();
+    }
+
     var objectRequest = ObjectRequest.builder()
         .objectType(objectType)
-        .objectKey(keyExtractor.apply(input))
+        .objectKey(keyExtractor.apply(mappedInput))
         .selectedProperties(selectedProperties)
         .build();
 

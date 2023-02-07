@@ -1,10 +1,12 @@
 package org.dotwebstack.orchestrate.model;
 
+import static java.util.Collections.unmodifiableMap;
+import static java.util.stream.Collectors.toMap;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
@@ -21,9 +23,26 @@ public final class Model {
 
   @Builder(toBuilder = true)
   private Model(@Singular List<ObjectType> objectTypes) {
-    this.objectTypes = objectTypes;
-    objectTypeMap = this.objectTypes.stream()
-        .collect(Collectors.toUnmodifiableMap(ObjectType::getName, Function.identity()));
+    // Pre-collect object types in map structure
+    var mutableObjectTypeMap = objectTypes.stream()
+        .collect(toMap(ObjectType::getName, Function.identity()));
+
+    // Discover & add inverse relation properties
+    objectTypes.forEach(objectType -> objectType.getProperties(Relation.class)
+        .forEach(relation -> Optional.ofNullable(relation.getInverseName())
+            .ifPresent(inverseName -> {
+              var targetRef = relation.getTarget();
+
+              mutableObjectTypeMap.computeIfPresent(targetRef.getName(), (targetName, targetType) -> targetType.toBuilder()
+                  .property(InverseRelation.builder()
+                      .target(objectType.getRef())
+                      .relation(relation)
+                      .build())
+                  .build());
+            })));
+
+    this.objectTypes = List.copyOf(mutableObjectTypeMap.values());
+    this.objectTypeMap = unmodifiableMap(mutableObjectTypeMap);
   }
 
   public ObjectType getObjectType(ObjectTypeRef typeRef) {

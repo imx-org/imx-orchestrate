@@ -71,13 +71,20 @@ public class GatewayConfiguration {
 
       @Override
       public Flux<Map<String, Object>> find(CollectionRequest collectionRequest) {
-        return Flux.just(
-            Map.of("identificatie", "0200200000075716", "huisnummer", 701, "postcode", "7334DP", "ligtAan", Map.of(
-                "identificatie", "0200300022472362")),
-            Map.of("identificatie", "0200200000075717", "huisnummer", 702, "postcode", "7334DP", "ligtAan", Map.of(
-                "identificatie", "0200300022472362")),
-            Map.of("identificatie", "0200200000075718", "huisnummer", 703, "postcode", "7334DP", "ligtAan", Map.of(
-                "identificatie", "0200300022472362")));
+        var typeName = collectionRequest.getObjectType()
+            .getName();
+
+        return switch (typeName) {
+          case "Nummeraanduiding" -> Flux.just(
+              Map.of("identificatie", "0200200000075716", "huisnummer", 701, "postcode", "7334DP", "ligtAan", Map.of(
+                  "identificatie", "0200300022472362")),
+              Map.of("identificatie", "0200200000075717", "huisnummer", 702, "postcode", "7334DP", "ligtAan", Map.of(
+                  "identificatie", "0200300022472362")),
+              Map.of("identificatie", "0200200000075718", "huisnummer", 703, "postcode", "7334DP", "ligtAan", Map.of(
+                  "identificatie", "0200300022472362")));
+          case "Verblijfsobject" -> Flux.just(Map.of("identificatie", "0200010000130331"));
+          default -> Flux.error(() -> new RuntimeException("Error!"));
+        };
       }
     };
   }

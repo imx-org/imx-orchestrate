@@ -3,6 +3,8 @@ package org.dotwebstack.orchestrate.engine.fetch;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
+import lombok.Builder;
 import lombok.Singular;
 import lombok.experimental.SuperBuilder;
 import org.dotwebstack.orchestrate.model.ObjectType;
@@ -26,19 +28,14 @@ abstract class AbstractFetchOperation implements FetchOperation {
   @Singular
   protected final Map<String, FetchOperation> nextOperations;
 
+  @Builder.Default
+  protected final UnaryOperator<Map<String, Object>> inputMapper = UnaryOperator.identity();
+
   protected Mono<Map<String, Object>> executeNextOperations(Map<String, Object> input) {
     return Flux.fromIterable(nextOperations.entrySet())
         .flatMap(entry -> {
-          @SuppressWarnings("unchecked")
-          var nestedInput = (Map<String, Object>) input.get(entry.getKey());
-
-          if (nestedInput == null) {
-            return Mono.empty();
-          }
-
           var nextOperation = entry.getValue();
-
-          return Mono.from(nextOperation.execute(nestedInput))
+          return Mono.from(nextOperation.execute(input))
               .map(nestedResult -> Tuples.of(entry.getKey(), nestedResult));
         })
         .collectMap(Tuple2::getT1, Tuple2::getT2, () -> new HashMap<>(input));

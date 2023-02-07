@@ -1,6 +1,11 @@
 package org.dotwebstack.orchestrate.source;
 
+import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
+@Getter
 @SuperBuilder(toBuilder = true)
-public final class CollectionRequest extends AbstractDataRequest {}
+public final class CollectionRequest extends AbstractDataRequest {
+
+  private final FilterExpression filter;
+}

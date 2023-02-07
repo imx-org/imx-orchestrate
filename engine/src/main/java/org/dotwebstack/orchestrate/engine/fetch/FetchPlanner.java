@@ -9,6 +9,8 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.cast;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.inputMapper;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.selectIdentity;
 
@@ -18,14 +20,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.function.UnaryOperator;
 import lombok.RequiredArgsConstructor;
-import org.dotwebstack.orchestrate.model.Property;
-import org.dotwebstack.orchestrate.model.PropertyPath;
+import org.dotwebstack.orchestrate.model.InverseRelation;
 import org.dotwebstack.orchestrate.model.ModelMapping;
-import org.dotwebstack.orchestrate.model.PropertyMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
+import org.dotwebstack.orchestrate.model.Property;
+import org.dotwebstack.orchestrate.model.PropertyMapping;
+import org.dotwebstack.orchestrate.model.PropertyPath;
 import org.dotwebstack.orchestrate.model.Relation;
+import org.dotwebstack.orchestrate.model.transforms.Transform;
+import org.dotwebstack.orchestrate.source.FilterDefinition;
 import org.dotwebstack.orchestrate.source.SelectedProperty;
 import org.dotwebstack.orchestrate.source.Source;
 import org.reactivestreams.Publisher;
@@ -69,7 +74,7 @@ public final class FetchPlanner {
     // TODO: Refactor
     var isCollection = isList(unwrapNonNull(environment.getFieldType()));
     var fetchPublisher = fetchSourceObject(sourceType, unmodifiableList(sourcePaths), sourceRoot.getModelAlias(),
-        isCollection).execute(environment.getArguments());
+        isCollection, UnaryOperator.identity()).execute(environment.getArguments());
 
     if (fetchPublisher instanceof Mono<?>) {
       return Mono.from(fetchPublisher)
@@ -81,12 +86,11 @@ public final class FetchPlanner {
   }
 
   private FetchOperation fetchSourceObject(ObjectType sourceType, List<PropertyPath> sourcePaths, String sourceAlias,
-      boolean isCollection) {
+      boolean isCollection, UnaryOperator<Map<String, Object>> inputMapper) {
     var selectedProperties = new ArrayList<SelectedProperty>();
 
     sourcePaths.stream()
         .filter(PropertyPath::isLeaf)
-        .filter(not(PropertyPath::hasOrigin))
         .map(sourcePath -> new SelectedProperty(sourceType.getProperty(sourcePath.getFirstSegment())))
         .forEach(selectedProperties::add);
 
@@ -94,17 +98,41 @@ public final class FetchPlanner {
 
     sourcePaths.stream()
         .filter(not(PropertyPath::isLeaf))
-        .filter(not(PropertyPath::hasOrigin))
         .collect(groupingBy(PropertyPath::getFirstSegment, mapping(PropertyPath::withoutFirstSegment, toList())))
         .forEach((propertyName, nestedSourcePaths) -> {
           var property = sourceType.getProperty(propertyName);
+
+          if (property instanceof InverseRelation relationProperty) {
+            var originType = modelMapping.getSourceModel(sourceAlias)
+                .getObjectType(relationProperty.getTarget());
+
+            var filter = FilterDefinition.builder()
+                .propertyPath(nestedSourcePaths.get(0).prependSegment(propertyName))
+                .valueExtractor(input -> input.get("identificatie"))
+                .build();
+
+            var nestedProperties = nestedSourcePaths.stream()
+                .map(sourcePath -> new SelectedProperty(originType.getProperty(sourcePath.getFirstSegment())))
+                .toList();
+
+            nextOperations.put(propertyName, CollectionFetchOperation.builder()
+                .source(sources.get(sourceAlias))
+                .objectType(originType)
+                .filter(filter)
+                .selectedProperties(nestedProperties)
+                .single(true)
+                .build());
+
+            return;
+          }
 
           // TODO: Differing model aliases & type safety
           var nestedObjectType = modelMapping.getSourceModel(sourceAlias)
               .getObjectType(((Relation) property).getTarget());
 
           selectedProperties.add(new SelectedProperty(property, selectIdentity(nestedObjectType)));
-          nextOperations.put(propertyName, fetchSourceObject(nestedObjectType, nestedSourcePaths, sourceAlias, false));
+          nextOperations.put(propertyName, fetchSourceObject(nestedObjectType, nestedSourcePaths, sourceAlias, false,
+              inputMapper(propertyName)));
         });
 
     if (isCollection) {
@@ -112,6 +140,7 @@ public final class FetchPlanner {
           .source(sources.get(sourceAlias))
           .objectType(sourceType)
           .selectedProperties(unmodifiableList(selectedProperties))
+          .inputMapper(inputMapper)
           .nextOperations(unmodifiableMap(nextOperations))
           .build();
     }
@@ -120,6 +149,7 @@ public final class FetchPlanner {
         .source(sources.get(sourceAlias))
         .objectType(sourceType)
         .selectedProperties(unmodifiableList(selectedProperties))
+        .inputMapper(inputMapper)
         .keyExtractor(keyExtractor(sourceType))
         .nextOperations(unmodifiableMap(nextOperations))
         .build();
@@ -132,11 +162,21 @@ public final class FetchPlanner {
   }
 
   private Object mapPropertyResult(PropertyMapping propertyMapping, Map<String, Object> result) {
-    return propertyMapping.getSourcePaths()
+    var sourceValues = propertyMapping.getSourcePaths()
         .stream()
         .map(sourcePath -> mapPropertyResult(sourcePath, result))
-        .filter(Objects::nonNull)
-        .findFirst();
+        .toList();
+
+    if (sourceValues.size() == 1) {
+      return transform(sourceValues.get(0), propertyMapping.getTransforms());
+    }
+
+    return transform(sourceValues, propertyMapping.getTransforms());
+  }
+
+  private Object transform(Object value, List<Transform> transforms) {
+    return transforms.stream()
+        .reduce(value, (acc, transform) -> transform.apply(acc), (a, b) -> a);
   }
 
   private Object mapPropertyResult(PropertyPath sourcePath, Map<String, Object> result) {
@@ -146,8 +186,7 @@ public final class FetchPlanner {
       return result.get(firstSegment);
     }
 
-    @SuppressWarnings("unchecked")
-    var propertyValue = (Map<String, Object>) result.get(firstSegment);
+    Map<String, Object> propertyValue = cast(result.get(firstSegment));
 
     if (propertyValue == null) {
       return null;
