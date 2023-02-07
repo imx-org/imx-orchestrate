@@ -2,15 +2,19 @@ package org.dotwebstack.orchestrate.model.transforms;
 
 import java.util.Collection;
 import java.util.Objects;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.extern.jackson.Jacksonized;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 
-@Jacksonized
-@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Coalesce implements Transform {
 
-  private final String name;
+  private static final String NAME = "coalesce";
+
+  private static final Coalesce INSTANCE = new Coalesce();
+
+  public static Coalesce getInstance() {
+    return INSTANCE;
+  }
 
   @Override
   public Object apply(Object value) {
@@ -26,6 +30,6 @@ public class Coalesce implements Transform {
 
   @Override
   public String getName() {
-    return name;
+    return NAME;
   }
 }

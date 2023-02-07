@@ -12,9 +12,7 @@ class YamlModelMappingParserTest {
   @Test
   void mapWorks() {
     var transformRegistry = TransformRegistry.builder()
-        .register(Coalesce.builder()
-            .name("coalesce")
-            .build())
+        .register(Coalesce.getInstance())
         .register(TestPredicate.builder()
             .name("nonNull")
             .predicate(Objects::nonNull)
