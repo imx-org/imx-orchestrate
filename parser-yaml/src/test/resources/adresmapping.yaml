@@ -4,14 +4,18 @@ objectTypeMappings:
     sourceRoot: bag:Nummeraanduiding
     propertyMappings:
       identificatie:
-        sourcePaths: identificatie
+        sourcePath: identificatie
       huisnummer:
-        sourcePaths: huisnummer
+        sourcePath: huisnummer
       postcode:
-        sourcePaths: postcode
+        sourcePath: postcode
       straatnaam:
-        sourcePaths: ligtAan/naam
+        sourcePath: ligtAan/naam
       plaatsnaam:
         sourcePaths:
           - ligtIn/naam
           - ligtAan/ligtIn/naam
+        transform: coalesce
+      isHoofdadres:
+        sourcePath: isHoofdadresVan
+        transform: nonNull
