@@ -7,15 +7,19 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.dotwebstack.orchestrate.model.Attribute;
 import org.dotwebstack.orchestrate.model.Cardinality;
-import org.dotwebstack.orchestrate.model.ComponentRegistry;
 import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
+import org.dotwebstack.orchestrate.model.ObjectTypeMapping;
+import org.dotwebstack.orchestrate.model.PropertyMapping;
+import org.dotwebstack.orchestrate.model.PropertyPath;
+import org.dotwebstack.orchestrate.model.PropertyPathMapping;
 import org.dotwebstack.orchestrate.model.Relation;
+import org.dotwebstack.orchestrate.model.SourceTypeRef;
+import org.dotwebstack.orchestrate.model.combiners.Concat;
 import org.dotwebstack.orchestrate.model.transforms.TestPredicate;
 import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.types.ScalarTypes;
-import org.dotwebstack.orchestrate.parser.yaml.YamlModelMappingParser;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class TestFixtures {
@@ -84,6 +88,11 @@ final class TestFixtures {
             .property(Attribute.builder()
                 .name("isHoofdadres")
                 .type(ScalarTypes.BOOLEAN)
+                .cardinality(Cardinality.REQUIRED)
+                .build())
+            .property(Attribute.builder()
+                .name("omschrijving")
+                .type(ScalarTypes.STRING)
                 .cardinality(Cardinality.REQUIRED)
                 .build())
             .build())
@@ -186,20 +195,95 @@ final class TestFixtures {
             .build())
         .build();
 
-    var mappingRegistry = new ComponentRegistry()
-        .registerTransform(TestPredicate.builder()
-            .name("nonNull")
-            .predicate(Objects::nonNull)
-            .build());
+    var adresMapping = ObjectTypeMapping.builder()
+        .sourceRoot(SourceTypeRef.fromString("bag:Nummeraanduiding"))
+        .propertyMapping("identificatie", PropertyMapping.builder()
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("identificatie"))
+                .build())
+            .build())
+        .propertyMapping("huisnummer", PropertyMapping.builder()
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("huisnummer"))
+                .build())
+            .build())
+        .propertyMapping("huisnummertoevoeging", PropertyMapping.builder()
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("huisnummertoevoeging"))
+                .build())
+            .build())
+        .propertyMapping("huisletter", PropertyMapping.builder()
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("huisletter"))
+                .build())
+            .build())
+        .propertyMapping("postcode", PropertyMapping.builder()
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("postcode"))
+                .build())
+            .build())
+        .propertyMapping("straatnaam", PropertyMapping.builder()
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("ligtAan/naam"))
+                .build())
+            .build())
+        .propertyMapping("plaatsnaam", PropertyMapping.builder()
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("ligtIn/naam"))
+                .path(PropertyPath.fromString("ligtAan/ligtIn/naam"))
+                .build())
+            .build())
+        .propertyMapping("isHoofdadres", PropertyMapping.builder()
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("isHoofdadresVan/identificatie"))
+                .transform(TestPredicate.builder()
+                    .name("nonNull")
+                    .predicate(Objects::nonNull)
+                    .build())
+                .build())
+            .build())
+        .propertyMapping("omschrijving", PropertyMapping.builder()
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("ligtAan/naam"))
+                .build())
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("huisnummer"))
+                .combiner(Concat.builder()
+                    .prefix(" ")
+                    .build())
+                .build())
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("huisletter"))
+                .combiner(Concat.builder()
+                    .prefix(" ")
+                    .build())
+                .build())
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("huisnummertoevoeging"))
+                .combiner(Concat.builder()
+                    .prefix("-")
+                    .build())
+                .build())
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("postcode"))
+                .combiner(Concat.builder()
+                    .prefix(", ")
+                    .build())
+                .build())
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("ligtIn/naam"))
+                .path(PropertyPath.fromString("ligtAan/ligtIn/naam"))
+                .combiner(Concat.builder()
+                    .prefix(" ")
+                    .build())
+                .build())
+            .build())
+        .build();
 
-    var yamlMapper = YamlModelMappingParser.getInstance(mappingRegistry);
-    var inputStream = TestFixtures.class.getResourceAsStream("/config/adresmapping.yaml");
-
-    var modelMapping = yamlMapper.parse(inputStream);
-
-    return modelMapping.toBuilder()
+    return ModelMapping.builder()
         .targetModel(targetModel)
         .sourceModel("bag", sourceModel)
+        .objectTypeMapping("Adres", adresMapping)
         .build();
   }
 }
