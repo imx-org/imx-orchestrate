@@ -15,7 +15,7 @@ import java.util.Set;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.PropertyMapping;
 import org.dotwebstack.orchestrate.model.transforms.Transform;
-import org.dotwebstack.orchestrate.model.transforms.TransformRegistry;
+import org.dotwebstack.orchestrate.model.MappingRegistry;
 import org.dotwebstack.orchestrate.parser.yaml.config.PropertyMappingMixin;
 import org.dotwebstack.orchestrate.parser.yaml.config.TransformDeserializer;
 
@@ -23,7 +23,7 @@ public class YamlModelMappingParser {
 
   private final ObjectMapper yamlObjectMapper;
 
-  public static YamlModelMappingParser getInstance(TransformRegistry transformRegistry) {
+  public static YamlModelMappingParser getInstance(MappingRegistry mappingRegistry) {
     var module = new SimpleModule()
         .setMixInAnnotation(PropertyMapping.PropertyMappingBuilder.class, PropertyMappingMixin.class)
         .setDeserializerModifier(new BeanDeserializerModifier() {
@@ -31,7 +31,7 @@ public class YamlModelMappingParser {
           public JsonDeserializer<?> modifyDeserializer(DeserializationConfig config, BeanDescription beanDesc,
                                                         JsonDeserializer<?> deserializer) {
             if (beanDesc.getBeanClass() == Transform.class) {
-              return new TransformDeserializer(transformRegistry);
+              return new TransformDeserializer(mappingRegistry);
             }
             return deserializer;
           }

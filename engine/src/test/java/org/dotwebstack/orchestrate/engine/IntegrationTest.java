@@ -38,7 +38,7 @@ class IntegrationTest {
 
           return switch (objectType.getName()) {
             case "Nummeraanduiding":
-              assertThat(objectRequest.getSelectedProperties()).hasSize(5);
+              assertThat(objectRequest.getSelectedProperties()).hasSize(7);
               assertThat(objectkey).isEqualTo(Map.of("identificatie", "0200200000075716"));
               yield Mono.just(Map.of("identificatie", "0200200000075716", "huisnummer", 701, "postcode", "7334DP",
                   "ligtAan", Map.of("identificatie", "0200300022472362")));
@@ -85,10 +85,13 @@ class IntegrationTest {
             adres(identificatie: "0200200000075716") {
               identificatie
               huisnummer
+              huisletter
+              huisnummertoevoeging
               postcode
               straatnaam
               plaatsnaam
               isHoofdadres
+              omschrijving
             }
           }
         """);
@@ -99,9 +102,19 @@ class IntegrationTest {
     assertThat(result.getErrors()).isEmpty();
     assertThat(result.isDataPresent()).isTrue();
 
-    Map<String, Object> data = result.getData();
-    assertThat(data).containsAllEntriesOf(Map.of("adres", Map.of("identificatie", "0200200000075716", "huisnummer", 701,
-        "postcode", "7334DP", "straatnaam", "Laan van Westenenk", "plaatsnaam", "Apeldoorn", "isHoofdadres", true)));
+    Map<String, Map<String, Object>> data = result.getData();
+    Map<String, Object> adres = data.get("adres");
+
+    assertThat(adres).isNotNull()
+        .containsEntry("identificatie", "0200200000075716")
+        .containsEntry("huisnummer", 701)
+        .containsEntry("huisletter", null)
+        .containsEntry("huisnummertoevoeging", null)
+        .containsEntry("postcode", "7334DP")
+        .containsEntry("straatnaam", "Laan van Westenenk")
+        .containsEntry("plaatsnaam", "Apeldoorn")
+        .containsEntry("isHoofdadres", true)
+        .containsEntry("omschrijving", "Laan van Westenenk 701");
 
     System.out.println(result);
   }
@@ -135,7 +148,7 @@ class IntegrationTest {
 
           return switch (objectType.getName()) {
             case "Nummeraanduiding":
-              assertThat(collectionRequest.getSelectedProperties()).hasSize(5);
+              assertThat(collectionRequest.getSelectedProperties()).hasSize(7);
               yield Flux.just(Map.of("identificatie", "0200200000075716", "huisnummer", 701, "postcode", "7334DP",
                       "ligtAan", Map.of("identificatie", "0200300022472362")),
                   Map.of("identificatie", "0200200000075717", "huisnummer", 702, "postcode", "7334DP", "ligtAan",
@@ -163,9 +176,13 @@ class IntegrationTest {
             adresCollection {
               identificatie
               huisnummer
+              huisletter
+              huisnummertoevoeging
               postcode
               straatnaam
               plaatsnaam
+              isHoofdadres
+              omschrijving
             }
           }
         """);

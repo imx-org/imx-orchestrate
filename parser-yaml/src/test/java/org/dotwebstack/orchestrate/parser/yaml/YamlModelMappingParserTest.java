@@ -4,16 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Objects;
 import org.dotwebstack.orchestrate.model.transforms.Coalesce;
 import org.dotwebstack.orchestrate.model.transforms.TestPredicate;
-import org.dotwebstack.orchestrate.model.transforms.TransformRegistry;
+import org.dotwebstack.orchestrate.model.MappingRegistry;
 import org.junit.jupiter.api.Test;
 
 class YamlModelMappingParserTest {
 
   @Test
   void mapWorks() {
-    var transformRegistry = TransformRegistry.builder()
+    var transformRegistry = MappingRegistry.builder()
         .register(Coalesce.getInstance())
-        .register(TestPredicate.builder()
+        .registerTransform(TestPredicate.builder()
             .name("nonNull")
             .predicate(Objects::nonNull)
             .build())

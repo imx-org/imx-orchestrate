@@ -3,18 +3,20 @@ package org.dotwebstack.orchestrate.engine;
 import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.dotwebstack.orchestrate.model.Attribute;
 import org.dotwebstack.orchestrate.model.Cardinality;
-import org.dotwebstack.orchestrate.model.PropertyMapping;
-import org.dotwebstack.orchestrate.model.PropertyPath;
 import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.model.ModelMapping;
+import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.ObjectTypeMapping;
+import org.dotwebstack.orchestrate.model.PropertyMapping;
+import org.dotwebstack.orchestrate.model.PropertyPath;
+import org.dotwebstack.orchestrate.model.PropertyPathMapping;
 import org.dotwebstack.orchestrate.model.Relation;
 import org.dotwebstack.orchestrate.model.SourceTypeRef;
-import org.dotwebstack.orchestrate.model.transforms.Coalesce;
+import org.dotwebstack.orchestrate.model.combiners.Coalesce;
+import org.dotwebstack.orchestrate.model.combiners.Concat;
 import org.dotwebstack.orchestrate.model.transforms.TestPredicate;
-import org.dotwebstack.orchestrate.model.Attribute;
-import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.types.ScalarTypes;
 
@@ -63,6 +65,11 @@ public final class TestFixtures {
             .property(Attribute.builder()
                 .name("isHoofdadres")
                 .type(ScalarTypes.BOOLEAN)
+                .cardinality(Cardinality.REQUIRED)
+                .build())
+            .property(Attribute.builder()
+                .name("omschrijving")
+                .type(ScalarTypes.STRING)
                 .cardinality(Cardinality.REQUIRED)
                 .build())
             .build())
@@ -168,33 +175,74 @@ public final class TestFixtures {
     var adresMapping = ObjectTypeMapping.builder()
         .sourceRoot(SourceTypeRef.fromString("bag:Nummeraanduiding"))
         .propertyMapping("identificatie", PropertyMapping.builder()
-            .sourcePath(PropertyPath.fromString("identificatie"))
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("identificatie"))
+                .build())
             .build())
         .propertyMapping("huisnummer", PropertyMapping.builder()
-            .sourcePath(PropertyPath.fromString("huisnummer"))
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("huisnummer"))
+                .build())
             .build())
         .propertyMapping("huisnummertoevoeging", PropertyMapping.builder()
-            .sourcePath(PropertyPath.fromString("huisnummertoevoeging"))
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("huisnummertoevoeging"))
+                .build())
             .build())
         .propertyMapping("huisletter", PropertyMapping.builder()
-            .sourcePath(PropertyPath.fromString("huisletter"))
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("huisletter"))
+                .build())
             .build())
         .propertyMapping("postcode", PropertyMapping.builder()
-            .sourcePath(PropertyPath.fromString("postcode"))
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("postcode"))
+                .build())
             .build())
         .propertyMapping("straatnaam", PropertyMapping.builder()
-            .sourcePath(PropertyPath.fromString("ligtAan/naam"))
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("ligtAan/naam"))
+                .build())
             .build())
         .propertyMapping("plaatsnaam", PropertyMapping.builder()
-            .sourcePath(PropertyPath.fromString("ligtIn/naam"))
-            .sourcePath(PropertyPath.fromString("ligtAan/ligtIn/naam"))
-            .transform(Coalesce.getInstance())
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("ligtIn/naam"))
+                .build())
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("ligtAan/ligtIn/naam"))
+                .combiner(Coalesce.getInstance())
+                .build())
             .build())
         .propertyMapping("isHoofdadres", PropertyMapping.builder()
-            .sourcePath(PropertyPath.fromString("isHoofdadresVan/identificatie"))
-            .transform(TestPredicate.builder()
-                .name("nonNull")
-                .predicate(Objects::nonNull)
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("isHoofdadresVan/identificatie"))
+                .transform(TestPredicate.builder()
+                    .name("nonNull")
+                    .predicate(Objects::nonNull)
+                    .build())
+                .build())
+            .build())
+        .propertyMapping("omschrijving", PropertyMapping.builder()
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("ligtAan/naam"))
+                .build())
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("huisnummer"))
+                .combiner(Concat.builder()
+                    .prefix(" ")
+                    .build())
+                .build())
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("huisletter"))
+                .combiner(Concat.builder()
+                    .prefix(" ")
+                    .build())
+                .build())
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("huisnummertoevoeging"))
+                .combiner(Concat.builder()
+                    .prefix("-")
+                    .build())
                 .build())
             .build())
         .build();

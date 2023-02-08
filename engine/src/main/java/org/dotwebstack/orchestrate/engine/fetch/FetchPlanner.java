@@ -4,22 +4,26 @@ import static graphql.schema.GraphQLTypeUtil.isList;
 import static graphql.schema.GraphQLTypeUtil.unwrapNonNull;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.Collections.unmodifiableSet;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.cast;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.inputMapper;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.noopCombiner;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.pathValue;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.selectIdentity;
 
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLObjectType;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.model.InverseRelation;
@@ -52,7 +56,7 @@ public final class FetchPlanner {
         .get(targetType.getName());
 
     var propertyMappings = new HashMap<Property, PropertyMapping>();
-    var sourcePaths = new ArrayList<PropertyPath>();
+    var sourcePaths = new HashSet<PropertyPath>();
 
     environment.getSelectionSet()
         .getImmediateFields()
@@ -62,7 +66,8 @@ public final class FetchPlanner {
         .forEach(property -> {
           var propertyMapping = targetMapping.getPropertyMapping(property.getName());
           propertyMappings.put(property, propertyMapping);
-          sourcePaths.addAll(propertyMapping.getSourcePaths());
+          propertyMapping.getPathMappings()
+              .forEach(pathMapping -> sourcePaths.add(pathMapping.getPath()));
         });
 
     var sourceRoot = targetMapping.getSourceRoot();
@@ -73,7 +78,7 @@ public final class FetchPlanner {
 
     // TODO: Refactor
     var isCollection = isList(unwrapNonNull(environment.getFieldType()));
-    var fetchPublisher = fetchSourceObject(sourceType, unmodifiableList(sourcePaths), sourceRoot.getModelAlias(),
+    var fetchPublisher = fetchSourceObject(sourceType, unmodifiableSet(sourcePaths), sourceRoot.getModelAlias(),
         isCollection, UnaryOperator.identity()).execute(environment.getArguments());
 
     if (fetchPublisher instanceof Mono<?>) {
@@ -85,7 +90,7 @@ public final class FetchPlanner {
         .map(result -> mapResult(unmodifiableMap(propertyMappings), result));
   }
 
-  private FetchOperation fetchSourceObject(ObjectType sourceType, List<PropertyPath> sourcePaths, String sourceAlias,
+  private FetchOperation fetchSourceObject(ObjectType sourceType, Set<PropertyPath> sourcePaths, String sourceAlias,
       boolean isCollection, UnaryOperator<Map<String, Object>> inputMapper) {
     var selectedProperties = new ArrayList<SelectedProperty>();
 
@@ -98,7 +103,7 @@ public final class FetchPlanner {
 
     sourcePaths.stream()
         .filter(not(PropertyPath::isLeaf))
-        .collect(groupingBy(PropertyPath::getFirstSegment, mapping(PropertyPath::withoutFirstSegment, toList())))
+        .collect(groupingBy(PropertyPath::getFirstSegment, mapping(PropertyPath::withoutFirstSegment, toSet())))
         .forEach((propertyName, nestedSourcePaths) -> {
           var property = sourceType.getProperty(propertyName);
 
@@ -107,7 +112,9 @@ public final class FetchPlanner {
                 .getObjectType(relationProperty.getTarget());
 
             var filter = FilterDefinition.builder()
-                .propertyPath(nestedSourcePaths.get(0).prependSegment(propertyName))
+                .propertyPath(nestedSourcePaths.iterator()
+                    .next()
+                    .prependSegment(propertyName))
                 .valueExtractor(input -> input.get("identificatie"))
                 .build();
 
@@ -163,21 +170,31 @@ public final class FetchPlanner {
   }
 
   private Object mapPropertyResult(PropertyMapping propertyMapping, Map<String, Object> result) {
-    var sourceValues = propertyMapping.getSourcePaths()
+    return propertyMapping.getPathMappings()
         .stream()
-        .map(sourcePath -> mapPropertyResult(sourcePath, result))
-        .toList();
+        .reduce(null, (previousValue, pathMapping) -> {
+          var pathValue = pathValue(result, pathMapping.getPath());
 
-    if (sourceValues.size() == 1) {
-      return transform(sourceValues.get(0), propertyMapping.getTransforms());
-    }
+          if (pathMapping.hasTransforms()) {
+            pathValue = transform(pathValue, pathMapping.getTransforms());
+          }
 
-    return transform(sourceValues, propertyMapping.getTransforms());
+          if (pathMapping.hasCombiner()) {
+            pathValue = pathMapping.getCombiner()
+                .apply(pathValue, previousValue);
+          }
+
+          return pathValue;
+        }, noopCombiner());
   }
 
   private Object transform(Object value, List<Transform> transforms) {
+    if (value == null) {
+      return null;
+    }
+
     return transforms.stream()
-        .reduce(value, (acc, transform) -> transform.apply(acc), (a, b) -> a);
+        .reduce(value, (acc, transform) -> transform.apply(acc), noopCombiner());
   }
 
   private Object mapPropertyResult(PropertyPath sourcePath, Map<String, Object> result) {
