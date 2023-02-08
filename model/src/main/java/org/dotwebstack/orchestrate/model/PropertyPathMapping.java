@@ -13,7 +13,8 @@ import org.dotwebstack.orchestrate.model.transforms.Transform;
 @Builder(toBuilder = true)
 public class PropertyPathMapping {
 
-  private final PropertyPath path;
+  @Singular
+  private final List<PropertyPath> paths;
 
   private final Combiner combiner;
 

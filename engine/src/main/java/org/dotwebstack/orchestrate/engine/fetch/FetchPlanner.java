@@ -9,7 +9,6 @@ import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toSet;
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.cast;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.inputMapper;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.noopCombiner;
@@ -23,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import lombok.RequiredArgsConstructor;
@@ -67,7 +67,7 @@ public final class FetchPlanner {
           var propertyMapping = targetMapping.getPropertyMapping(property.getName());
           propertyMappings.put(property, propertyMapping);
           propertyMapping.getPathMappings()
-              .forEach(pathMapping -> sourcePaths.add(pathMapping.getPath()));
+              .forEach(pathMapping -> sourcePaths.addAll(pathMapping.getPaths()));
         });
 
     var sourceRoot = targetMapping.getSourceRoot();
@@ -173,7 +173,12 @@ public final class FetchPlanner {
     return propertyMapping.getPathMappings()
         .stream()
         .reduce(null, (previousValue, pathMapping) -> {
-          var pathValue = pathValue(result, pathMapping.getPath());
+          var pathValue = pathMapping.getPaths()
+              .stream()
+              .map(path -> pathValue(result, path))
+              .filter(Objects::nonNull)
+              .findFirst()
+              .orElse(null);
 
           if (pathMapping.hasTransforms()) {
             pathValue = transform(pathValue, pathMapping.getTransforms());
@@ -189,27 +194,7 @@ public final class FetchPlanner {
   }
 
   private Object transform(Object value, List<Transform> transforms) {
-    if (value == null) {
-      return null;
-    }
-
     return transforms.stream()
         .reduce(value, (acc, transform) -> transform.apply(acc), noopCombiner());
-  }
-
-  private Object mapPropertyResult(PropertyPath sourcePath, Map<String, Object> result) {
-    var firstSegment = sourcePath.getFirstSegment();
-
-    if (sourcePath.isLeaf()) {
-      return result.get(firstSegment);
-    }
-
-    Map<String, Object> propertyValue = cast(result.get(firstSegment));
-
-    if (propertyValue == null) {
-      return null;
-    }
-
-    return mapPropertyResult(sourcePath.withoutFirstSegment(), propertyValue);
   }
 }
