@@ -12,7 +12,6 @@ import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.Relation;
-import org.dotwebstack.orchestrate.model.combiners.Coalesce;
 import org.dotwebstack.orchestrate.model.transforms.TestPredicate;
 import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.types.ScalarTypes;
@@ -191,8 +190,7 @@ final class TestFixtures {
         .registerTransform(TestPredicate.builder()
             .name("nonNull")
             .predicate(Objects::nonNull)
-            .build())
-        .registerCombiner(Coalesce.getInstance());
+            .build());
 
     var yamlMapper = YamlModelMappingParser.getInstance(mappingRegistry);
     var inputStream = TestFixtures.class.getResourceAsStream("/config/adresmapping.yaml");

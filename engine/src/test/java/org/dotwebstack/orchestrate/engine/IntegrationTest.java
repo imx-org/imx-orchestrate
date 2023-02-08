@@ -115,7 +115,7 @@ class IntegrationTest {
         .containsEntry("straatnaam", "Laan van Westenenk")
         .containsEntry("plaatsnaam", "Apeldoorn")
         .containsEntry("isHoofdadres", true)
-        .containsEntry("omschrijving", "Laan van Westenenk 701");
+        .containsEntry("omschrijving", "Laan van Westenenk 701, 7334DP Apeldoorn");
   }
 
   @Test

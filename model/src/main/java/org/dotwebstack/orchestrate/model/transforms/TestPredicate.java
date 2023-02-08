@@ -4,7 +4,7 @@ import java.util.function.Predicate;
 import lombok.Builder;
 
 @Builder
-public class TestPredicate implements Transform {
+public final class TestPredicate implements Transform {
 
   private final String name;
 

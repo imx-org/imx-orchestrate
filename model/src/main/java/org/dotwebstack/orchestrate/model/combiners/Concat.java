@@ -3,7 +3,7 @@ package org.dotwebstack.orchestrate.model.combiners;
 import lombok.Builder;
 
 @Builder
-public class Concat implements Combiner {
+public final class Concat implements Combiner {
 
   private static final String NAME = "concat";
 

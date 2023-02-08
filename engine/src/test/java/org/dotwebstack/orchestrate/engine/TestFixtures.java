@@ -16,7 +16,6 @@ import org.dotwebstack.orchestrate.model.PropertyPath;
 import org.dotwebstack.orchestrate.model.PropertyPathMapping;
 import org.dotwebstack.orchestrate.model.Relation;
 import org.dotwebstack.orchestrate.model.SourceTypeRef;
-import org.dotwebstack.orchestrate.model.combiners.Coalesce;
 import org.dotwebstack.orchestrate.model.combiners.Concat;
 import org.dotwebstack.orchestrate.model.transforms.TestPredicate;
 import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
@@ -231,10 +230,7 @@ public final class TestFixtures {
         .propertyMapping("plaatsnaam", PropertyMapping.builder()
             .pathMapping(PropertyPathMapping.builder()
                 .path(PropertyPath.fromString("ligtIn/naam"))
-                .build())
-            .pathMapping(PropertyPathMapping.builder()
                 .path(PropertyPath.fromString("ligtAan/ligtIn/naam"))
-                .combiner(Coalesce.getInstance())
                 .build())
             .build())
         .propertyMapping("isHoofdadres", PropertyMapping.builder()

@@ -21,10 +21,10 @@ objectTypeMappings:
         pathMapping:
           path: ligtAan/naam
       plaatsnaam:
-        pathMappings:
-          - ligtIn/naam
-          - path: ligtAan/ligtIn/naam
-            combiner: coalesce
+        pathMapping:
+          paths:
+            - ligtIn/naam
+            - ligtAan/ligtIn/naam
       isHoofdadres:
         pathMapping:
           path: isHoofdadresVan/identificatie
@@ -44,3 +44,13 @@ objectTypeMappings:
             combiner:
               name: concat
               prefix: '-'
+          - path: postcode
+            combiner:
+              name: concat
+              prefix: ' '
+          - paths:
+              - ligtIn/naam
+              - ligtAan/ligtIn/naam
+            combiner:
+              name: concat
+              prefix: ' '
