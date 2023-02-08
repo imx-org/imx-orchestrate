@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.Serial;
 import java.util.Map;
 import org.dotwebstack.orchestrate.model.transforms.Transform;
-import org.dotwebstack.orchestrate.model.transforms.TransformRegistry;
+import org.dotwebstack.orchestrate.model.ComponentRegistry;
 import org.dotwebstack.orchestrate.parser.yaml.YamlModelMappingParserException;
 
 public class TransformDeserializer extends StdDeserializer<Transform> {
@@ -16,11 +16,11 @@ public class TransformDeserializer extends StdDeserializer<Transform> {
   @Serial
   private static final long serialVersionUID = -3632511025789813533L;
 
-  private final TransformRegistry transformRegistry;
+  private final ComponentRegistry componentRegistry;
 
-  public TransformDeserializer(TransformRegistry transformRegistry) {
+  public TransformDeserializer(ComponentRegistry componentRegistry) {
     super(Transform.class);
-    this.transformRegistry = transformRegistry;
+    this.componentRegistry = componentRegistry;
   }
 
   @Override
@@ -33,7 +33,7 @@ public class TransformDeserializer extends StdDeserializer<Transform> {
       var transformNameValue = (String) deserializationContext.findRootValueDeserializer(deserializationContext.constructType(String.class))
           .deserialize(jsonParser, deserializationContext);
 
-      return transformRegistry.getTransform(transformNameValue);
+      return componentRegistry.getTransform(transformNameValue);
     } else if (token == JsonToken.START_OBJECT) {
 
       var transformMapValue = (Map<String, Object>) deserializationContext.findRootValueDeserializer(
@@ -45,7 +45,7 @@ public class TransformDeserializer extends StdDeserializer<Transform> {
             String.format("Transform mapping is missing name property. %s", transformMapValue));
       }
 
-      return transformRegistry.getTransform((String) transformMapValue.get("name"));
+      return componentRegistry.getTransform((String) transformMapValue.get("name"));
     } else {
       throw new YamlModelMappingParserException(String.format("Error deserializing transform on token %s", token));
     }

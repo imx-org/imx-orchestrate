@@ -5,11 +5,13 @@ import java.util.List;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Singular;
 
 @Getter
+@EqualsAndHashCode
 @Builder(toBuilder = true)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class PropertyPath {
