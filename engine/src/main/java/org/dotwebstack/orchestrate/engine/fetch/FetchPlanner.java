@@ -107,18 +107,21 @@ public final class FetchPlanner {
         .forEach((propertyName, nestedSourcePaths) -> {
           var property = sourceType.getProperty(propertyName);
 
-          if (property instanceof InverseRelation relationProperty) {
+          if (property instanceof InverseRelation inverseRelation) {
             var originType = modelMapping.getSourceModel(sourceAlias)
-                .getObjectType(relationProperty.getTarget());
+                .getObjectType(inverseRelation.getTarget());
 
-            var originFieldName = relationProperty.getOriginRelation()
+            var originFieldName = inverseRelation.getOriginRelation()
                 .getName();
 
+            // TODO: How to handle composite keys?
             var filter = FilterDefinition.builder()
                 .propertyPath(nestedSourcePaths.iterator()
                     .next()
                     .prependSegment(originFieldName))
-                .valueExtractor(input -> input.get("identificatie"))
+                .valueExtractor(input -> input.get(sourceType.getIdentityProperties()
+                    .get(0)
+                    .getName()))
                 .build();
 
             var nestedProperties = nestedSourcePaths.stream()
