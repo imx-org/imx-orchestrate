@@ -108,19 +108,11 @@ public final class FetchPlanner {
           var property = sourceType.getProperty(propertyName);
 
           if (property instanceof InverseRelation relationProperty) {
-            var originRelation = relationProperty.getOriginRelation();
-
             var originType = modelMapping.getSourceModel(sourceAlias)
                 .getObjectType(relationProperty.getTarget());
 
-            // TODO: This needs to be refactored to become more efficient
-            var originFieldName = originType.getPropertyMap()
-                .entrySet()
-                .stream()
-                .filter(entry -> originRelation == entry.getValue())
-                .findFirst()
-                .map(Map.Entry::getKey)
-                .orElseThrow();
+            var originFieldName = relationProperty.getOriginRelation()
+                .getName();
 
             var filter = FilterDefinition.builder()
                 .propertyPath(nestedSourcePaths.iterator()
