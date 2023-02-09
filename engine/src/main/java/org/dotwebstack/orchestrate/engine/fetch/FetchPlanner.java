@@ -20,12 +20,15 @@ import graphql.schema.GraphQLObjectType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import org.dotwebstack.orchestrate.engine.schema.SchemaConstants;
+import org.dotwebstack.orchestrate.model.Attribute;
 import org.dotwebstack.orchestrate.model.InverseRelation;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
@@ -33,6 +36,10 @@ import org.dotwebstack.orchestrate.model.Property;
 import org.dotwebstack.orchestrate.model.PropertyMapping;
 import org.dotwebstack.orchestrate.model.PropertyPath;
 import org.dotwebstack.orchestrate.model.Relation;
+import org.dotwebstack.orchestrate.model.lineage.ObjectLineage;
+import org.dotwebstack.orchestrate.model.lineage.OrchestratedProperty;
+import org.dotwebstack.orchestrate.model.lineage.SourceObjectReference;
+import org.dotwebstack.orchestrate.model.lineage.SourceProperty;
 import org.dotwebstack.orchestrate.model.transforms.Transform;
 import org.dotwebstack.orchestrate.source.FilterDefinition;
 import org.dotwebstack.orchestrate.source.SelectedProperty;
@@ -93,6 +100,7 @@ public final class FetchPlanner {
   private FetchOperation fetchSourceObject(ObjectType sourceType, Set<PropertyPath> sourcePaths, String sourceAlias,
       boolean isCollection, UnaryOperator<Map<String, Object>> inputMapper) {
     var selectedProperties = new ArrayList<SelectedProperty>();
+    selectedProperties.addAll(selectIdentity(sourceType));
 
     sourcePaths.stream()
         .filter(PropertyPath::isLeaf)
@@ -169,20 +177,46 @@ public final class FetchPlanner {
   }
 
   private Map<String, Object> mapResult(Map<Property, PropertyMapping> propertyMappings, Map<String, Object> result) {
-    return propertyMappings.entrySet()
+    var objectLineageBuilder = ObjectLineage.builder();
+
+    Map<String, Object> resultData = propertyMappings.entrySet()
         .stream()
-        .collect(HashMap::new, (acc, entry) -> acc.put(entry.getKey().getName(), mapPropertyResult(entry.getValue(),
-            result)), HashMap::putAll);
+        .collect(HashMap::new, (acc, entry) -> acc.put(entry.getKey().getName(), mapPropertyResult(entry.getKey(),
+            entry.getValue(), result, objectLineageBuilder)), HashMap::putAll);
+
+    resultData.put(SchemaConstants.HAS_LINEAGE_FIELD, objectLineageBuilder.build());
+
+    return unmodifiableMap(resultData);
   }
 
-  private Object mapPropertyResult(PropertyMapping propertyMapping, Map<String, Object> result) {
-    return propertyMapping.getPathMappings()
+  private Object mapPropertyResult(Property property, PropertyMapping propertyMapping, Map<String, Object> result,
+      ObjectLineage.ObjectLineageBuilder objectLineageBuilder) {
+    var sourceProperties = new LinkedHashSet<SourceProperty>();
+
+    var resultValue = propertyMapping.getPathMappings()
         .stream()
         .reduce(null, (previousValue, pathMapping) -> {
           var pathValue = pathMapping.getPaths()
               .stream()
-              .map(path -> pathValue(result, path))
-              .filter(Objects::nonNull)
+              .flatMap(path -> {
+                var value = pathValue(result, path);
+
+                if (value == null) {
+                  return Stream.empty();
+                }
+
+                sourceProperties.add(SourceProperty.builder()
+                    .subject(SourceObjectReference.builder()
+                        .objectType("ObjectType")
+                        .objectKey("objectKey")
+                        .build())
+                    .property(path.getLastSegment())
+                    .propertyPath(path.getSegments())
+                    .value(value)
+                    .build());
+
+                return Stream.of(value);
+              })
               .findFirst()
               .orElse(null);
 
@@ -197,6 +231,22 @@ public final class FetchPlanner {
 
           return pathValue;
         }, noopCombiner());
+
+    if (resultValue == null) {
+      return null;
+    }
+
+    if (property instanceof Attribute) {
+      var orchestratedProperty = OrchestratedProperty.builder()
+          .property(property.getName())
+          .value(resultValue)
+          .isDerivedFrom(sourceProperties)
+          .build();
+
+      objectLineageBuilder.orchestratedProperty(orchestratedProperty);
+    }
+
+    return resultValue;
   }
 
   private Object transform(Object value, List<Transform> transforms) {

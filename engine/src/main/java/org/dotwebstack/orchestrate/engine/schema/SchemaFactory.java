@@ -28,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.Orchestration;
 import org.dotwebstack.orchestrate.engine.fetch.FetchPlanner;
 import org.dotwebstack.orchestrate.engine.fetch.GenericDataFetcher;
+import org.dotwebstack.orchestrate.engine.fetch.PropertyValueFetcher;
 import org.dotwebstack.orchestrate.model.Attribute;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
@@ -100,7 +101,7 @@ public final class SchemaFactory {
     typeDefinitionRegistry.add(newObjectTypeDefinition()
         .name(ObjectLineage.class.getSimpleName())
         .fieldDefinition(newFieldDefinition()
-            .name("isComposedOf")
+            .name("orchestratedProperties")
             .type(requiredListType(OrchestratedProperty.class))
             .build())
         .build());
@@ -132,6 +133,10 @@ public final class SchemaFactory {
             .type(requiredType("String"))
             .build())
         .fieldDefinition(newFieldDefinition()
+            .name("propertyPath")
+            .type(requiredListType("String"))
+            .build())
+        .fieldDefinition(newFieldDefinition()
             .name("value")
             .type(requiredType("PropertyValue"))
             .build())
@@ -153,17 +158,22 @@ public final class SchemaFactory {
         .name("PropertyValue")
         .fieldDefinition(newFieldDefinition()
             .name("stringValue")
-            .type(requiredType("String"))
+            .type(new TypeName("String"))
             .build())
         .fieldDefinition(newFieldDefinition()
             .name("integerValue")
-            .type(requiredType("Int"))
+            .type(new TypeName("Int"))
             .build())
         .fieldDefinition(newFieldDefinition()
             .name("booleanValue")
-            .type(requiredType("Boolean"))
+            .type(new TypeName("Boolean"))
             .build())
         .build());
+
+    var valueFetcher = new PropertyValueFetcher();
+
+    codeRegistryBuilder.dataFetcher(coordinates(OrchestratedProperty.class.getSimpleName(), "value"), valueFetcher)
+        .dataFetcher(coordinates(SourceProperty.class.getSimpleName(), "value"), valueFetcher);
   }
 
   private ObjectTypeDefinition createObjectTypeDefinition(ObjectType objectType) {

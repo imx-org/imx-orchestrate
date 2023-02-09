@@ -1,6 +1,5 @@
 package org.dotwebstack.orchestrate.model.lineage;
 
-import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -10,5 +9,5 @@ public class SourceObjectReference {
 
   private final String objectType;
 
-  private final Map<String, Object> objectKey;
+  private final String objectKey;
 }

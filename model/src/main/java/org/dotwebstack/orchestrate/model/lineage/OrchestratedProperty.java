@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 @Builder(toBuilder = true)
-public final class OrchestratedProperty {
+public final class OrchestratedProperty implements PropertyLineage {
 
   private final String property;
 

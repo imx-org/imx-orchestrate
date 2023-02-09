@@ -43,15 +43,15 @@ class IntegrationTest {
 
           return switch (objectType.getName()) {
             case "Nummeraanduiding":
-              assertThat(objectRequest.getSelectedProperties()).hasSize(7);
+              assertThat(objectRequest.getSelectedProperties()).hasSize(8);
               assertThat(objectkey).isEqualTo(Map.of("identificatie", "0200200000075716"));
               yield Mono.just(NUM_DATA.get("0200200000075716"));
             case "OpenbareRuimte":
-              assertThat(objectRequest.getSelectedProperties()).hasSize(2);
+              assertThat(objectRequest.getSelectedProperties()).hasSize(3);
               assertThat(objectkey).isEqualTo(Map.of("identificatie", "0200300022472362"));
               yield Mono.just(OPR_DATA.get("0200300022472362"));
             case "Woonplaats":
-              assertThat(objectRequest.getSelectedProperties()).hasSize(1);
+              assertThat(objectRequest.getSelectedProperties()).hasSize(2);
               assertThat(objectkey).isEqualTo(Map.of("identificatie", "3560"));
               yield Mono.just(WPL_DATA.get("3560"));
             default:
@@ -128,11 +128,11 @@ class IntegrationTest {
 
           return switch (objectType.getName()) {
             case "OpenbareRuimte":
-              assertThat(objectRequest.getSelectedProperties()).hasSize(2);
+              assertThat(objectRequest.getSelectedProperties()).hasSize(3);
               assertThat(objectkey).isEqualTo(Map.of("identificatie", "0200300022472362"));
               yield Mono.just(OPR_DATA.get("0200300022472362"));
             case "Woonplaats":
-              assertThat(objectRequest.getSelectedProperties()).hasSize(1);
+              assertThat(objectRequest.getSelectedProperties()).hasSize(2);
               yield Mono.just(WPL_DATA.get((String) objectkey.get("identificatie")));
             default:
               yield Mono.error(() -> new RuntimeException("Error!"));
@@ -146,7 +146,7 @@ class IntegrationTest {
 
           return switch (objectType.getName()) {
             case "Nummeraanduiding":
-              assertThat(collectionRequest.getSelectedProperties()).hasSize(7);
+              assertThat(collectionRequest.getSelectedProperties()).hasSize(8);
               yield Flux.fromIterable(NUM_DATA.values());
             case "Verblijfsobject":
               assertThat(collectionRequest.getSelectedProperties()).hasSize(1);
