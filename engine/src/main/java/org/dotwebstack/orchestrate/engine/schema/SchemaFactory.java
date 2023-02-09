@@ -176,7 +176,7 @@ public final class SchemaFactory {
         .forEach(objectTypeDefinitionBuilder::fieldDefinition);
 
     objectTypeDefinitionBuilder.fieldDefinition(newFieldDefinition()
-        .name("hasLineage")
+        .name(SchemaConstants.HAS_LINEAGE_FIELD)
         .type(requiredType(ObjectLineage.class))
         .build());
 

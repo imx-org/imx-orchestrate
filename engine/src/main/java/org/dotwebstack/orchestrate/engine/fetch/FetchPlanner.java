@@ -61,7 +61,7 @@ public final class FetchPlanner {
     environment.getSelectionSet()
         .getImmediateFields()
         .stream()
-        .filter(not(FetchUtils::isIntrospectionField))
+        .filter(not(FetchUtils::isReservedField))
         .map(property -> targetType.getProperty(property.getName()))
         .forEach(property -> {
           var propertyMapping = targetMapping.getPropertyMapping(property.getName());
