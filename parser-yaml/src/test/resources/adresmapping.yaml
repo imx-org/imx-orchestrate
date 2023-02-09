@@ -1,21 +1,56 @@
-
 objectTypeMappings:
   Adres:
     sourceRoot: bag:Nummeraanduiding
     propertyMappings:
       identificatie:
-        sourcePath: identificatie
+        pathMapping:
+          path: identificatie
       huisnummer:
-        sourcePath: huisnummer
+        pathMapping:
+          path: huisnummer
+      huisnummertoevoeging:
+        pathMapping:
+          path: huisnummertoevoeging
+      huisletter:
+        pathMapping:
+          path: huisletter
       postcode:
-        sourcePath: postcode
+        pathMapping:
+          path: postcode
       straatnaam:
-        sourcePath: ligtAan/naam
+        pathMapping:
+          path: ligtAan/naam
       plaatsnaam:
-        sourcePaths:
-          - ligtIn/naam
-          - ligtAan/ligtIn/naam
-        transform: coalesce
+        pathMapping:
+          paths:
+            - ligtIn/naam
+            - ligtAan/ligtIn/naam
       isHoofdadres:
-        sourcePath: isHoofdadresVan
-        transform: nonNull
+        pathMapping:
+          path: isHoofdadresVan/identificatie
+          transform: nonNull
+      omschrijving:
+        pathMappings:
+          - ligtAan/naam
+          - path: huisnummer
+            combiner:
+              name: concat
+              prefix: ' '
+          - path: huisletter
+            combiner:
+              name: concat
+              prefix: ' '
+          - path: huisnummertoevoeging
+            combiner:
+              name: concat
+              prefix: '-'
+          - path: postcode
+            combiner:
+              name: concat
+              prefix: ' '
+          - paths:
+              - ligtIn/naam
+              - ligtAan/ligtIn/naam
+            combiner:
+              name: concat
+              prefix: ' '

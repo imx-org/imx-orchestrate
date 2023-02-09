@@ -2,7 +2,9 @@ package org.dotwebstack.orchestrate.model.transforms;
 
 import java.util.function.Predicate;
 import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 
+@Jacksonized
 @Builder
 public final class TestPredicate implements Transform {
 

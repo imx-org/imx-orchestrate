@@ -1,19 +1,25 @@
 package org.dotwebstack.orchestrate.model.combiners;
 
 import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 
+@Jacksonized
 @Builder
 public final class Concat implements Combiner {
 
-  private static final String NAME = "concat";
+  private static final String DEFAULT_NAME= "concat";
+
+  // NO-OP
+  private final String name;
 
   private final String prefix;
 
   private final String suffix;
 
+  @SuppressWarnings("java:S4275")
   @Override
   public String getName() {
-    return NAME;
+    return DEFAULT_NAME;
   }
 
   @Override
