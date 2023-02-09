@@ -151,7 +151,7 @@ class IntegrationTest {
             case "Verblijfsobject":
               assertThat(collectionRequest.getSelectedProperties()).hasSize(1);
               var filter = collectionRequest.getFilter();
-              assertThat(filter.getPropertyPath()).isEqualTo(PropertyPath.fromString("isHoofdadresVan/identificatie"));
+              assertThat(filter.getPropertyPath()).isEqualTo(PropertyPath.fromString("heeftAlsHoofdadres/identificatie"));
               assertThat(filter.getValue()).isInstanceOf(String.class);
               yield Optional.ofNullable(VBO_DATA.get((String) filter.getValue()))
                   .map(Flux::just)

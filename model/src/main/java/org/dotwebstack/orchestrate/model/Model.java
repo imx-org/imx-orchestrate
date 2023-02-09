@@ -36,7 +36,7 @@ public final class Model {
               mutableObjectTypeMap.computeIfPresent(targetRef.getName(), (targetName, targetType) -> targetType.toBuilder()
                   .property(InverseRelation.builder()
                       .target(objectType.getRef())
-                      .relation(relation)
+                      .originRelation(relation)
                       .build())
                   .build());
             })));

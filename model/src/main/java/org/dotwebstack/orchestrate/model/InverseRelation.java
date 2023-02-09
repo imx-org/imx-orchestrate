@@ -10,11 +10,11 @@ public class InverseRelation implements Property {
 
   private final ObjectTypeRef target;
 
-  private final Relation relation;
+  private final Relation originRelation;
 
   @Override
   public String getName() {
-    return relation.getInverseName();
+    return originRelation.getInverseName();
   }
 
   @Override
@@ -24,6 +24,6 @@ public class InverseRelation implements Property {
 
   @Override
   public Cardinality getCardinality() {
-    return relation.getInverseCardinality();
+    return originRelation.getInverseCardinality();
   }
 }
