@@ -21,3 +21,5 @@ orchestrate:
   gateway:
     targetModel: adres
     mapping: /config/adresmapping.yaml
+#    targetModel: coreLocation
+#    mapping: /config/coreLocationMapping.yaml
