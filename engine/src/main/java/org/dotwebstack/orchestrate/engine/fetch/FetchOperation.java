@@ -5,5 +5,5 @@ import org.reactivestreams.Publisher;
 
 interface FetchOperation {
 
-  Publisher<Map<String, Object>> execute(Map<String, Object> input);
+  Publisher<ObjectResult> execute(Map<String, Object> input);
 }

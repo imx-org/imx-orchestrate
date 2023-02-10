@@ -15,7 +15,7 @@ final class CollectionFetchOperation extends AbstractFetchOperation {
 
   private final boolean single;
 
-  public Publisher<Map<String, Object>> execute(Map<String, Object> input) {
+  public Publisher<ObjectResult> execute(Map<String, Object> input) {
     var mappedInput = inputMapper.apply(input);
 
     var collectionRequest = CollectionRequest.builder()
@@ -27,6 +27,11 @@ final class CollectionFetchOperation extends AbstractFetchOperation {
     var result = source.getDataRepository()
         .find(collectionRequest)
         .log(objectType.getName(), Level.INFO, SignalType.ON_NEXT)
+        .map(properties -> ObjectResult.builder()
+            .objectType(objectType)
+            .objectKey(Map.of("identificatie", properties.get("identificatie")))
+            .properties(properties)
+            .build())
         .flatMap(this::executeNextOperations);
 
     return single ? result.singleOrEmpty() : result;

@@ -56,17 +56,17 @@ final class FetchUtils {
     };
   }
 
-  public static Object pathValue(Map<String, Object> data, PropertyPath path) {
+  public static ObjectResult pathResult(ObjectResult objectResult, PropertyPath path) {
     if (path.isLeaf()) {
-      return data.get(path.getFirstSegment());
+      return objectResult;
     }
 
-    Map<String, Object> nestedData = cast(data.get(path.getFirstSegment()));
+    var nestedObject = objectResult.getNestedObject(path.getFirstSegment());
 
-    if (nestedData == null) {
+    if (nestedObject == null) {
       return null;
     }
 
-    return pathValue(nestedData, path.withoutFirstSegment());
+    return pathResult(nestedObject, path.withoutFirstSegment());
   }
 }

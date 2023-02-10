@@ -15,6 +15,7 @@ import graphql.GraphQL;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.dotwebstack.orchestrate.engine.schema.SchemaConstants;
 import org.dotwebstack.orchestrate.engine.schema.SchemaFactory;
 import org.dotwebstack.orchestrate.model.PropertyPath;
 import org.dotwebstack.orchestrate.source.CollectionRequest;
@@ -34,6 +35,7 @@ class IntegrationTest {
   private DataRepository dataRepositoryStub;
 
   @Test
+  @SuppressWarnings("unchecked")
   void queryObject_withoutEagerLoading() {
     when(dataRepositoryStub.findOne(any(ObjectRequest.class)))
         .thenAnswer(invocation -> {
@@ -93,6 +95,18 @@ class IntegrationTest {
               plaatsnaam
               isHoofdadres
               omschrijving
+              hasLineage {
+                orchestratedProperties {
+                  property
+                  isDerivedFrom {
+                    property
+                    subject {
+                      objectType
+                      objectKey
+                    }
+                  }
+                }
+              }
             }
           }
         """);
@@ -116,6 +130,16 @@ class IntegrationTest {
         .containsEntry("plaatsnaam", "Apeldoorn")
         .containsEntry("isHoofdadres", true)
         .containsEntry("omschrijving", "Laan van Westenenk 701, 7334DP Apeldoorn");
+
+    var lineage = (Map<String, Object>) adres.get(SchemaConstants.HAS_LINEAGE_FIELD);
+    var orchestratedProperty = ((List<Map<String, Object>>) lineage.get("orchestratedProperties")).get(0);
+    var sourceProperty = ((List<Map<String, Object>>) orchestratedProperty.get("isDerivedFrom")).get(0);
+
+    assertThat(orchestratedProperty).isNotNull()
+        .containsEntry("property", "identificatie");
+    assertThat(sourceProperty).isNotNull()
+        .containsEntry("property", "identificatie")
+        .containsEntry("subject", Map.of("objectType", "Nummeraanduiding", "objectKey", "0200200000075716"));
   }
 
   @Test
@@ -151,7 +175,8 @@ class IntegrationTest {
             case "Verblijfsobject":
               assertThat(collectionRequest.getSelectedProperties()).hasSize(1);
               var filter = collectionRequest.getFilter();
-              assertThat(filter.getPropertyPath()).isEqualTo(PropertyPath.fromString("heeftAlsHoofdadres/identificatie"));
+              assertThat(filter.getPropertyPath()).isEqualTo(PropertyPath.fromString("heeftAlsHoofdadres" +
+                  "/identificatie"));
               assertThat(filter.getValue()).isInstanceOf(String.class);
               yield Optional.ofNullable(VBO_DATA.get((String) filter.getValue()))
                   .map(Flux::just)

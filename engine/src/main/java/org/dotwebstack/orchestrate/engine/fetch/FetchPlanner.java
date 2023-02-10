@@ -12,7 +12,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.inputMapper;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.noopCombiner;
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.pathValue;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.pathResult;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.selectIdentity;
 
 import graphql.schema.DataFetchingEnvironment;
@@ -20,6 +20,7 @@ import graphql.schema.GraphQLObjectType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +63,7 @@ public final class FetchPlanner {
     var targetMapping = modelMapping.getObjectTypeMappings()
         .get(targetType.getName());
 
-    var propertyMappings = new HashMap<Property, PropertyMapping>();
+    var propertyMappings = new LinkedHashMap<Property, PropertyMapping>();
     var sourcePaths = new HashSet<PropertyPath>();
 
     environment.getSelectionSet()
@@ -176,20 +177,20 @@ public final class FetchPlanner {
         .build();
   }
 
-  private Map<String, Object> mapResult(Map<Property, PropertyMapping> propertyMappings, Map<String, Object> result) {
+  private Map<String, Object> mapResult(Map<Property, PropertyMapping> propertyMappings, ObjectResult objectResult) {
     var objectLineageBuilder = ObjectLineage.builder();
 
     Map<String, Object> resultData = propertyMappings.entrySet()
         .stream()
         .collect(HashMap::new, (acc, entry) -> acc.put(entry.getKey().getName(), mapPropertyResult(entry.getKey(),
-            entry.getValue(), result, objectLineageBuilder)), HashMap::putAll);
+            entry.getValue(), objectResult, objectLineageBuilder)), HashMap::putAll);
 
     resultData.put(SchemaConstants.HAS_LINEAGE_FIELD, objectLineageBuilder.build());
 
     return unmodifiableMap(resultData);
   }
 
-  private Object mapPropertyResult(Property property, PropertyMapping propertyMapping, Map<String, Object> result,
+  private Object mapPropertyResult(Property property, PropertyMapping propertyMapping, ObjectResult objectResult,
       ObjectLineage.ObjectLineageBuilder objectLineageBuilder) {
     var sourceProperties = new LinkedHashSet<SourceProperty>();
 
@@ -199,7 +200,13 @@ public final class FetchPlanner {
           var pathValue = pathMapping.getPaths()
               .stream()
               .flatMap(path -> {
-                var value = pathValue(result, path);
+                var pathResult = pathResult(objectResult, path);
+
+                if (pathResult == null) {
+                  return Stream.empty();
+                }
+
+                var value = pathResult.getProperty(path.getLastSegment());
 
                 if (value == null) {
                   return Stream.empty();
@@ -207,8 +214,10 @@ public final class FetchPlanner {
 
                 sourceProperties.add(SourceProperty.builder()
                     .subject(SourceObjectReference.builder()
-                        .objectType("ObjectType")
-                        .objectKey("objectKey")
+                        .objectType(pathResult.getObjectType()
+                            .getName())
+                        .objectKey((String) pathResult.getObjectKey()
+                            .get("identificatie"))
                         .build())
                     .property(path.getLastSegment())
                     .propertyPath(path.getSegments())
