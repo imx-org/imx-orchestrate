@@ -1,13 +1,14 @@
 package org.dotwebstack.orchestrate.model.lineage;
 
+import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder(toBuilder = true)
-public class SourceObjectReference {
+public class ObjectReference {
 
   private final String objectType;
 
-  private final String objectKey;
+  private final Map<String, Object> objectKey;
 }

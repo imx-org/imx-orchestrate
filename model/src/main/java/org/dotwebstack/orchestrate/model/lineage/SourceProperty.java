@@ -8,7 +8,7 @@ import lombok.Getter;
 @Builder(toBuilder = true)
 public final class SourceProperty implements PropertyLineage {
 
-  private final SourceObjectReference subject;
+  private final ObjectReference subject;
 
   private final String property;
 

@@ -8,6 +8,8 @@ import lombok.Getter;
 @Builder(toBuilder = true)
 public final class OrchestratedProperty implements PropertyLineage {
 
+  private final ObjectReference subject;
+
   private final String property;
 
   private final Object value;

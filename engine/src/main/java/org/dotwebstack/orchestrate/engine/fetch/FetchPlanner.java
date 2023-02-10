@@ -38,8 +38,8 @@ import org.dotwebstack.orchestrate.model.PropertyMapping;
 import org.dotwebstack.orchestrate.model.PropertyPath;
 import org.dotwebstack.orchestrate.model.Relation;
 import org.dotwebstack.orchestrate.model.lineage.ObjectLineage;
+import org.dotwebstack.orchestrate.model.lineage.ObjectReference;
 import org.dotwebstack.orchestrate.model.lineage.OrchestratedProperty;
-import org.dotwebstack.orchestrate.model.lineage.SourceObjectReference;
 import org.dotwebstack.orchestrate.model.lineage.SourceProperty;
 import org.dotwebstack.orchestrate.model.transforms.Transform;
 import org.dotwebstack.orchestrate.source.FilterDefinition;
@@ -113,16 +113,21 @@ public final class FetchPlanner {
           return acc;
         }, noopCombiner());
 
+    var targetReference = ObjectReference.builder()
+        .objectType(targetType.getName())
+        .objectKey(keyExtractor(targetType).apply(environment.getArguments()))
+        .build();
+
     var fetchPublisher = fetchSourceObject(sourceType, unmodifiableSet(sourcePaths), sourceRoot.getModelAlias(),
         isCollection, inputMapper).execute(environment.getArguments());
 
     if (fetchPublisher instanceof Mono<?>) {
       return Mono.from(fetchPublisher)
-          .map(result -> mapResult(unmodifiableMap(propertyMappings), result));
+          .map(result -> mapResult(unmodifiableMap(propertyMappings), result, targetReference));
     }
 
     return Flux.from(fetchPublisher)
-        .map(result -> mapResult(unmodifiableMap(propertyMappings), result));
+        .map(result -> mapResult(unmodifiableMap(propertyMappings), result, targetReference));
   }
 
   private FetchOperation fetchSourceObject(ObjectType sourceType, Set<PropertyPath> sourcePaths, String sourceAlias,
@@ -204,13 +209,14 @@ public final class FetchPlanner {
         .build();
   }
 
-  private Map<String, Object> mapResult(Map<Property, PropertyMapping> propertyMappings, ObjectResult objectResult) {
+  private Map<String, Object> mapResult(Map<Property, PropertyMapping> propertyMappings, ObjectResult objectResult,
+      ObjectReference targetReference) {
     var objectLineageBuilder = ObjectLineage.builder();
 
     Map<String, Object> resultData = propertyMappings.entrySet()
         .stream()
         .collect(HashMap::new, (acc, entry) -> acc.put(entry.getKey().getName(), mapPropertyResult(entry.getKey(),
-            entry.getValue(), objectResult, objectLineageBuilder)), HashMap::putAll);
+            entry.getValue(), objectResult, targetReference, objectLineageBuilder)), HashMap::putAll);
 
     resultData.put(SchemaConstants.HAS_LINEAGE_FIELD, objectLineageBuilder.build());
 
@@ -218,7 +224,7 @@ public final class FetchPlanner {
   }
 
   private Object mapPropertyResult(Property property, PropertyMapping propertyMapping, ObjectResult objectResult,
-      ObjectLineage.ObjectLineageBuilder objectLineageBuilder) {
+      ObjectReference targetReference, ObjectLineage.ObjectLineageBuilder objectLineageBuilder) {
     var sourceProperties = new LinkedHashSet<SourceProperty>();
 
     var resultValue = propertyMapping.getPathMappings()
@@ -239,15 +245,12 @@ public final class FetchPlanner {
                   return Stream.empty();
                 }
 
-                var resultType = pathResult.getObjectType();
+                var resultType = objectResult.getObjectType();
 
                 sourceProperties.add(SourceProperty.builder()
-                    .subject(SourceObjectReference.builder()
+                    .subject(ObjectReference.builder()
                         .objectType(resultType.getName())
-                        .objectKey((String) pathResult.getObjectKey()
-                            .get(resultType.getIdentityProperties()
-                                .get(0)
-                                .getName()))
+                        .objectKey(keyExtractor(resultType).apply(pathResult.getProperties()))
                         .build())
                     .property(path.getLastSegment())
                     .propertyPath(path.getSegments())
@@ -277,6 +280,7 @@ public final class FetchPlanner {
 
     if (property instanceof Attribute) {
       var orchestratedProperty = OrchestratedProperty.builder()
+          .subject(targetReference)
           .property(property.getName())
           .value(resultValue)
           .isDerivedFrom(sourceProperties)

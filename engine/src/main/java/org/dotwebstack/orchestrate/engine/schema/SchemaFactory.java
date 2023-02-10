@@ -18,6 +18,7 @@ import graphql.language.NonNullType;
 import graphql.language.ObjectTypeDefinition;
 import graphql.language.Type;
 import graphql.language.TypeName;
+import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.SchemaGenerator;
@@ -33,8 +34,8 @@ import org.dotwebstack.orchestrate.model.Attribute;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.lineage.ObjectLineage;
+import org.dotwebstack.orchestrate.model.lineage.ObjectReference;
 import org.dotwebstack.orchestrate.model.lineage.OrchestratedProperty;
-import org.dotwebstack.orchestrate.model.lineage.SourceObjectReference;
 import org.dotwebstack.orchestrate.model.lineage.SourceProperty;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -109,6 +110,10 @@ public final class SchemaFactory {
     typeDefinitionRegistry.add(newObjectTypeDefinition()
         .name(OrchestratedProperty.class.getSimpleName())
         .fieldDefinition(newFieldDefinition()
+            .name("subject")
+            .type(requiredType(ObjectReference.class))
+            .build())
+        .fieldDefinition(newFieldDefinition()
             .name("property")
             .type(requiredType("String"))
             .build())
@@ -126,7 +131,7 @@ public final class SchemaFactory {
         .name(SourceProperty.class.getSimpleName())
         .fieldDefinition(newFieldDefinition()
             .name("subject")
-            .type(requiredType(SourceObjectReference.class))
+            .type(requiredType(ObjectReference.class))
             .build())
         .fieldDefinition(newFieldDefinition()
             .name("property")
@@ -143,7 +148,7 @@ public final class SchemaFactory {
         .build());
 
     typeDefinitionRegistry.add(newObjectTypeDefinition()
-        .name(SourceObjectReference.class.getSimpleName())
+        .name(ObjectReference.class.getSimpleName())
         .fieldDefinition(newFieldDefinition()
             .name("objectType")
             .type(requiredType("String"))
@@ -172,8 +177,17 @@ public final class SchemaFactory {
 
     var valueFetcher = new PropertyValueFetcher();
 
+    DataFetcher<String> objectKeyFetcher = environment -> ((ObjectReference) environment.getSource())
+        .getObjectKey()
+        .values()
+        .stream()
+        .map(String.class::cast)
+        .findFirst()
+        .orElseThrow();
+
     codeRegistryBuilder.dataFetcher(coordinates(OrchestratedProperty.class.getSimpleName(), "value"), valueFetcher)
-        .dataFetcher(coordinates(SourceProperty.class.getSimpleName(), "value"), valueFetcher);
+        .dataFetcher(coordinates(SourceProperty.class.getSimpleName(), "value"), valueFetcher)
+        .dataFetcher(coordinates(ObjectReference.class.getSimpleName(), "objectKey"), objectKeyFetcher);
   }
 
   private ObjectTypeDefinition createObjectTypeDefinition(ObjectType objectType) {
