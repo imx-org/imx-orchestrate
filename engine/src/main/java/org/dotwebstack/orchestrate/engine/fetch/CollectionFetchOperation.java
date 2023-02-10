@@ -1,5 +1,7 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
+
 import java.util.Map;
 import java.util.logging.Level;
 import lombok.experimental.SuperBuilder;
@@ -29,7 +31,7 @@ final class CollectionFetchOperation extends AbstractFetchOperation {
         .log(objectType.getName(), Level.INFO, SignalType.ON_NEXT)
         .map(properties -> ObjectResult.builder()
             .objectType(objectType)
-            .objectKey(Map.of("identificatie", properties.get("identificatie")))
+            .objectKey(keyExtractor(objectType).apply(properties))
             .properties(properties)
             .build())
         .flatMap(this::executeNextOperations);

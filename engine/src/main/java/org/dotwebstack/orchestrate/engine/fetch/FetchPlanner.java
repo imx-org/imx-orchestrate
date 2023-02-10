@@ -102,12 +102,11 @@ public final class FetchPlanner {
               .get(0)
               .getLastSegment();
 
-
           if (!targetKeyName.equals(sourceKeyName)) {
             return input -> {
-              var accResult = acc.apply(input);
+              var accResult = new HashMap<>(acc.apply(input));
               accResult.put(sourceKeyName, input.get(targetKeyName));
-              return accResult;
+              return unmodifiableMap(accResult);
             };
           }
 
@@ -240,12 +239,15 @@ public final class FetchPlanner {
                   return Stream.empty();
                 }
 
+                var resultType = pathResult.getObjectType();
+
                 sourceProperties.add(SourceProperty.builder()
                     .subject(SourceObjectReference.builder()
-                        .objectType(pathResult.getObjectType()
-                            .getName())
+                        .objectType(resultType.getName())
                         .objectKey((String) pathResult.getObjectKey()
-                            .get("identificatie"))
+                            .get(resultType.getIdentityProperties()
+                                .get(0)
+                                .getName()))
                         .build())
                     .property(path.getLastSegment())
                     .propertyPath(path.getSegments())
