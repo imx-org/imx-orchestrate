@@ -5,7 +5,6 @@ import static org.dotwebstack.orchestrate.TestFixtures.OPR_DATA;
 import static org.dotwebstack.orchestrate.TestFixtures.VBO_DATA;
 import static org.dotwebstack.orchestrate.TestFixtures.WPL_DATA;
 import static org.dotwebstack.orchestrate.TestFixtures.createModelMapping;
-
 import graphql.GraphQL;
 import graphql.schema.GraphQLSchema;
 import java.util.Map;
@@ -29,10 +28,17 @@ import reactor.core.publisher.Mono;
 @EnableConfigurationProperties(GraphQlProperties.class)
 public class GatewayConfiguration {
 
+  private GatewayProperties gatewayProperties;
+
+  public GatewayConfiguration(GatewayProperties gatewayProperties) {
+    this.gatewayProperties = gatewayProperties;
+  }
+
   @Bean
   public GraphQlSource graphQlSource() {
     var orchestration = Orchestration.builder()
-        .modelMapping(createModelMapping())
+        .modelMapping(createModelMapping(gatewayProperties.getTargetModel(),
+            GatewayConfiguration.class.getResourceAsStream(gatewayProperties.getMapping())))
         .source("bag", createSourceStub())
         .build();
 

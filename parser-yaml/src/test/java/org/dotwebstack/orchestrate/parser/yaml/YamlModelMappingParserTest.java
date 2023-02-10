@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Objects;
 import org.dotwebstack.orchestrate.model.ComponentRegistry;
 import org.dotwebstack.orchestrate.model.combiners.Concat;
+import org.dotwebstack.orchestrate.model.transforms.FunctionTransform;
 import org.dotwebstack.orchestrate.model.transforms.TestPredicate;
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +17,10 @@ class YamlModelMappingParserTest {
         .registerTransform(TestPredicate.builder()
             .name("nonNull")
             .predicate(Objects::nonNull)
+            .build())
+        .registerTransform(FunctionTransform.builder()
+            .name("toString")
+            .function(Objects::toString)
             .build());
 
     var yamlMapper = YamlModelMappingParser.getInstance(Map.of("concat", Concat.class, "nonNull", TestPredicate.class),
