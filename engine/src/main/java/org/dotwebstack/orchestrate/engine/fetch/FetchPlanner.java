@@ -113,21 +113,28 @@ public final class FetchPlanner {
           return acc;
         }, noopCombiner());
 
-    var targetReference = ObjectReference.builder()
-        .objectType(targetType.getName())
-        .objectKey(keyExtractor(targetType).apply(environment.getArguments()))
-        .build();
-
     var fetchPublisher = fetchSourceObject(sourceType, unmodifiableSet(sourcePaths), sourceRoot.getModelAlias(),
         isCollection, inputMapper).execute(environment.getArguments());
 
     if (fetchPublisher instanceof Mono<?>) {
+      var targetReference = ObjectReference.builder()
+          .objectType(targetType.getName())
+          .objectKey(keyExtractor(targetType).apply(environment.getArguments()))
+          .build();
+
       return Mono.from(fetchPublisher)
           .map(result -> mapResult(unmodifiableMap(propertyMappings), result, targetReference));
     }
 
     return Flux.from(fetchPublisher)
-        .map(result -> mapResult(unmodifiableMap(propertyMappings), result, targetReference));
+        .map(result -> {
+          var targetReference = ObjectReference.builder()
+              .objectType(targetType.getName())
+              .objectKey(keyExtractor(targetType).apply(result.getProperties()))
+              .build();
+
+          return mapResult(unmodifiableMap(propertyMappings), result, targetReference);
+        });
   }
 
   private FetchOperation fetchSourceObject(ObjectType sourceType, Set<PropertyPath> sourcePaths, String sourceAlias,
