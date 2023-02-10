@@ -86,8 +86,36 @@ public final class FetchPlanner {
 
     // TODO: Refactor
     var isCollection = isList(unwrapNonNull(environment.getFieldType()));
+
+    // TODO: Refactor
+    var inputMapper = targetType.getIdentityProperties(Attribute.class)
+        .stream()
+        .reduce(UnaryOperator.<Map<String, Object>>identity(), (acc, attribute) -> {
+          var targetKeyName = targetType.getIdentityProperties()
+              .get(0)
+              .getName();
+
+          var sourceKeyName = targetMapping.getPropertyMapping(attribute.getName())
+              .getPathMappings()
+              .get(0)
+              .getPaths()
+              .get(0)
+              .getLastSegment();
+
+
+          if (!targetKeyName.equals(sourceKeyName)) {
+            return input -> {
+              var accResult = acc.apply(input);
+              accResult.put(sourceKeyName, input.get(targetKeyName));
+              return accResult;
+            };
+          }
+
+          return acc;
+        }, noopCombiner());
+
     var fetchPublisher = fetchSourceObject(sourceType, unmodifiableSet(sourcePaths), sourceRoot.getModelAlias(),
-        isCollection, UnaryOperator.identity()).execute(environment.getArguments());
+        isCollection, inputMapper).execute(environment.getArguments());
 
     if (fetchPublisher instanceof Mono<?>) {
       return Mono.from(fetchPublisher)

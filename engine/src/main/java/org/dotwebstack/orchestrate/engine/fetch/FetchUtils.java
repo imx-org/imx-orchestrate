@@ -50,7 +50,7 @@ final class FetchUtils {
     return (T) value;
   }
 
-  public static BinaryOperator<Object> noopCombiner() {
+  public static <T> BinaryOperator<T> noopCombiner() {
     return (a, b) -> {
       throw new OrchestrateException("Combiner should never be called.");
     };
