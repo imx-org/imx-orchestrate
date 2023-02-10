@@ -245,7 +245,7 @@ public final class FetchPlanner {
                   return Stream.empty();
                 }
 
-                var resultType = objectResult.getObjectType();
+                var resultType = pathResult.getObjectType();
 
                 sourceProperties.add(SourceProperty.builder()
                     .subject(ObjectReference.builder()
