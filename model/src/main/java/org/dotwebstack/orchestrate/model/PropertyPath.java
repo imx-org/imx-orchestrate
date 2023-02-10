@@ -25,6 +25,10 @@ public final class PropertyPath {
     return segments.get(0);
   }
 
+  public String getLastSegment() {
+    return segments.get(segments.size() - 1);
+  }
+
   public boolean isLeaf() {
     return segments.size() == 1;
   }

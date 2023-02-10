@@ -40,9 +40,9 @@ final class TestFixtures {
         "ligtAan", Map.of("identificatie", "0200300022472362"), "ligtIn", Map.of("identificatie", "2258")));
     VBO_DATA.put("0200200000075716", Map.of("identificatie", "0200010000130331"));
     VBO_DATA.put("0200200000075718", Map.of("identificatie", "0200010000130331"));
-    OPR_DATA.put("0200300022472362", Map.of("naam", "Laan van Westenenk", "ligtIn", Map.of("identificatie", "3560")));
-    WPL_DATA.put("3560", Map.of("naam", "Apeldoorn"));
-    WPL_DATA.put("2258", Map.of("naam", "Beekbergen"));
+    OPR_DATA.put("0200300022472362", Map.of("identificatie", "0200300022472362", "naam", "Laan van Westenenk", "ligtIn", Map.of("identificatie", "3560")));
+    WPL_DATA.put("3560", Map.of("identificatie", "3560", "naam", "Apeldoorn"));
+    WPL_DATA.put("2258", Map.of("identificatie", "2258", "naam", "Beekbergen"));
   }
 
   public enum TargetModelType {

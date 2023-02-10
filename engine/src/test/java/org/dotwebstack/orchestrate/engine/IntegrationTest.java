@@ -15,6 +15,7 @@ import graphql.GraphQL;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.dotwebstack.orchestrate.engine.schema.SchemaConstants;
 import org.dotwebstack.orchestrate.engine.schema.SchemaFactory;
 import org.dotwebstack.orchestrate.model.PropertyPath;
 import org.dotwebstack.orchestrate.source.CollectionRequest;
@@ -34,6 +35,7 @@ class IntegrationTest {
   private DataRepository dataRepositoryStub;
 
   @Test
+  @SuppressWarnings("unchecked")
   void queryObject_withoutEagerLoading() {
     when(dataRepositoryStub.findOne(any(ObjectRequest.class)))
         .thenAnswer(invocation -> {
@@ -43,15 +45,15 @@ class IntegrationTest {
 
           return switch (objectType.getName()) {
             case "Nummeraanduiding":
-              assertThat(objectRequest.getSelectedProperties()).hasSize(7);
+              assertThat(objectRequest.getSelectedProperties()).hasSize(8);
               assertThat(objectkey).isEqualTo(Map.of("identificatie", "0200200000075716"));
               yield Mono.just(NUM_DATA.get("0200200000075716"));
             case "OpenbareRuimte":
-              assertThat(objectRequest.getSelectedProperties()).hasSize(2);
+              assertThat(objectRequest.getSelectedProperties()).hasSize(3);
               assertThat(objectkey).isEqualTo(Map.of("identificatie", "0200300022472362"));
               yield Mono.just(OPR_DATA.get("0200300022472362"));
             case "Woonplaats":
-              assertThat(objectRequest.getSelectedProperties()).hasSize(1);
+              assertThat(objectRequest.getSelectedProperties()).hasSize(2);
               assertThat(objectkey).isEqualTo(Map.of("identificatie", "3560"));
               yield Mono.just(WPL_DATA.get("3560"));
             default:
@@ -93,6 +95,18 @@ class IntegrationTest {
               plaatsnaam
               isHoofdadres
               omschrijving
+              hasLineage {
+                orchestratedProperties {
+                  property
+                  isDerivedFrom {
+                    property
+                    subject {
+                      objectType
+                      objectKey
+                    }
+                  }
+                }
+              }
             }
           }
         """);
@@ -116,6 +130,16 @@ class IntegrationTest {
         .containsEntry("plaatsnaam", "Apeldoorn")
         .containsEntry("isHoofdadres", true)
         .containsEntry("omschrijving", "Laan van Westenenk 701, 7334DP Apeldoorn");
+
+    var lineage = (Map<String, Object>) adres.get(SchemaConstants.HAS_LINEAGE_FIELD);
+    var orchestratedProperty = ((List<Map<String, Object>>) lineage.get("orchestratedProperties")).get(0);
+    var sourceProperty = ((List<Map<String, Object>>) orchestratedProperty.get("isDerivedFrom")).get(0);
+
+    assertThat(orchestratedProperty).isNotNull()
+        .containsEntry("property", "identificatie");
+    assertThat(sourceProperty).isNotNull()
+        .containsEntry("property", "identificatie")
+        .containsEntry("subject", Map.of("objectType", "Nummeraanduiding", "objectKey", "0200200000075716"));
   }
 
   @Test
@@ -128,11 +152,11 @@ class IntegrationTest {
 
           return switch (objectType.getName()) {
             case "OpenbareRuimte":
-              assertThat(objectRequest.getSelectedProperties()).hasSize(2);
+              assertThat(objectRequest.getSelectedProperties()).hasSize(3);
               assertThat(objectkey).isEqualTo(Map.of("identificatie", "0200300022472362"));
               yield Mono.just(OPR_DATA.get("0200300022472362"));
             case "Woonplaats":
-              assertThat(objectRequest.getSelectedProperties()).hasSize(1);
+              assertThat(objectRequest.getSelectedProperties()).hasSize(2);
               yield Mono.just(WPL_DATA.get((String) objectkey.get("identificatie")));
             default:
               yield Mono.error(() -> new RuntimeException("Error!"));
@@ -146,12 +170,13 @@ class IntegrationTest {
 
           return switch (objectType.getName()) {
             case "Nummeraanduiding":
-              assertThat(collectionRequest.getSelectedProperties()).hasSize(7);
+              assertThat(collectionRequest.getSelectedProperties()).hasSize(8);
               yield Flux.fromIterable(NUM_DATA.values());
             case "Verblijfsobject":
               assertThat(collectionRequest.getSelectedProperties()).hasSize(1);
               var filter = collectionRequest.getFilter();
-              assertThat(filter.getPropertyPath()).isEqualTo(PropertyPath.fromString("heeftAlsHoofdadres/identificatie"));
+              assertThat(filter.getPropertyPath()).isEqualTo(PropertyPath.fromString("heeftAlsHoofdadres" +
+                  "/identificatie"));
               assertThat(filter.getValue()).isInstanceOf(String.class);
               yield Optional.ofNullable(VBO_DATA.get((String) filter.getValue()))
                   .map(Flux::just)

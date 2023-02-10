@@ -1,6 +1,7 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
 import static graphql.introspection.Introspection.INTROSPECTION_SYSTEM_FIELDS;
+import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.HAS_LINEAGE_FIELD;
 
 import graphql.schema.SelectedField;
 import java.util.List;
@@ -39,8 +40,9 @@ final class FetchUtils {
         .toList();
   }
 
-  public static boolean isIntrospectionField(SelectedField selectedField) {
-    return INTROSPECTION_SYSTEM_FIELDS.contains(selectedField.getName());
+  public static boolean isReservedField(SelectedField selectedField) {
+    var fieldName = selectedField.getName();
+    return INTROSPECTION_SYSTEM_FIELDS.contains(fieldName) || HAS_LINEAGE_FIELD.equals(fieldName);
   }
 
   @SuppressWarnings("unchecked")
@@ -54,17 +56,17 @@ final class FetchUtils {
     };
   }
 
-  public static Object pathValue(Map<String, Object> data, PropertyPath path) {
+  public static ObjectResult pathResult(ObjectResult objectResult, PropertyPath path) {
     if (path.isLeaf()) {
-      return data.get(path.getFirstSegment());
+      return objectResult;
     }
 
-    Map<String, Object> nestedData = cast(data.get(path.getFirstSegment()));
+    var nestedObject = objectResult.getNestedObject(path.getFirstSegment());
 
-    if (nestedData == null) {
+    if (nestedObject == null) {
       return null;
     }
 
-    return pathValue(nestedData, path.withoutFirstSegment());
+    return pathResult(nestedObject, path.withoutFirstSegment());
   }
 }
