@@ -191,7 +191,10 @@ public final class FetchPlanner {
           var nestedObjectType = modelMapping.getSourceModel(sourceAlias)
               .getObjectType(((Relation) property).getTarget());
 
-          selectedProperties.add(new SelectedProperty(property, selectIdentity(nestedObjectType)));
+          if (!property.isIdentifier()) {
+            selectedProperties.add(new SelectedProperty(property, selectIdentity(nestedObjectType)));
+          }
+
           nextOperations.put(propertyName, fetchSourceObject(nestedObjectType, nestedSourcePaths, sourceAlias, false,
               inputMapper(propertyName)));
         });
