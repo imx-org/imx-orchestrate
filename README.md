@@ -20,4 +20,4 @@ Specification: https://www.apollographql.com/docs/federation/
 
 ## License
 
-The DotWebStack Framework is published under the [MIT License](LICENSE.md).
+This library is published under the [MIT License](LICENSE.md).
