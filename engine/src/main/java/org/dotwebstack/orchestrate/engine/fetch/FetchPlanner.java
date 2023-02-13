@@ -144,7 +144,9 @@ public final class FetchPlanner {
 
     sourcePaths.stream()
         .filter(PropertyPath::isLeaf)
-        .map(sourcePath -> new SelectedProperty(sourceType.getProperty(sourcePath.getFirstSegment())))
+        .map(sourcePath -> sourceType.getProperty(sourcePath.getFirstSegment()))
+        .filter(not(Property::isIdentifier))
+        .map(SelectedProperty::new)
         .forEach(selectedProperties::add);
 
     var nextOperations = new HashMap<String, FetchOperation>();

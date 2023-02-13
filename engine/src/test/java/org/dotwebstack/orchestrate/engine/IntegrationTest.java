@@ -45,7 +45,7 @@ class IntegrationTest {
 
           return switch (objectType.getName()) {
             case "Nummeraanduiding":
-              assertThat(objectRequest.getSelectedProperties()).hasSize(8);
+              assertThat(objectRequest.getSelectedProperties()).hasSize(7);
               assertThat(objectkey).isEqualTo(Map.of("identificatie", "0200200000075716"));
               yield Mono.just(NUM_DATA.get("0200200000075716"));
             case "OpenbareRuimte":
@@ -170,7 +170,7 @@ class IntegrationTest {
 
           return switch (objectType.getName()) {
             case "Nummeraanduiding":
-              assertThat(collectionRequest.getSelectedProperties()).hasSize(8);
+              assertThat(collectionRequest.getSelectedProperties()).hasSize(7);
               yield Flux.fromIterable(NUM_DATA.values());
             case "Verblijfsobject":
               assertThat(collectionRequest.getSelectedProperties()).hasSize(1);
