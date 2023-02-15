@@ -12,5 +12,8 @@ jobs:
         with:
           java-version: 17
           distribution: temurin
-      - name: Build with Maven
-        run: mvn --batch-mode --update-snapshots package
+      - name: Analyze with SonarCloud
+        run: mvn -B verify sonar:sonar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
