@@ -34,7 +34,6 @@
         <assertj.version>3.24.2</assertj.version>
         <mockito.version>5.1.1</mockito.version>
         <jacoco.version>0.8.8</jacoco.version>
-        <sonar.projectKey>orchestrate</sonar.projectKey>
         <sonar.organization>dotwebstack</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
