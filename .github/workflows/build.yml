@@ -14,6 +14,7 @@ jobs:
         with:
           java-version: 17
           distribution: temurin
+          cache: maven
       - name: Analyze with SonarCloud
         run: mvn -B verify sonar:sonar
         env:
