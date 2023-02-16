@@ -15,7 +15,7 @@ jobs:
           java-version: 17
           distribution: temurin
           cache: maven
-      - name: Analyze with SonarCloud
+      - name: Compile & analyze
         run: mvn -B verify sonar:sonar -Pcoverage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
