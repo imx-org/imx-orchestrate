@@ -5,6 +5,7 @@ import static org.dotwebstack.orchestrate.TestFixtures.OPR_DATA;
 import static org.dotwebstack.orchestrate.TestFixtures.VBO_DATA;
 import static org.dotwebstack.orchestrate.TestFixtures.WPL_DATA;
 import static org.dotwebstack.orchestrate.TestFixtures.createModelMapping;
+
 import graphql.GraphQL;
 import graphql.schema.GraphQLSchema;
 import java.util.Map;
@@ -86,7 +87,7 @@ public class GatewayConfiguration {
 
         return switch (typeName) {
           case "Nummeraanduiding" -> Flux.fromIterable(NUM_DATA.values());
-          case "Verblijfsobject" -> Optional.ofNullable(VBO_DATA.get((String) collectionRequest.getFilter()
+          case "Verblijfsobject" -> Optional.ofNullable(VBO_DATA.get(collectionRequest.getFilter()
                   .getValue()))
               .map(Flux::just)
               .orElse(Flux.empty());

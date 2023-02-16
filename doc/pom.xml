@@ -24,7 +24,22 @@
         </dependency>
         <dependency>
             <groupId>org.dotwebstack.orchestrate</groupId>
+            <artifactId>orchestrate-gateway</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.dotwebstack.orchestrate</groupId>
             <artifactId>orchestrate-model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.dotwebstack.orchestrate</groupId>
+            <artifactId>orchestrate-parser-yaml</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.dotwebstack.orchestrate</groupId>
+            <artifactId>orchestrate-source</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
