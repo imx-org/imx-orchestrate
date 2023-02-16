@@ -29,6 +29,10 @@ class GatewayApplicationTest {
             omschrijving
             hasLineage {
               orchestratedProperties {
+                subject {
+                  objectType
+                  objectKey
+                }
                 property
                 value {
                   stringValue
@@ -36,12 +40,12 @@ class GatewayApplicationTest {
                   booleanValue
                 }
                 isDerivedFrom {
-                  property
-                  propertyPath
                   subject {
                     objectType
                     objectKey
                   }
+                  property
+                  propertyPath
                   value {
                     stringValue
                     integerValue
