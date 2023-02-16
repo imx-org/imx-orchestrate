@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +11,6 @@ import lombok.Singular;
 
 @Getter
 @EqualsAndHashCode
-@Builder(toBuilder = true)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class PropertyPath {
 
@@ -42,11 +40,8 @@ public final class PropertyPath {
   }
 
   public static PropertyPath fromString(String path) {
-    var segments = path.split(PATH_SEPARATOR);
-
-    return builder()
-        .segments(Arrays.asList(segments))
-        .build();
+    var segments = Arrays.asList(path.split(PATH_SEPARATOR));
+    return new PropertyPath(segments);
   }
 
   @Override

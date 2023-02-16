@@ -60,9 +60,7 @@ public final class FetchPlanner {
     var targetType = modelMapping.getTargetModel()
         .getObjectType(outputType.getName());
 
-    var targetMapping = modelMapping.getObjectTypeMappings()
-        .get(targetType.getName());
-
+    var targetMapping = modelMapping.getObjectTypeMapping(targetType.getName());
     var propertyMappings = new LinkedHashMap<Property, PropertyMapping>();
     var sourcePaths = new HashSet<PropertyPath>();
 
