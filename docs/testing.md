@@ -2,7 +2,7 @@
 
 ## Execution
 
-To run all unit tests locally, the following Maven commands can be used:
+To run all tests locally, the following Maven commands can be used:
 
 ```bash
 mvn test              # for unit tests

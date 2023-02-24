@@ -1,8 +1,8 @@
-## Comparison
+# Comparison
 
 This page describes how this library compares to existing open-source concepts.
 
-### Apollo Federation
+## Apollo Federation
 
 Specification: https://www.apollographql.com/docs/federation/
 
