@@ -13,7 +13,7 @@ import org.springframework.graphql.test.tester.HttpGraphQlTester;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class GatewayApplicationTest {
+class GatewayIT {
 
   private static final String QUERY = """
         {

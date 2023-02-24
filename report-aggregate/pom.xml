@@ -10,7 +10,7 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>orchestrate-doc</artifactId>
+    <artifactId>orchestrate-report-aggregate</artifactId>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
