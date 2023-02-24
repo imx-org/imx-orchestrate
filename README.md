@@ -4,22 +4,9 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=org.dotwebstack.orchestrate%3Aorchestrate&metric=alert_status)](https://sonarcloud.io/dashboard?id=org.dotwebstack.orchestrate%3Aorchestrate)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=org.dotwebstack.orchestrate%3Aorchestrate&metric=coverage)](https://sonarcloud.io/dashboard?id=org.dotwebstack.orchestrate%3Aorchestrate)
 
-## Architecture goals
+## Documentation
 
-- **Model-driven**: the mapping of one or more datasets to a single orchestrated dataset is specified on the level of the information model, regardless of the way the data is published (e.g. APIs, serialization formats). 
-- **Heterogeneous data sources**: the orchestration engine must be able to retrieve data from data sources providing completely different types of interfaces. For example: one data source can be a REST API, while another data source can be a GraphQL API or a CSV file.
-
-## Comparison with existing concepts
-
-### Apollo Federation
-
-Specification: https://www.apollographql.com/docs/federation/
-
-1. Apollo Federation is GraphQL-only, requiring every data source to comply with the Apollo Federation standard, while Orchestrate supports heterogeneous data sources, which may or may not implement GraphQL.
-2. Apollo Federation requires every sub model to be aware of its relations to other models (as part of the GraphQL schema), whereas Orchestrate fully separates the mapping between information models from the models itself. 
-3. Apollo Federation is primarily used for wiring models, where each object type lives (and stays) within its own schema. With orchestrate, you can combine objects by flattening, expanding or zipping multiple objects together.
-4. Apollo Federation does not provide data lineage, whereas Orchestrate tracks the full data lineage for every object instance.
-5. Apollo Federation does not perform data modifications, such as type conversions or aggregations.
+The documentation can be found here: https://dotwebstack.org/orchestrate
 
 ## License
 
