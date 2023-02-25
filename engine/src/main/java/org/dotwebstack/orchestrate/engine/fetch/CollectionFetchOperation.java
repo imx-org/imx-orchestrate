@@ -1,13 +1,11 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
-
 import java.util.Map;
 import java.util.logging.Level;
 import lombok.experimental.SuperBuilder;
 import org.dotwebstack.orchestrate.source.CollectionRequest;
 import org.dotwebstack.orchestrate.source.FilterDefinition;
-import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.SignalType;
 
 @SuperBuilder(toBuilder = true)
@@ -15,27 +13,19 @@ final class CollectionFetchOperation extends AbstractFetchOperation {
 
   private final FilterDefinition filter;
 
-  private final boolean single;
-
-  public Publisher<ObjectResult> execute(Map<String, Object> input) {
-    var mappedInput = inputMapper.apply(input);
-
+  public Flux<ObjectResult> fetch(Map<String, Object> input) {
     var collectionRequest = CollectionRequest.builder()
         .objectType(objectType)
-        .filter(filter != null ? filter.createExpression(mappedInput) : null)
+        .filter(filter != null ? filter.createExpression(input) : null)
         .selectedProperties(selectedProperties)
         .build();
 
-    var result = source.getDataRepository()
+    return source.getDataRepository()
         .find(collectionRequest)
         .log(objectType.getName(), Level.INFO, SignalType.ON_NEXT)
         .map(properties -> ObjectResult.builder()
-            .objectType(objectType)
-            .objectKey(keyExtractor(objectType).apply(properties))
+            .type(objectType)
             .properties(properties)
-            .build())
-        .flatMap(this::executeNextOperations);
-
-    return single ? result.singleOrEmpty() : result;
+            .build());
   }
 }

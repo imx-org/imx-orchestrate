@@ -1,9 +1,9 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
 import java.util.Map;
-import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 
 interface FetchOperation {
 
-  Publisher<ObjectResult> execute(Map<String, Object> input);
+  Flux<ObjectResult> execute(Map<String, Object> input);
 }

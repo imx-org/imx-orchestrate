@@ -4,33 +4,54 @@ import static graphql.introspection.Introspection.INTROSPECTION_SYSTEM_FIELDS;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.HAS_LINEAGE_FIELD;
 
 import graphql.schema.SelectedField;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.BinaryOperator;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.ObjectType;
+import org.dotwebstack.orchestrate.model.ObjectTypeMapping;
 import org.dotwebstack.orchestrate.model.Property;
 import org.dotwebstack.orchestrate.model.PropertyPath;
 import org.dotwebstack.orchestrate.source.SelectedProperty;
+import reactor.util.function.Tuples;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class FetchUtils {
 
-  public static UnaryOperator<Map<String, Object>> inputMapper(String propertyName) {
-    return input -> Optional.ofNullable(input.get(propertyName))
-        .map(FetchUtils::<Map<String, Object>>cast)
-        .orElse(null);
+  public static UnaryOperator<Map<String, Object>> keyExtractor(ObjectType targetType, ObjectTypeMapping targetMapping) {
+    // TODO: Refactor & support nested keys
+    var propertyMapping = targetType.getIdentityProperties()
+        .stream()
+        .map(property -> {
+          var sourcePath = targetMapping.getPropertyMapping(property.getName())
+              .getPathMappings()
+              .get(0)
+              .getPaths()
+              .get(0)
+              .getFirstSegment();
+
+          return Tuples.of(sourcePath, property.getName());
+        })
+        .toList();
+
+    return input -> propertyMapping.stream()
+        .collect(HashMap::new, (acc, t) -> acc.put(t.getT1(), input.get(t.getT2())), HashMap::putAll);
   }
 
-  public static UnaryOperator<Map<String, Object>> keyExtractor(ObjectType objectType) {
-    return data -> objectType.getIdentityProperties()
+  public static Function<ObjectResult, Map<String, Object>> inputMapper(ObjectType objectType) {
+    return objectResult -> objectType.getIdentityProperties()
         .stream()
-        .collect(Collectors.toMap(Property::getName, property -> data.get(property.getName())));
+        .collect(Collectors.toMap(Property::getName, property -> objectResult.getProperty(property.getName())));
+  }
+
+  public static Function<ObjectResult, Map<String, Object>> inputMapper(String propertyName) {
+    return objectResult -> cast(objectResult.getProperty(propertyName));
   }
 
   public static List<SelectedProperty> selectIdentity(ObjectType objectType) {
@@ -61,12 +82,12 @@ final class FetchUtils {
       return objectResult;
     }
 
-    var nestedObject = objectResult.getNestedObject(path.getFirstSegment());
+    var relatedObject = objectResult.getRelatedObject(path.getFirstSegment());
 
-    if (nestedObject == null) {
+    if (relatedObject == null) {
       return null;
     }
 
-    return pathResult(nestedObject, path.withoutFirstSegment());
+    return pathResult(relatedObject, path.withoutFirstSegment());
   }
 }

@@ -34,17 +34,16 @@ public final class TestFixtures {
 
   static {
     NUM_DATA.put("0200200000075716", Map.of("identificatie", "0200200000075716", "huisnummer", 701, "postcode",
-        "7334DP",
-        "ligtAan", Map.of("identificatie", "0200300022472362")));
+        "7334DP", "ligtAan", Map.of("identificatie", "0200300022472362")));
     NUM_DATA.put("0200200000075717", Map.of("identificatie", "0200200000075717", "huisnummer", 702, "postcode",
-        "7334DP",
-        "ligtAan", Map.of("identificatie", "0200300022472362")));
+        "7334DP", "ligtAan", Map.of("identificatie", "0200300022472362")));
     NUM_DATA.put("0200200000075718", Map.of("identificatie", "0200200000075718", "huisnummer", 703,
-        "huisnummertoevoeging", "8", "huisletter", "C", "postcode", "7334DP",
-        "ligtAan", Map.of("identificatie", "0200300022472362"), "ligtIn", Map.of("identificatie", "2258")));
+        "huisnummertoevoeging", "8", "huisletter", "C", "postcode", "7334DP", "ligtAan", Map.of("identificatie",
+            "0200300022472362"), "ligtIn", Map.of("identificatie", "2258")));
     VBO_DATA.put("0200200000075716", Map.of("identificatie", "0200010000130331"));
     VBO_DATA.put("0200200000075718", Map.of("identificatie", "0200010000130331"));
-    OPR_DATA.put("0200300022472362", Map.of("identificatie", "0200300022472362", "naam", "Laan van Westenenk", "ligtIn", Map.of("identificatie", "3560")));
+    OPR_DATA.put("0200300022472362", Map.of("identificatie", "0200300022472362", "naam", "Laan van Westenenk",
+        "ligtIn", Map.of("identificatie", "3560")));
     WPL_DATA.put("3560", Map.of("identificatie", "3560", "naam", "Apeldoorn"));
     WPL_DATA.put("2258", Map.of("identificatie", "2258", "naam", "Beekbergen"));
   }

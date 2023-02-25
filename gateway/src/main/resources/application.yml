@@ -21,5 +21,3 @@ orchestrate:
   gateway:
     targetModel: ${TARGET_MODEL:adres}
     mapping: ${MODEL_MAPPING:/config/adresmapping.yaml}
-#    targetModel: ${TARGET_MODEL:coreLocation}
-#    mapping: ${MODEL_MAPPING:/config/coreLocationMapping.yaml

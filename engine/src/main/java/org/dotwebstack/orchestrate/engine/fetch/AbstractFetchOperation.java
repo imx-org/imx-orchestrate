@@ -2,6 +2,7 @@ package org.dotwebstack.orchestrate.engine.fetch;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 import lombok.Builder;
 import lombok.Singular;
@@ -9,9 +10,9 @@ import lombok.experimental.SuperBuilder;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.source.SelectedProperty;
 import org.dotwebstack.orchestrate.source.Source;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuples;
 
 @SuperBuilder(toBuilder = true)
 abstract class AbstractFetchOperation implements FetchOperation {
@@ -24,23 +25,28 @@ abstract class AbstractFetchOperation implements FetchOperation {
   protected final List<SelectedProperty> selectedProperties;
 
   @Singular
-  protected final Map<String, FetchOperation> nextOperations;
+  protected final Set<NextOperation> nextOperations;
 
   @Builder.Default
-  protected final UnaryOperator<Map<String, Object>> inputMapper = UnaryOperator.identity();
+  protected final UnaryOperator<ObjectResult> resultMapper = UnaryOperator.identity();
 
-  protected Mono<ObjectResult> executeNextOperations(ObjectResult input) {
+  public final Flux<ObjectResult> execute(Map<String, Object> input) {
+    return Flux.from(fetch(input))
+        .flatMap(this::executeNextOperations)
+        .map(resultMapper);
+  }
+
+  protected abstract Publisher<ObjectResult> fetch(Map<String, Object> input);
+
+  private Mono<ObjectResult> executeNextOperations(ObjectResult objectResult) {
     if (nextOperations.isEmpty()) {
-      return Mono.just(input);
+      return Mono.just(objectResult);
     }
 
-    return Flux.fromIterable(nextOperations.entrySet())
-        .flatMap(entry -> {
-          var nextOperation = entry.getValue();
-          return Mono.from(nextOperation.execute(input.getProperties()))
-              .map(nestedResult -> Tuples.of(entry.getKey(), nestedResult));
-        })
-        .collect(input::toBuilder, (builder, tuple) -> builder.nestedObject(tuple.getT1(), tuple.getT2()))
+    return Flux.fromIterable(nextOperations)
+        .flatMap(nextOperation -> nextOperation.execute(objectResult))
+        .collect(objectResult::toBuilder, (builder, result) -> builder.relatedObject(result.getPropertyName(),
+            result.getObjectResult()))
         .map(ObjectResult.ObjectResultBuilder::build);
   }
 }

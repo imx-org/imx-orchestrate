@@ -20,9 +20,14 @@ public final class ModelMapping {
   @Singular
   private final Map<String, ObjectTypeMapping> objectTypeMappings;
 
-  public Model getSourceModel(String key) {
-    return Optional.ofNullable(sourceModels.get(key))
-        .orElseThrow(() -> new ModelException("Source model not found: " + key));
+  public Model getSourceModel(String modelAlias) {
+    return Optional.ofNullable(sourceModels.get(modelAlias))
+        .orElseThrow(() -> new ModelException("Source model not found: " + modelAlias));
+  }
+
+  public ObjectType getSourceType(SourceTypeRef sourceTypeRef) {
+    return getSourceModel(sourceTypeRef.getModelAlias())
+        .getObjectType(sourceTypeRef.getObjectType());
   }
 
   public ObjectTypeMapping getObjectTypeMapping(String name) {
