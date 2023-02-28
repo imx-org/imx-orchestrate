@@ -1,6 +1,5 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
-import java.util.Map;
 import java.util.logging.Level;
 import lombok.experimental.SuperBuilder;
 import org.dotwebstack.orchestrate.source.CollectionRequest;
@@ -13,10 +12,10 @@ final class CollectionFetchOperation extends AbstractFetchOperation {
 
   private final FilterDefinition filter;
 
-  public Flux<ObjectResult> fetch(Map<String, Object> input) {
+  public Flux<ObjectResult> fetch(FetchContext context) {
     var collectionRequest = CollectionRequest.builder()
         .objectType(objectType)
-        .filter(filter != null ? filter.createExpression(input) : null)
+        .filter(filter != null ? filter.createExpression(context.getInput()) : null)
         .selectedProperties(selectedProperties)
         .build();
 

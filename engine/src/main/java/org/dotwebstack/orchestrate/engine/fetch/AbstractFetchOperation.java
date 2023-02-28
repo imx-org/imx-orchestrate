@@ -1,7 +1,6 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import lombok.Builder;
@@ -30,21 +29,21 @@ abstract class AbstractFetchOperation implements FetchOperation {
   @Builder.Default
   protected final UnaryOperator<ObjectResult> resultMapper = UnaryOperator.identity();
 
-  public final Flux<ObjectResult> execute(Map<String, Object> input) {
-    return Flux.from(fetch(input))
-        .flatMap(this::executeNextOperations)
+  public final Flux<ObjectResult> execute(FetchContext context) {
+    return Flux.from(fetch(context))
+        .flatMap(objectResult -> executeNextOperations(objectResult, context))
         .map(resultMapper);
   }
 
-  protected abstract Publisher<ObjectResult> fetch(Map<String, Object> input);
+  protected abstract Publisher<ObjectResult> fetch(FetchContext context);
 
-  private Mono<ObjectResult> executeNextOperations(ObjectResult objectResult) {
+  private Mono<ObjectResult> executeNextOperations(ObjectResult objectResult, FetchContext context) {
     if (nextOperations.isEmpty()) {
       return Mono.just(objectResult);
     }
 
     return Flux.fromIterable(nextOperations)
-        .flatMap(nextOperation -> nextOperation.execute(objectResult))
+        .flatMap(nextOperation -> nextOperation.execute(objectResult, context))
         .collect(objectResult::toBuilder, (builder, result) -> builder.relatedObject(result.getPropertyName(),
             result.getObjectResult()))
         .map(ObjectResult.ObjectResultBuilder::build);

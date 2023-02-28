@@ -72,10 +72,12 @@ public final class FetchPlanner {
     var fetchOperation = fetchSourceObject(sourceType, unmodifiableSet(sourcePaths), targetMapping.getSourceRoot()
         .getModelAlias(), isCollection, resultMapper);
 
-    var input = keyExtractor(targetType, targetMapping)
-        .apply(environment.getArguments());
+    var context = FetchContext.builder()
+        .input(keyExtractor(targetType, targetMapping)
+            .apply(environment.getArguments()))
+        .build();
 
-    var fetchResult = fetchOperation.execute(input)
+    var fetchResult = fetchOperation.execute(context)
         .map(ObjectResult::toMap);
 
     return isCollection ? fetchResult : fetchResult.singleOrEmpty();

@@ -19,14 +19,14 @@ public class NextOperation {
 
   private final boolean singleResult;
 
-  public Publisher<NextOperationResult> execute(ObjectResult objectResult) {
+  public Publisher<NextOperationResult> execute(ObjectResult objectResult, FetchContext context) {
     var input = inputMapper.apply(objectResult);
 
     if (input == null) {
       return Mono.empty();
     }
 
-    var resultPublisher = delegateOperation.execute(input);
+    var resultPublisher = delegateOperation.execute(context.withInput(input));
 
     // TODO: Handle nested object lists
     return Mono.from(resultPublisher)

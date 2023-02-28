@@ -6,7 +6,7 @@
 
 ## Documentation
 
-The documentation can be found here: https://dotwebstack.org/orchestrate
+The documentation can be found here: https://dotwebstack.org/orchestrate/
 
 ## License
 

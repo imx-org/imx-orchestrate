@@ -1,6 +1,5 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
-import java.util.Map;
 import java.util.logging.Level;
 import lombok.experimental.SuperBuilder;
 import org.dotwebstack.orchestrate.source.ObjectRequest;
@@ -10,10 +9,10 @@ import reactor.core.publisher.SignalType;
 @SuperBuilder(toBuilder = true)
 final class ObjectFetchOperation extends AbstractFetchOperation {
 
-  public Mono<ObjectResult> fetch(Map<String, Object> input) {
+  public Mono<ObjectResult> fetch(FetchContext context) {
     var objectRequest = ObjectRequest.builder()
         .objectType(objectType)
-        .objectKey(input)
+        .objectKey(context.getInput())
         .selectedProperties(selectedProperties)
         .build();
 

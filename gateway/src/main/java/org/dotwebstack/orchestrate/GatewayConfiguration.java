@@ -88,7 +88,8 @@ public class GatewayConfiguration {
         return switch (typeName) {
           case "Nummeraanduiding" -> Flux.fromIterable(NUM_DATA.values());
           case "Verblijfsobject" -> Optional.ofNullable(VBO_DATA.get(collectionRequest.getFilter()
-                  .getValue()))
+                  .getValue()
+                  .toString()))
               .map(Flux::just)
               .orElse(Flux.empty());
           default -> Flux.error(() -> new RuntimeException("Error!"));
