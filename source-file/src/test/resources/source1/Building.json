@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "Building 1",
+    "address": {
+      "id": 2
+    }
+  },
+  {
+    "id": 2,
+    "name": "Building 2",
+    "address": {
+      "id": 3
+    }
+  },
+  {
+    "id": 3,
+    "name": "Building 3",
+    "address": {
+      "id": 1
+    }
+  }
+]
