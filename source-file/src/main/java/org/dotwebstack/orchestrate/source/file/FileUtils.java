@@ -37,7 +37,8 @@ public class FileUtils {
         .map(Property::getName)
         .toList();
 
-    return objectNodeToMap(objectNode.retain(propertyNames));
+    return objectNodeToMap(objectNode.deepCopy()
+        .retain(propertyNames));
   }
 
   public static Map<String, Object> getObjectProperties(ObjectNode objectNode,
@@ -47,7 +48,8 @@ public class FileUtils {
         .map(Property::getName)
         .toList();
 
-    return objectNodeToMap(objectNode.retain(propertyNames));
+    return objectNodeToMap(objectNode.deepCopy()
+        .retain(propertyNames));
   }
 
   @SuppressWarnings("unchecked")
