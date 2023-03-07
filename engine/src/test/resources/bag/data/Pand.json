@@ -1,6 +1,7 @@
 [
   {
     "identificatie": "0200100000085932",
+    "oorspronkelijkBouwjaar": "2006",
     "status": "Pand in gebruik",
     "geometrie": {
       "type": "Polygon",

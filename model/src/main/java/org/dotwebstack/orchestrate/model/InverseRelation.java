@@ -2,7 +2,6 @@ package org.dotwebstack.orchestrate.model;
 
 import lombok.Builder;
 import lombok.Getter;
-import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 
 @Getter
 @Builder(toBuilder = true)

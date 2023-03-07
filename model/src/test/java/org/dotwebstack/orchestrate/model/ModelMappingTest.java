@@ -16,7 +16,7 @@ class ModelMappingTest {
         .targetModel(targetModel)
         .sourceModel("src", sourceModel)
         .objectTypeMapping("Area", ObjectTypeMapping.builder()
-            .sourceRoot(SourceTypeRef.fromString("src:City"))
+            .sourceRoot(ObjectTypeRef.fromString("src:City"))
             .propertyMapping("code", PropertyMapping.builder()
                 .pathMapping(PropertyPathMapping.builder()
                   .path(PropertyPath.fromString("id"))

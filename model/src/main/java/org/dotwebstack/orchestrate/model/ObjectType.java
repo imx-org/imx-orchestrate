@@ -10,7 +10,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import lombok.ToString;
-import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 
 @Getter
 @ToString(exclude = {"propertyMap"})
@@ -52,13 +51,5 @@ public final class ObjectType {
   public Property getProperty(String name) {
     return Optional.ofNullable(propertyMap.get(name))
         .orElseThrow(() -> new ModelException("Attribute not found: " + name));
-  }
-
-  public ObjectTypeRef getRef() {
-    return ObjectTypeRef.forType(name);
-  }
-
-  public boolean hasIdentity() {
-    return !identityProperties.isEmpty();
   }
 }

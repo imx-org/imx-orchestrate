@@ -105,7 +105,8 @@ public final class FetchPlanner {
 
           if (property instanceof InverseRelation inverseRelation) {
             var originType = modelMapping.getSourceModel(sourceAlias)
-                .getObjectType(inverseRelation.getTarget());
+                .getObjectType(inverseRelation.getTarget()
+                    .getName());
 
             var originFieldName = inverseRelation.getOriginRelation()
                 .getName();
@@ -141,7 +142,8 @@ public final class FetchPlanner {
 
           // TODO: Differing model aliases & type safety
           var relatedObjectType = modelMapping.getSourceModel(sourceAlias)
-              .getObjectType(((Relation) property).getTarget());
+              .getObjectType(((Relation) property).getTarget()
+                  .getName());
 
           selectedProperties.add(new SelectedProperty(property, selectIdentity(relatedObjectType)));
 

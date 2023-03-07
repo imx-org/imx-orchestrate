@@ -12,7 +12,7 @@ import lombok.extern.jackson.Jacksonized;
 @Builder(toBuilder = true)
 public final class ObjectTypeMapping {
 
-  private final SourceTypeRef sourceRoot;
+  private final ObjectTypeRef sourceRoot;
 
   @Singular
   private final Map<String, PropertyMapping> propertyMappings;

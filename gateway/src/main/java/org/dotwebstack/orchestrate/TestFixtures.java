@@ -12,11 +12,11 @@ import org.dotwebstack.orchestrate.model.ComponentRegistry;
 import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
+import org.dotwebstack.orchestrate.model.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.Relation;
 import org.dotwebstack.orchestrate.model.combiners.Concat;
 import org.dotwebstack.orchestrate.model.transforms.FunctionTransform;
 import org.dotwebstack.orchestrate.model.transforms.TestPredicate;
-import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.types.ScalarTypes;
 import org.dotwebstack.orchestrate.parser.yaml.YamlModelMappingParser;
 

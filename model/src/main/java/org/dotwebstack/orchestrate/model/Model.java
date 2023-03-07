@@ -11,7 +11,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import lombok.ToString;
-import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 
 @Getter
 @ToString(exclude = {"objectTypeMap"})
@@ -35,7 +34,7 @@ public final class Model {
 
               mutableObjectTypeMap.computeIfPresent(targetRef.getName(), (targetName, targetType) -> targetType.toBuilder()
                   .property(InverseRelation.builder()
-                      .target(objectType.getRef())
+                      .target(ObjectTypeRef.forType(objectType.getName()))
                       .originRelation(relation)
                       .build())
                   .build());
@@ -43,10 +42,6 @@ public final class Model {
 
     this.objectTypes = List.copyOf(mutableObjectTypeMap.values());
     this.objectTypeMap = unmodifiableMap(mutableObjectTypeMap);
-  }
-
-  public ObjectType getObjectType(ObjectTypeRef typeRef) {
-    return getObjectType(typeRef.getName());
   }
 
   public ObjectType getObjectType(String name) {

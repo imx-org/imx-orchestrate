@@ -2,7 +2,6 @@ package org.dotwebstack.orchestrate.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.types.ScalarTypes;
 import org.junit.jupiter.api.Test;
 

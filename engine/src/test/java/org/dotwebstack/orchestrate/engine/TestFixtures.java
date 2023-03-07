@@ -9,14 +9,13 @@ import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.ObjectTypeMapping;
+import org.dotwebstack.orchestrate.model.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.PropertyMapping;
 import org.dotwebstack.orchestrate.model.PropertyPath;
 import org.dotwebstack.orchestrate.model.PropertyPathMapping;
 import org.dotwebstack.orchestrate.model.Relation;
-import org.dotwebstack.orchestrate.model.SourceTypeRef;
 import org.dotwebstack.orchestrate.model.combiners.Concat;
 import org.dotwebstack.orchestrate.model.transforms.TestPredicate;
-import org.dotwebstack.orchestrate.model.types.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.types.ScalarTypes;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -104,6 +103,11 @@ public final class TestFixtures {
                 .identifier(true)
                 .build())
             .property(Attribute.builder()
+                .name("oorspronkelijkBouwjaar")
+                .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.REQUIRED)
+                .build())
+            .property(Attribute.builder()
                 .name("status")
                 .type(ScalarTypes.STRING)
                 .cardinality(Cardinality.REQUIRED)
@@ -135,7 +139,36 @@ public final class TestFixtures {
         .build();
   }
 
-  public static Model createAdresModel() {
+  public static Model createBgtModel() {
+    return Model.builder()
+        .objectType(ObjectType.builder()
+            .name("Pand")
+            .property(Attribute.builder()
+                .name("identificatie")
+                .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.REQUIRED)
+                .identifier(true)
+                .build())
+            .property(Attribute.builder()
+                .name("bgt-status")
+                .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.REQUIRED)
+                .build())
+            .property(Attribute.builder()
+                .name("identificatieBAGPND")
+                .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.REQUIRED)
+                .build())
+            .property(Relation.builder()
+                .name("gerelateerdBagPand")
+                .target(ObjectTypeRef.fromString("bag:Pand"))
+                .cardinality(Cardinality.OPTIONAL)
+                .build())
+            .build())
+        .build();
+  }
+
+  public static Model createTargetModel() {
     return Model.builder()
         .objectType(ObjectType.builder()
             .name("Adres")
@@ -185,12 +218,26 @@ public final class TestFixtures {
                 .cardinality(Cardinality.REQUIRED)
                 .build())
             .build())
+        .objectType(ObjectType.builder()
+            .name("Gebouw")
+            .property(Attribute.builder()
+                .name("identificatie")
+                .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.REQUIRED)
+                .identifier(true)
+                .build())
+            .property(Attribute.builder()
+                .name("bouwjaar")
+                .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.OPTIONAL)
+                .build())
+            .build())
         .build();
   }
 
   public static ObjectTypeMapping createAdresMapping() {
     return ObjectTypeMapping.builder()
-        .sourceRoot(SourceTypeRef.fromString("bag:Nummeraanduiding"))
+        .sourceRoot(ObjectTypeRef.fromString("bag:Nummeraanduiding"))
         .propertyMapping("identificatie", PropertyMapping.builder()
             .pathMapping(PropertyPathMapping.builder()
                 .path(PropertyPath.fromString("identificatie"))
@@ -275,10 +322,27 @@ public final class TestFixtures {
         .build();
   }
 
+  public static ObjectTypeMapping createGebouwMapping() {
+    return ObjectTypeMapping.builder()
+        .sourceRoot(ObjectTypeRef.fromString("bgt:Pand"))
+        .propertyMapping("identificatie", PropertyMapping.builder()
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("identificatie"))
+                .build())
+            .build())
+        .propertyMapping("bouwjaar", PropertyMapping.builder()
+            .pathMapping(PropertyPathMapping.builder()
+                .path(PropertyPath.fromString("gerelateerdBagPand/oorspronkelijkBouwjaar"))
+                .build())
+            .build())
+        .build();
+  }
+
   public static ModelMapping createModelMapping() {
     return ModelMapping.builder()
-        .targetModel(createAdresModel())
+        .targetModel(createTargetModel())
         .sourceModel("bag", createBagModel())
+        .sourceModel("bgt", createBgtModel())
         .objectTypeMapping("Adres", createAdresMapping())
         .build();
   }

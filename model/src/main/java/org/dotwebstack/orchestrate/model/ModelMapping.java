@@ -25,9 +25,9 @@ public final class ModelMapping {
         .orElseThrow(() -> new ModelException("Source model not found: " + modelAlias));
   }
 
-  public ObjectType getSourceType(SourceTypeRef sourceTypeRef) {
+  public ObjectType getSourceType(ObjectTypeRef sourceTypeRef) {
     return getSourceModel(sourceTypeRef.getModelAlias())
-        .getObjectType(sourceTypeRef.getObjectType());
+        .getObjectType(sourceTypeRef.getName());
   }
 
   public ObjectTypeMapping getObjectTypeMapping(String name) {
