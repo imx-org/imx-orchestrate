@@ -160,7 +160,7 @@ public final class TestFixtures {
                 .cardinality(Cardinality.REQUIRED)
                 .build())
             .property(Relation.builder()
-                .name("gerelateerdBagPand")
+                .name("isGerelateerdAan")
                 .target(ObjectTypeRef.fromString("bag:Pand"))
                 .cardinality(Cardinality.OPTIONAL)
                 .build())
@@ -332,7 +332,7 @@ public final class TestFixtures {
             .build())
         .propertyMapping("bouwjaar", PropertyMapping.builder()
             .pathMapping(PropertyPathMapping.builder()
-                .path(PropertyPath.fromString("gerelateerdBagPand/oorspronkelijkBouwjaar"))
+                .path(PropertyPath.fromString("isGerelateerdAan/oorspronkelijkBouwjaar"))
                 .build())
             .build())
         .build();

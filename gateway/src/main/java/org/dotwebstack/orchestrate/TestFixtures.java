@@ -1,7 +1,6 @@
 package org.dotwebstack.orchestrate;
 
 import java.io.InputStream;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import lombok.AccessLevel;
@@ -23,42 +22,12 @@ import org.dotwebstack.orchestrate.parser.yaml.YamlModelMappingParser;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class TestFixtures {
 
-  static final Map<String, Map<String, Object>> NUM_DATA = new LinkedHashMap<>();
-
-  static final Map<String, Map<String, Object>> VBO_DATA = new LinkedHashMap<>();
-
-  static final Map<String, Map<String, Object>> OPR_DATA = new LinkedHashMap<>();
-
-  static final Map<String, Map<String, Object>> WPL_DATA = new LinkedHashMap<>();
-
-  static {
-    NUM_DATA.put("0200200000075716", Map.of("identificatie", "0200200000075716", "huisnummer", 701, "postcode", "7334DP",
-        "ligtAan", Map.of("identificatie", "0200300022472362")));
-    NUM_DATA.put("0200200000075717", Map.of("identificatie", "0200200000075717", "huisnummer", 702, "postcode", "7334DP",
-        "ligtAan", Map.of("identificatie", "0200300022472362")));
-    NUM_DATA.put("0200200000075718", Map.of("identificatie", "0200200000075718", "huisnummer", 703, "huisnummertoevoeging", "8", "huisletter", "C", "postcode", "7334DP",
-        "ligtAan", Map.of("identificatie", "0200300022472362"), "ligtIn", Map.of("identificatie", "2258")));
-    VBO_DATA.put("0200200000075716", Map.of("identificatie", "0200010000130331"));
-    VBO_DATA.put("0200200000075718", Map.of("identificatie", "0200010000130331"));
-    OPR_DATA.put("0200300022472362", Map.of("identificatie", "0200300022472362", "naam", "Laan van Westenenk", "ligtIn", Map.of("identificatie", "3560")));
-    WPL_DATA.put("3560", Map.of("identificatie", "3560", "naam", "Apeldoorn"));
-    WPL_DATA.put("2258", Map.of("identificatie", "2258", "naam", "Beekbergen"));
-  }
-
   public enum TargetModelType {
     ADRES, CORE_LOCATION
   }
 
-  public static ModelMapping createModelMapping(TargetModelType targetModelType, InputStream mappingInputStream) {
-    Model targetModel = null;
-
-    if (targetModelType == TargetModelType.ADRES) {
-      targetModel = buildAdresTargetModel();
-    } else if (targetModelType == TargetModelType.CORE_LOCATION) {
-      targetModel = buildCoreLocationTargetModel();
-    }
-
-    var sourceModel = Model.builder()
+  public static Model createBagModel() {
+    return Model.builder()
         .objectType(ObjectType.builder()
             .name("Nummeraanduiding")
             .property(Attribute.builder()
@@ -131,6 +100,25 @@ final class TestFixtures {
                 .build())
             .build())
         .objectType(ObjectType.builder()
+            .name("Pand")
+            .property(Attribute.builder()
+                .name("identificatie")
+                .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.REQUIRED)
+                .identifier(true)
+                .build())
+            .property(Attribute.builder()
+                .name("oorspronkelijkBouwjaar")
+                .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.REQUIRED)
+                .build())
+            .property(Attribute.builder()
+                .name("status")
+                .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.REQUIRED)
+                .build())
+            .build())
+        .objectType(ObjectType.builder()
             .name("Verblijfsobject")
             .property(Attribute.builder()
                 .name("identificatie")
@@ -154,6 +142,45 @@ final class TestFixtures {
                 .build())
             .build())
         .build();
+  }
+
+  public static Model createBgtModel() {
+    return Model.builder()
+        .objectType(ObjectType.builder()
+            .name("Pand")
+            .property(Attribute.builder()
+                .name("identificatie")
+                .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.REQUIRED)
+                .identifier(true)
+                .build())
+            .property(Attribute.builder()
+                .name("bgt-status")
+                .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.REQUIRED)
+                .build())
+            .property(Attribute.builder()
+                .name("identificatieBAGPND")
+                .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.REQUIRED)
+                .build())
+            .property(Relation.builder()
+                .name("isGerelateerdAan")
+                .target(ObjectTypeRef.fromString("bag:Pand"))
+                .cardinality(Cardinality.OPTIONAL)
+                .build())
+            .build())
+        .build();
+  }
+
+  public static ModelMapping createModelMapping(TargetModelType targetModelType, InputStream mappingInputStream) {
+    Model targetModel = null;
+
+    if (targetModelType == TargetModelType.ADRES) {
+      targetModel = buildAdresTargetModel();
+    } else if (targetModelType == TargetModelType.CORE_LOCATION) {
+      targetModel = buildCoreLocationTargetModel();
+    }
 
     var componentRegistry = new ComponentRegistry()
         .registerTransform(TestPredicate.builder()
@@ -172,7 +199,8 @@ final class TestFixtures {
 
     return modelMapping.toBuilder()
         .targetModel(targetModel)
-        .sourceModel("bag", sourceModel)
+        .sourceModel("bag", createBagModel())
+        .sourceModel("bgt", createBgtModel())
         .build();
   }
 
@@ -224,6 +252,20 @@ final class TestFixtures {
                 .name("omschrijving")
                 .type(ScalarTypes.STRING)
                 .cardinality(Cardinality.REQUIRED)
+                .build())
+            .build())
+        .objectType(ObjectType.builder()
+            .name("Gebouw")
+            .property(Attribute.builder()
+                .name("identificatie")
+                .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.REQUIRED)
+                .identifier(true)
+                .build())
+            .property(Attribute.builder()
+                .name("bouwjaar")
+                .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.OPTIONAL)
                 .build())
             .build())
         .build();
