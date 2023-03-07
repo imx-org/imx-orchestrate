@@ -20,9 +20,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import lombok.RequiredArgsConstructor;
+import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.InverseRelation;
 import org.dotwebstack.orchestrate.model.ModelMapping;
-import org.dotwebstack.orchestrate.model.ObjectType;
+import org.dotwebstack.orchestrate.model.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.Property;
 import org.dotwebstack.orchestrate.model.PropertyMapping;
 import org.dotwebstack.orchestrate.model.PropertyPath;
@@ -59,8 +60,6 @@ public final class FetchPlanner {
               .forEach(pathMapping -> sourcePaths.addAll(pathMapping.getPaths()));
         });
 
-    var sourceType = modelMapping.getSourceType(targetMapping.getSourceRoot());
-
     // TODO: Refactor
     var isCollection = isList(unwrapNonNull(environment.getFieldType()));
 
@@ -69,8 +68,8 @@ public final class FetchPlanner {
         .propertyMappings(propertyMappings)
         .build();
 
-    var fetchOperation = fetchSourceObject(sourceType, unmodifiableSet(sourcePaths), targetMapping.getSourceRoot()
-        .getModelAlias(), isCollection, resultMapper);
+    var fetchOperation = fetchSourceObject(targetMapping.getSourceRoot(), unmodifiableSet(sourcePaths), isCollection,
+        resultMapper);
 
     var context = FetchContext.builder()
         .input(keyExtractor(targetType, targetMapping)
@@ -83,9 +82,10 @@ public final class FetchPlanner {
     return isCollection ? fetchResult : fetchResult.singleOrEmpty();
   }
 
-  private FetchOperation fetchSourceObject(ObjectType sourceType, Set<PropertyPath> sourcePaths, String sourceAlias,
-      boolean isCollection,
-      UnaryOperator<ObjectResult> resultMapper) {
+  private FetchOperation fetchSourceObject(ObjectTypeRef sourceTypeRef, Set<PropertyPath> sourcePaths,
+      boolean isCollection, UnaryOperator<ObjectResult> resultMapper) {
+    var source = sources.get(sourceTypeRef.getModelAlias());
+    var sourceType = modelMapping.getSourceType(sourceTypeRef);
     var selectedProperties = new ArrayList<>(selectIdentity(sourceType));
 
     sourcePaths.stream()
@@ -104,10 +104,8 @@ public final class FetchPlanner {
           var property = sourceType.getProperty(propertyName);
 
           if (property instanceof InverseRelation inverseRelation) {
-            var originType = modelMapping.getSourceModel(sourceAlias)
-                .getObjectType(inverseRelation.getTarget()
-                    .getName());
-
+            var originTypeRef = inverseRelation.getTarget(sourceTypeRef);
+            var originType = modelMapping.getSourceType(originTypeRef);
             var originFieldName = inverseRelation.getOriginRelation()
                 .getName();
 
@@ -128,7 +126,7 @@ public final class FetchPlanner {
             nextOperations.add(NextOperation.builder()
                 .propertyName(propertyName)
                 .delegateOperation(CollectionFetchOperation.builder()
-                    .source(sources.get(sourceAlias))
+                    .source(source)
                     .objectType(originType)
                     .filter(filter)
                     .selectedProperties(nestedProperties)
@@ -140,25 +138,29 @@ public final class FetchPlanner {
             return;
           }
 
-          // TODO: Differing model aliases & type safety
-          var relatedObjectType = modelMapping.getSourceModel(sourceAlias)
-              .getObjectType(((Relation) property).getTarget()
-                  .getName());
+          if (property instanceof Relation relation) {
+            var targetTypeRef = relation.getTarget(sourceTypeRef);
+            var targetType = modelMapping.getSourceType(targetTypeRef);
 
-          selectedProperties.add(new SelectedProperty(property, selectIdentity(relatedObjectType)));
+            selectedProperties.add(new SelectedProperty(property, selectIdentity(targetType)));
 
-          nextOperations.add(NextOperation.builder()
-              .propertyName(propertyName)
-              .delegateOperation(fetchSourceObject(relatedObjectType, nestedSourcePaths, sourceAlias, false,
-                  UnaryOperator.identity()))
-              .inputMapper(FetchUtils.inputMapper(propertyName))
-              .singleResult(true)
-              .build());
+            nextOperations.add(NextOperation.builder()
+                .propertyName(propertyName)
+                .delegateOperation(fetchSourceObject(targetTypeRef, nestedSourcePaths, false,
+                    UnaryOperator.identity()))
+                .inputMapper(FetchUtils.inputMapper(propertyName))
+                .singleResult(true)
+                .build());
+
+            return;
+          }
+
+          throw new OrchestrateException("Could not map property: " + propertyName);
         });
 
     if (isCollection) {
       return CollectionFetchOperation.builder()
-          .source(sources.get(sourceAlias))
+          .source(source)
           .objectType(sourceType)
           .selectedProperties(unmodifiableList(selectedProperties))
           .resultMapper(resultMapper)
@@ -167,7 +169,7 @@ public final class FetchPlanner {
     }
 
     return ObjectFetchOperation.builder()
-        .source(sources.get(sourceAlias))
+        .source(source)
         .objectType(sourceType)
         .selectedProperties(unmodifiableList(selectedProperties))
         .resultMapper(resultMapper)

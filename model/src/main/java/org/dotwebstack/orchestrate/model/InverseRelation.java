@@ -1,24 +1,19 @@
 package org.dotwebstack.orchestrate.model;
 
-import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 @Getter
-@Builder(toBuilder = true)
-public class InverseRelation implements Property {
-
-  private final ObjectTypeRef target;
+@ToString(callSuper = true)
+@SuperBuilder(toBuilder = true)
+public final class InverseRelation extends AbstractRelation {
 
   private final Relation originRelation;
 
   @Override
   public String getName() {
     return originRelation.getInverseName();
-  }
-
-  @Override
-  public boolean isIdentifier() {
-    return false;
   }
 
   @Override

@@ -1,6 +1,8 @@
 package org.dotwebstack.orchestrate.engine;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.dotwebstack.orchestrate.engine.TestFixtures.createBagModel;
+import static org.dotwebstack.orchestrate.engine.TestFixtures.createBgtModel;
 import static org.dotwebstack.orchestrate.engine.TestFixtures.createModelMapping;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -38,7 +40,35 @@ class EngineIT {
 
   @BeforeAll
   static void beforeAll() {
-    SOURCE_MAP.put("bag", new FileSource(TestFixtures.createBagModel(), Paths.get("src/test/resources/bag/data")));
+    SOURCE_MAP.put("bag", new FileSource(createBagModel(), Paths.get("src/test/resources/bag/data")));
+    SOURCE_MAP.put("bgt", new FileSource(createBgtModel(), Paths.get("src/test/resources/bgt/data")));
+  }
+
+  @Test
+  void queryObject_withCrossModelRelation() {
+    var orchestration = Orchestration.builder()
+        .modelMapping(createModelMapping())
+        .sources(SOURCE_MAP)
+        .build();
+
+    var graphQL = GraphQL.newGraphQL(SchemaFactory.create(orchestration))
+        .build();
+
+    var result = graphQL.execute("""
+          query {
+            gebouw(identificatie: "G0200.42b3d39246840268e0530a0a28492340") {
+              identificatie
+              bouwjaar
+            }
+          }
+        """);
+
+    Map<String, Map<String, Object>> data = result.getData();
+    assertThat(data).isNotNull()
+        .containsKey("gebouw");
+    assertThat(data.get("gebouw")).isNotNull()
+        .containsEntry("identificatie", "G0200.42b3d39246840268e0530a0a28492340")
+        .containsEntry("bouwjaar", "2006");
   }
 
   @Test

@@ -2,9 +2,11 @@ package org.dotwebstack.orchestrate.model;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 @Getter
+@ToString(callSuper = true)
 @SuperBuilder(toBuilder = true)
 abstract class AbstractProperty implements Property {
 

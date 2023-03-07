@@ -3,6 +3,9 @@
     "identificatie": "G0200.42b3d39246840268e0530a0a28492340",
     "bgt-status": "bestaand",
     "identificatieBAGPND": "0200100000085932",
+    "gerelateerdBagPand": {
+      "identificatie": "0200100000085932"
+    },
     "geometrie2dGrondvlak": {
       "type": "MultiPolygon",
       "coordinates": [

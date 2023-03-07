@@ -6,11 +6,9 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 @Getter
-@ToString
+@ToString(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public final class Relation extends AbstractProperty {
-
-  private final ObjectTypeRef target;
+public final class Relation extends AbstractRelation {
 
   private final String inverseName;
 

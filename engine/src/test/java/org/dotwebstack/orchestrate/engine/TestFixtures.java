@@ -344,6 +344,7 @@ public final class TestFixtures {
         .sourceModel("bag", createBagModel())
         .sourceModel("bgt", createBgtModel())
         .objectTypeMapping("Adres", createAdresMapping())
+        .objectTypeMapping("Gebouw", createGebouwMapping())
         .build();
   }
 }

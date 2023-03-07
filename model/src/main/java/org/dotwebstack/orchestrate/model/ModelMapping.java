@@ -26,6 +26,10 @@ public final class ModelMapping {
   }
 
   public ObjectType getSourceType(ObjectTypeRef sourceTypeRef) {
+    if (sourceTypeRef.getModelAlias() == null) {
+      throw new ModelException("Source type reference does not contain a model alias.");
+    }
+
     return getSourceModel(sourceTypeRef.getModelAlias())
         .getObjectType(sourceTypeRef.getName());
   }
