@@ -40,8 +40,8 @@ class EngineIT {
 
   @BeforeAll
   static void beforeAll() {
-    SOURCE_MAP.put("bag", new FileSource(createBagModel(), Paths.get("src/test/resources/bag/data")));
-    SOURCE_MAP.put("bgt", new FileSource(createBgtModel(), Paths.get("src/test/resources/bgt/data")));
+    SOURCE_MAP.put("bag", new FileSource(createBagModel(), Paths.get("data/bag")));
+    SOURCE_MAP.put("bgt", new FileSource(createBgtModel(), Paths.get("data/bgt")));
   }
 
   @Test
