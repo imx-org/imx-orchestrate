@@ -14,5 +14,7 @@ public final class OrchestratedProperty implements PropertyLineage {
 
   private final Object value;
 
+  private final PropertyMappingExecution wasGeneratedBy;
+
   private final Set<SourceProperty> isDerivedFrom;
 }

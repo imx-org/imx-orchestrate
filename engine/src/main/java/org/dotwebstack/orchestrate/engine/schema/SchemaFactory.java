@@ -36,6 +36,10 @@ import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.lineage.ObjectLineage;
 import org.dotwebstack.orchestrate.model.lineage.ObjectReference;
 import org.dotwebstack.orchestrate.model.lineage.OrchestratedProperty;
+import org.dotwebstack.orchestrate.model.lineage.PropertyMapping;
+import org.dotwebstack.orchestrate.model.lineage.PropertyMappingExecution;
+import org.dotwebstack.orchestrate.model.lineage.PropertyPath;
+import org.dotwebstack.orchestrate.model.lineage.PropertyPathMapping;
 import org.dotwebstack.orchestrate.model.lineage.SourceProperty;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -122,7 +126,51 @@ public final class SchemaFactory {
             .type(requiredType("PropertyValue"))
             .build())
         .fieldDefinition(newFieldDefinition()
+            .name("wasGeneratedBy")
+            .type(requiredType(PropertyMappingExecution.class))
+            .build())
+        .fieldDefinition(newFieldDefinition()
             .name("isDerivedFrom")
+            .type(requiredListType(SourceProperty.class))
+            .build())
+        .build());
+
+    typeDefinitionRegistry.add(newObjectTypeDefinition()
+        .name(PropertyMappingExecution.class.getSimpleName())
+        .fieldDefinition(newFieldDefinition()
+            .name("used")
+            .type(requiredType(PropertyMapping.class))
+            .build())
+        .build());
+
+    typeDefinitionRegistry.add(newObjectTypeDefinition()
+        .name(PropertyMapping.class.getSimpleName())
+        .fieldDefinition(newFieldDefinition()
+            .name("pathMapping")
+            .type(requiredListType(PropertyPathMapping.class))
+            .build())
+        .build());
+
+    typeDefinitionRegistry.add(newObjectTypeDefinition()
+        .name(PropertyPathMapping.class.getSimpleName())
+        .fieldDefinition(newFieldDefinition()
+            .name("path")
+            .type(requiredListType(PropertyPath.class))
+            .build())
+        .build());
+
+    typeDefinitionRegistry.add(newObjectTypeDefinition()
+        .name(PropertyPath.class.getSimpleName())
+        .fieldDefinition(newFieldDefinition()
+            .name("startNode")
+            .type(requiredType(ObjectReference.class))
+            .build())
+        .fieldDefinition(newFieldDefinition()
+            .name("segments")
+            .type(requiredListType("String"))
+            .build())
+        .fieldDefinition(newFieldDefinition()
+            .name("reference")
             .type(requiredListType(SourceProperty.class))
             .build())
         .build());
