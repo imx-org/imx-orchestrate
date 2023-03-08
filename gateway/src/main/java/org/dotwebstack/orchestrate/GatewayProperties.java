@@ -15,4 +15,6 @@ public class GatewayProperties {
   private TestFixtures.TargetModelType targetModel;
 
   private String mapping;
+
+  private String dataPath;
 }

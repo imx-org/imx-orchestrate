@@ -40,8 +40,8 @@ class EngineIT {
 
   @BeforeAll
   static void beforeAll() {
-    SOURCE_MAP.put("bag", new FileSource(createBagModel(), Paths.get("data/bag")));
-    SOURCE_MAP.put("bgt", new FileSource(createBgtModel(), Paths.get("data/bgt")));
+    SOURCE_MAP.put("bag", new FileSource(createBagModel(), Paths.get("../data/bag")));
+    SOURCE_MAP.put("bgt", new FileSource(createBgtModel(), Paths.get("../data/bgt")));
   }
 
   @Test
@@ -73,7 +73,7 @@ class EngineIT {
 
   @Test
   @SuppressWarnings("unchecked")
-  void queryObject_withoutEagerLoading() {
+  void queryObject_withoutBatchLoading() {
     var bagRepository = SOURCE_MAP.get("bag")
         .getDataRepository();
 
@@ -183,7 +183,72 @@ class EngineIT {
   }
 
   @Test
-  void queryCollection_withoutEagerLoading() {
+  @SuppressWarnings("unchecked")
+  void queryObject_withBatchLoading() {
+    var bagRepository = SOURCE_MAP.get("bag")
+        .getDataRepository();
+
+    when(dataRepositoryStub.findOne(any(ObjectRequest.class)))
+        .thenAnswer(invocation -> {
+          var objectRequest = (ObjectRequest) invocation.getArgument(0);
+          var objectType = objectRequest.getObjectType();
+          var objectkey = objectRequest.getObjectKey();
+
+          return switch (objectType.getName()) {
+            case "OpenbareRuimte":
+              assertThat(objectRequest.getSelectedProperties()).hasSize(2);
+              assertThat(objectkey).isEqualTo(Map.of("identificatie", "0200300022472362"));
+              yield bagRepository.findOne(objectRequest);
+            default:
+              yield Mono.error(() -> new RuntimeException("Error!"));
+          };
+        });
+
+    when(dataRepositoryStub.find(any(CollectionRequest.class)))
+        .thenAnswer(invocation -> {
+          var collectionRequest = (CollectionRequest) invocation.getArgument(0);
+          var objectType = collectionRequest.getObjectType();
+
+          return switch (objectType.getName()) {
+            case "Nummeraanduiding":
+              assertThat(collectionRequest.getSelectedProperties()).hasSize(2);
+              yield bagRepository.find(collectionRequest);
+            default:
+              yield Mono.error(() -> new RuntimeException("Error!"));
+          };
+        });
+
+    var orchestration = Orchestration.builder()
+        .modelMapping(createModelMapping())
+        .source("bag", () -> dataRepositoryStub)
+        .build();
+
+    var graphQL = GraphQL.newGraphQL(SchemaFactory.create(orchestration))
+        .build();
+
+    var result = graphQL.execute("""
+          query {
+            adresCollection {
+              identificatie
+              straatnaam
+            }
+          }
+        """);
+
+    verify(dataRepositoryStub, times(3)).findOne(any(ObjectRequest.class));
+
+    assertThat(result).isNotNull();
+    assertThat(result.getErrors()).isEmpty();
+    assertThat(result.isDataPresent()).isTrue();
+
+    Map<String, List<Map<String, Object>>> data = result.getData();
+    var adresCollection = data.get("adresCollection");
+
+    assertThat(adresCollection).isNotNull();
+  }
+
+  @Test
+  void queryCollection_withoutBatchLoading() {
     var bagRepository = SOURCE_MAP.get("bag")
         .getDataRepository();
 

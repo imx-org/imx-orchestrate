@@ -21,3 +21,4 @@ orchestrate:
   gateway:
     targetModel: ${TARGET_MODEL:adres}
     mapping: ${MODEL_MAPPING:/config/adresmapping.yaml}
+    dataPath: ${DATA_PATH:./data}

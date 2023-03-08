@@ -32,8 +32,8 @@ public class GatewayConfiguration {
     var orchestration = Orchestration.builder()
         .modelMapping(createModelMapping(gatewayProperties.getTargetModel(),
             GatewayConfiguration.class.getResourceAsStream(gatewayProperties.getMapping())))
-        .source("bag", new FileSource(createBagModel(), Paths.get("data/bag")))
-        .source("bgt", new FileSource(createBgtModel(), Paths.get("data/bgt")))
+        .source("bag", new FileSource(createBagModel(), Paths.get(gatewayProperties.getDataPath(), "bag")))
+        .source("bgt", new FileSource(createBgtModel(), Paths.get(gatewayProperties.getDataPath(), "bgt")))
         .build();
 
     var graphQL = GraphQL.newGraphQL(SchemaFactory.create(orchestration)).build();
