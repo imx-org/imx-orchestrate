@@ -1,5 +1,6 @@
 package org.dotwebstack.orchestrate.model;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import lombok.Builder;
@@ -19,6 +20,9 @@ public final class ModelMapping {
 
   @Singular
   private final Map<String, ObjectTypeMapping> objectTypeMappings;
+
+  @Builder.Default
+  private final Map<String, String> lineageNameMapping = new HashMap<>();
 
   public Model getSourceModel(String modelAlias) {
     return Optional.ofNullable(sourceModels.get(modelAlias))

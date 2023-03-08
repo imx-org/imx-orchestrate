@@ -1,3 +1,16 @@
+lineageNameMapping:
+  hasLineage: geregistreerdMet
+  ObjectLineage: Registratie
+  orchestratedProperties: bestaatUit
+  OrchestratedProperty: GeorkestreerdGegeven
+  SourceProperty: Brongegeven
+  ObjectReference: Object
+  subject: onderwerp
+  property: kenmerk
+  value: waarde
+  objectKey: identificatie
+  objectType: type
+
 objectTypeMappings:
   Adres:
     sourceRoot: bag:Nummeraanduiding
