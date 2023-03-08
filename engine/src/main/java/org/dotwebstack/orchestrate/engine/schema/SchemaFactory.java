@@ -260,9 +260,12 @@ public final class SchemaFactory {
 
     var objectKeyFetcher = new ObjectKeyFetcher(lineageRenamer);
 
-    codeRegistryBuilder.dataFetcher(coordinates(OrchestratedProperty.class.getSimpleName(), lineageRenamer.apply("value")), valueFetcher)
-        .dataFetcher(coordinates(SourceProperty.class.getSimpleName(), lineageRenamer.apply("value")), valueFetcher)
-        .dataFetcher(coordinates(ObjectReference.class.getSimpleName(), lineageRenamer.apply("objectKey")), objectKeyFetcher);
+    codeRegistryBuilder.dataFetcher(coordinates(lineageRenamer.apply(OrchestratedProperty.class.getSimpleName()),
+            lineageRenamer.apply("value")), valueFetcher)
+        .dataFetcher(coordinates(lineageRenamer.apply(SourceProperty.class.getSimpleName()),
+                lineageRenamer.apply("value")), valueFetcher)
+        .dataFetcher(coordinates(lineageRenamer.apply(ObjectReference.class.getSimpleName()),
+                lineageRenamer.apply("objectKey")), objectKeyFetcher);
   }
 
   private ObjectTypeDefinition createObjectTypeDefinition(ObjectType objectType) {
@@ -316,15 +319,7 @@ public final class SchemaFactory {
     return new NonNullType(new TypeName(typeName));
   }
 
-  private static Type<?> requiredType(Class<?> typeClass) {
-    return requiredType(typeClass.getSimpleName());
-  }
-
   private static Type<?> requiredListType(String typeName) {
     return new NonNullType(new ListType(requiredType(typeName)));
-  }
-
-  private static Type<?> requiredListType(Class<?> typeClass) {
-    return requiredListType(typeClass.getSimpleName());
   }
 }
