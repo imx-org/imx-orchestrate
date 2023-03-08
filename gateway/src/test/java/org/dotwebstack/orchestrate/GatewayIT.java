@@ -22,36 +22,58 @@ class GatewayIT {
           adres(identificatie: "0200200000075716") {
             identificatie
             huisnummer
-            huisletter
-            huisnummertoevoeging
             postcode
             straatnaam
             plaatsnaam
             isHoofdadres
             omschrijving
-            hasLineage {
-              orchestratedProperties {
-                subject {
-                  objectType
-                  objectKey
+            geregistreerdMet {
+              bestaatUit {
+                onderwerp {
+                  identificatie
+                  type
                 }
-                property
-                value {
+                kenmerk
+                waarde {
                   stringValue
-                  integerValue
                   booleanValue
+                  integerValue
                 }
                 isDerivedFrom {
-                  subject {
-                    objectType
-                    objectKey
+                  onderwerp {
+                    identificatie
+                    type
                   }
-                  property
-                  propertyPath
-                  value {
+                  kenmerk
+                  waarde {
                     stringValue
-                    integerValue
                     booleanValue
+                    integerValue
+                  }
+                }
+                wasGeneratedBy {
+                  used {
+                    pathMapping {
+                      path {
+                        startNode {
+                          identificatie
+                          type
+                        }
+                        segments
+                        reference {
+                          onderwerp {
+                            identificatie
+                            type
+                          }
+                          kenmerk
+                          waarde {
+                            stringValue
+                            booleanValue
+                            integerValue
+                          }
+                        }
+                      }
+                    }
                   }
                 }
               }

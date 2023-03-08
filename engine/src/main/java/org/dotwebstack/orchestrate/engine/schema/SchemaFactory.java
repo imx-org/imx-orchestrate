@@ -10,7 +10,12 @@ import static org.apache.commons.lang3.StringUtils.uncapitalize;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_COLLECTION_SUFFIX;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_TYPE;
 import static org.dotwebstack.orchestrate.model.Cardinality.REQUIRED;
-
+import com.fasterxml.jackson.databind.BeanDescription;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import graphql.language.FieldDefinition;
 import graphql.language.InputValueDefinition;
 import graphql.language.ListType;
@@ -18,17 +23,18 @@ import graphql.language.NonNullType;
 import graphql.language.ObjectTypeDefinition;
 import graphql.language.Type;
 import graphql.language.TypeName;
-import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import java.util.List;
+import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.Orchestration;
 import org.dotwebstack.orchestrate.engine.fetch.FetchPlanner;
 import org.dotwebstack.orchestrate.engine.fetch.GenericDataFetcher;
+import org.dotwebstack.orchestrate.engine.fetch.ObjectKeyFetcher;
 import org.dotwebstack.orchestrate.engine.fetch.PropertyValueFetcher;
 import org.dotwebstack.orchestrate.model.Attribute;
 import org.dotwebstack.orchestrate.model.ModelMapping;
@@ -36,6 +42,10 @@ import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.lineage.ObjectLineage;
 import org.dotwebstack.orchestrate.model.lineage.ObjectReference;
 import org.dotwebstack.orchestrate.model.lineage.OrchestratedProperty;
+import org.dotwebstack.orchestrate.model.lineage.PropertyMapping;
+import org.dotwebstack.orchestrate.model.lineage.PropertyMappingExecution;
+import org.dotwebstack.orchestrate.model.lineage.PropertyPath;
+import org.dotwebstack.orchestrate.model.lineage.PropertyPathMapping;
 import org.dotwebstack.orchestrate.model.lineage.SourceProperty;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -51,11 +61,38 @@ public final class SchemaFactory {
 
   private final GenericDataFetcher genericDataFetcher;
 
+  private final UnaryOperator<String> lineageRenamer;
+
   public static GraphQLSchema create(Orchestration orchestration) {
-    var fetchPlanner = new FetchPlanner(orchestration.getModelMapping(), orchestration.getSources());
+    var modelMapping = orchestration.getModelMapping();
+    var objectMapper = getObjectMapperInstance(modelMapping);
+
+    UnaryOperator<String> lineageRenamer =
+        fieldName -> modelMapping.getLineageNameMapping().getOrDefault(fieldName, fieldName);
+
+    var fetchPlanner = new FetchPlanner(modelMapping, orchestration.getSources(), objectMapper, lineageRenamer);
     var genericDataFetcher = new GenericDataFetcher(fetchPlanner);
 
-    return new SchemaFactory(orchestration.getModelMapping(), genericDataFetcher).create();
+    return new SchemaFactory(modelMapping, genericDataFetcher, lineageRenamer).create();
+  }
+
+  private static ObjectMapper getObjectMapperInstance(ModelMapping modelMapping) {
+    var lineageMapping = modelMapping.getLineageNameMapping();
+    var objectMapper = new ObjectMapper();
+    if (!lineageMapping.isEmpty()) {
+      var module = new SimpleModule()
+          .setDeserializerModifier(new BeanDeserializerModifier() {
+            @Override
+            public JsonDeserializer<?> modifyDeserializer(DeserializationConfig config, BeanDescription beanDesc,
+                JsonDeserializer<?> deserializer) {
+              return new FieldRenamingDeserializer(deserializer, lineageMapping);
+            }
+          });
+
+      objectMapper.registerModule(module);
+    }
+
+    return objectMapper;
   }
 
   private GraphQLSchema create() {
@@ -100,94 +137,132 @@ public final class SchemaFactory {
 
   private void registerLineageTypes() {
     typeDefinitionRegistry.add(newObjectTypeDefinition()
-        .name(ObjectLineage.class.getSimpleName())
+        .name(lineageRenamer.apply(ObjectLineage.class.getSimpleName()))
         .fieldDefinition(newFieldDefinition()
-            .name("orchestratedProperties")
-            .type(requiredListType(OrchestratedProperty.class))
+            .name(lineageRenamer.apply("orchestratedProperties"))
+            .type(requiredListType(lineageRenamer.apply(OrchestratedProperty.class.getSimpleName())))
             .build())
         .build());
 
     typeDefinitionRegistry.add(newObjectTypeDefinition()
-        .name(OrchestratedProperty.class.getSimpleName())
+        .name(lineageRenamer.apply(OrchestratedProperty.class.getSimpleName()))
         .fieldDefinition(newFieldDefinition()
-            .name("subject")
-            .type(requiredType(ObjectReference.class))
+            .name(lineageRenamer.apply("subject"))
+            .type(requiredType(lineageRenamer.apply(ObjectReference.class.getSimpleName())))
             .build())
         .fieldDefinition(newFieldDefinition()
-            .name("property")
+            .name(lineageRenamer.apply("property"))
             .type(requiredType("String"))
             .build())
         .fieldDefinition(newFieldDefinition()
-            .name("value")
+            .name(lineageRenamer.apply("value"))
             .type(requiredType("PropertyValue"))
             .build())
         .fieldDefinition(newFieldDefinition()
-            .name("isDerivedFrom")
-            .type(requiredListType(SourceProperty.class))
+            .name(lineageRenamer.apply("wasGeneratedBy"))
+            .type(requiredType(lineageRenamer.apply(PropertyMappingExecution.class.getSimpleName())))
+            .build())
+        .fieldDefinition(newFieldDefinition()
+            .name(lineageRenamer.apply("isDerivedFrom"))
+            .type(requiredListType(lineageRenamer.apply(SourceProperty.class.getSimpleName())))
             .build())
         .build());
 
     typeDefinitionRegistry.add(newObjectTypeDefinition()
-        .name(SourceProperty.class.getSimpleName())
+        .name(lineageRenamer.apply(PropertyMappingExecution.class.getSimpleName()))
         .fieldDefinition(newFieldDefinition()
-            .name("subject")
-            .type(requiredType(ObjectReference.class))
+            .name(lineageRenamer.apply("used"))
+            .type(requiredType(lineageRenamer.apply(PropertyMapping.class.getSimpleName())))
+            .build())
+        .build());
+
+    typeDefinitionRegistry.add(newObjectTypeDefinition()
+        .name(lineageRenamer.apply(PropertyMapping.class.getSimpleName()))
+        .fieldDefinition(newFieldDefinition()
+            .name(lineageRenamer.apply("pathMapping"))
+            .type(requiredListType(lineageRenamer.apply(PropertyPathMapping.class.getSimpleName())))
+            .build())
+        .build());
+
+    typeDefinitionRegistry.add(newObjectTypeDefinition()
+        .name(lineageRenamer.apply(PropertyPathMapping.class.getSimpleName()))
+        .fieldDefinition(newFieldDefinition()
+            .name(lineageRenamer.apply("path"))
+            .type(requiredListType(lineageRenamer.apply(PropertyPath.class.getSimpleName())))
+            .build())
+        .build());
+
+    typeDefinitionRegistry.add(newObjectTypeDefinition()
+        .name(lineageRenamer.apply(PropertyPath.class.getSimpleName()))
+        .fieldDefinition(newFieldDefinition()
+            .name(lineageRenamer.apply("startNode"))
+            .type(requiredType(lineageRenamer.apply(ObjectReference.class.getSimpleName())))
             .build())
         .fieldDefinition(newFieldDefinition()
-            .name("property")
-            .type(requiredType("String"))
-            .build())
-        .fieldDefinition(newFieldDefinition()
-            .name("propertyPath")
+            .name(lineageRenamer.apply("segments"))
             .type(requiredListType("String"))
             .build())
         .fieldDefinition(newFieldDefinition()
-            .name("value")
-            .type(requiredType("PropertyValue"))
+            .name(lineageRenamer.apply("reference"))
+            .type(requiredListType(lineageRenamer.apply(SourceProperty.class.getSimpleName())))
             .build())
         .build());
 
     typeDefinitionRegistry.add(newObjectTypeDefinition()
-        .name(ObjectReference.class.getSimpleName())
+        .name(lineageRenamer.apply(SourceProperty.class.getSimpleName()))
         .fieldDefinition(newFieldDefinition()
-            .name("objectType")
+            .name(lineageRenamer.apply("subject"))
+            .type(requiredType(lineageRenamer.apply(ObjectReference.class.getSimpleName())))
+            .build())
+        .fieldDefinition(newFieldDefinition()
+            .name(lineageRenamer.apply("property"))
             .type(requiredType("String"))
             .build())
         .fieldDefinition(newFieldDefinition()
-            .name("objectKey")
+            .name(lineageRenamer.apply("propertyPath"))
+            .type(requiredListType("String"))
+            .build())
+        .fieldDefinition(newFieldDefinition()
+            .name(lineageRenamer.apply("value"))
+            .type(requiredType(lineageRenamer.apply("PropertyValue")))
+            .build())
+        .build());
+
+    typeDefinitionRegistry.add(newObjectTypeDefinition()
+        .name(lineageRenamer.apply(ObjectReference.class.getSimpleName()))
+        .fieldDefinition(newFieldDefinition()
+            .name(lineageRenamer.apply("objectType"))
+            .type(requiredType("String"))
+            .build())
+        .fieldDefinition(newFieldDefinition()
+            .name(lineageRenamer.apply("objectKey"))
             .type(requiredType("String"))
             .build())
         .build());
 
     typeDefinitionRegistry.add(newObjectTypeDefinition()
-        .name("PropertyValue")
+        .name(lineageRenamer.apply("PropertyValue"))
         .fieldDefinition(newFieldDefinition()
-            .name("stringValue")
+            .name(lineageRenamer.apply("stringValue"))
             .type(new TypeName("String"))
             .build())
         .fieldDefinition(newFieldDefinition()
-            .name("integerValue")
+            .name(lineageRenamer.apply("integerValue"))
             .type(new TypeName("Int"))
             .build())
         .fieldDefinition(newFieldDefinition()
-            .name("booleanValue")
+            .name(lineageRenamer.apply("booleanValue"))
             .type(new TypeName("Boolean"))
             .build())
         .build());
 
-    var valueFetcher = new PropertyValueFetcher();
+    var valueFetcher = new PropertyValueFetcher(lineageRenamer);
 
-    DataFetcher<String> objectKeyFetcher = environment -> ((ObjectReference) environment.getSource())
-        .getObjectKey()
-        .values()
-        .stream()
-        .map(String.class::cast)
-        .findFirst()
-        .orElseThrow();
+    var objectKeyFetcher = new ObjectKeyFetcher(lineageRenamer);
 
-    codeRegistryBuilder.dataFetcher(coordinates(OrchestratedProperty.class.getSimpleName(), "value"), valueFetcher)
-        .dataFetcher(coordinates(SourceProperty.class.getSimpleName(), "value"), valueFetcher)
-        .dataFetcher(coordinates(ObjectReference.class.getSimpleName(), "objectKey"), objectKeyFetcher);
+    codeRegistryBuilder.dataFetcher(coordinates(OrchestratedProperty.class.getSimpleName(), lineageRenamer.apply("value")), valueFetcher)
+        .dataFetcher(coordinates(SourceProperty.class.getSimpleName(), lineageRenamer.apply("value")), valueFetcher)
+        .dataFetcher(coordinates(ObjectReference.class.getSimpleName(), lineageRenamer.apply("objectKey")), objectKeyFetcher);
   }
 
   private ObjectTypeDefinition createObjectTypeDefinition(ObjectType objectType) {
@@ -200,8 +275,8 @@ public final class SchemaFactory {
         .forEach(objectTypeDefinitionBuilder::fieldDefinition);
 
     objectTypeDefinitionBuilder.fieldDefinition(newFieldDefinition()
-        .name(SchemaConstants.HAS_LINEAGE_FIELD)
-        .type(requiredType(ObjectLineage.class))
+        .name(lineageRenamer.apply(SchemaConstants.HAS_LINEAGE_FIELD))
+        .type(requiredType(lineageRenamer.apply(ObjectLineage.class.getSimpleName())))
         .build());
 
     return objectTypeDefinitionBuilder.build();

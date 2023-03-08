@@ -1,9 +1,10 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
 import static java.util.Collections.unmodifiableMap;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
@@ -33,10 +34,14 @@ public class ObjectResult {
     return relatedObjects.get(name);
   }
 
-  public Map<String, Object> toMap() {
+  public Map<String, Object> toMap(ObjectMapper objectMapper, UnaryOperator<String> lineageRenamer) {
     var resultMap = new HashMap<>(properties);
-    relatedObjects.forEach((name, relatedObject) -> resultMap.put(name, relatedObject.toMap()));
-    resultMap.put(SchemaConstants.HAS_LINEAGE_FIELD, lineage);
+    relatedObjects.forEach((name, relatedObject) ->
+        resultMap.put(name, relatedObject.toMap(objectMapper, lineageRenamer)));
+
+    var mappedLineage = objectMapper.convertValue(lineage, Object.class);
+    resultMap.put(lineageRenamer.apply(SchemaConstants.HAS_LINEAGE_FIELD), mappedLineage);
+
     return unmodifiableMap(resultMap);
   }
 }

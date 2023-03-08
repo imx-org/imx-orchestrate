@@ -11,6 +11,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.selectIdentity;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLObjectType;
 import java.util.ArrayList;
@@ -40,6 +41,10 @@ public final class FetchPlanner {
 
   private final Map<String, Source> sources;
 
+  private final ObjectMapper objectMapper;
+
+  private final UnaryOperator<String> lineageRenamer;
+
   public Publisher<Map<String, Object>> fetch(DataFetchingEnvironment environment, GraphQLObjectType outputType) {
     var targetType = modelMapping.getTargetModel()
         .getObjectType(outputType.getName());
@@ -51,7 +56,7 @@ public final class FetchPlanner {
     environment.getSelectionSet()
         .getImmediateFields()
         .stream()
-        .filter(not(FetchUtils::isReservedField))
+        .filter(not(field -> FetchUtils.isReservedField(field, lineageRenamer)))
         .map(property -> targetType.getProperty(property.getName()))
         .forEach(property -> {
           var propertyMapping = targetMapping.getPropertyMapping(property.getName());
@@ -77,7 +82,7 @@ public final class FetchPlanner {
         .build();
 
     var fetchResult = fetchOperation.execute(context)
-        .map(ObjectResult::toMap);
+        .map(objectResult -> objectResult.toMap(objectMapper, lineageRenamer));
 
     return isCollection ? fetchResult : fetchResult.singleOrEmpty();
   }

@@ -61,9 +61,9 @@ final class FetchUtils {
         .toList();
   }
 
-  public static boolean isReservedField(SelectedField selectedField) {
+  public static boolean isReservedField(SelectedField selectedField, UnaryOperator<String> lineageRenamer) {
     var fieldName = selectedField.getName();
-    return INTROSPECTION_SYSTEM_FIELDS.contains(fieldName) || HAS_LINEAGE_FIELD.equals(fieldName);
+    return INTROSPECTION_SYSTEM_FIELDS.contains(fieldName) || lineageRenamer.apply(HAS_LINEAGE_FIELD).equals(fieldName);
   }
 
   @SuppressWarnings("unchecked")
