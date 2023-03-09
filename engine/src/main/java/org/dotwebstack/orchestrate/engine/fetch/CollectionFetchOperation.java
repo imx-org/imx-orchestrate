@@ -1,15 +1,15 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
 import java.util.List;
-import java.util.logging.Level;
 import lombok.experimental.SuperBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.source.CollectionRequest;
 import org.dotwebstack.orchestrate.source.FilterDefinition;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.SignalType;
 
+@Slf4j
 @SuperBuilder(toBuilder = true)
 final class CollectionFetchOperation extends AbstractFetchOperation {
 
@@ -22,9 +22,12 @@ final class CollectionFetchOperation extends AbstractFetchOperation {
         .selectedProperties(selectedProperties)
         .build();
 
+    if (log.isDebugEnabled()) {
+      log.debug(collectionRequest.toString());
+    }
+
     return source.getDataRepository()
         .find(collectionRequest)
-        .log("Collection/" + objectType.getName(), Level.INFO, SignalType.ON_NEXT)
         .map(properties -> ObjectResult.builder()
             .type(objectType)
             .properties(properties)

@@ -18,4 +18,10 @@ public final class SelectedProperty {
   public SelectedProperty(Property property) {
     this(property, emptyList());
   }
+
+  @Override
+  public String toString() {
+    return property.getName()
+        .concat(selectedProperties.isEmpty() ? "" : " " + selectedProperties);
+  }
 }

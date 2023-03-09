@@ -10,4 +10,10 @@ import lombok.experimental.SuperBuilder;
 public final class BatchRequest extends AbstractDataRequest {
 
   private final Collection<Map<String, Object>> objectKeys;
+
+  @Override
+  public String toString() {
+    return super.toString()
+        .concat("Object keys: " + objectKeys + "\n");
+  }
 }

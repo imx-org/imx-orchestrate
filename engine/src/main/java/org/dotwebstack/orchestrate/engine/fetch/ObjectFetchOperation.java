@@ -1,14 +1,14 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
 import java.util.List;
-import java.util.logging.Level;
 import lombok.experimental.SuperBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.dotwebstack.orchestrate.source.BatchRequest;
 import org.dotwebstack.orchestrate.source.ObjectRequest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.SignalType;
 
+@Slf4j
 @SuperBuilder(toBuilder = true)
 final class ObjectFetchOperation extends AbstractFetchOperation {
 
@@ -19,9 +19,12 @@ final class ObjectFetchOperation extends AbstractFetchOperation {
         .selectedProperties(selectedProperties)
         .build();
 
+    if (log.isDebugEnabled()) {
+      log.debug(objectRequest.toString());
+    }
+
     return source.getDataRepository()
         .findOne(objectRequest)
-        .log("Object/" + objectType.getName(), Level.INFO, SignalType.ON_NEXT)
         .map(properties -> ObjectResult.builder()
             .type(objectType)
             .properties(properties)
@@ -46,8 +49,11 @@ final class ObjectFetchOperation extends AbstractFetchOperation {
         .selectedProperties(selectedProperties)
         .build();
 
+    if (log.isDebugEnabled()) {
+      log.debug(batchRequest.toString());
+    }
+
     return dataRepository.findBatch(batchRequest)
-        .log("ObjectBatch/" + objectType.getName(), Level.INFO, SignalType.ON_NEXT)
         .map(properties -> ObjectResult.builder()
             .type(objectType)
             .properties(properties)
