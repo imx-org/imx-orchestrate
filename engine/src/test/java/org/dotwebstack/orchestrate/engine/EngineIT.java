@@ -242,7 +242,20 @@ class EngineIT {
     Map<String, List<Map<String, Object>>> data = result.getData();
     var gebouwCollection = data.get("gebouwCollection");
 
-    assertThat(gebouwCollection).isNotNull();
+    assertThat(gebouwCollection).isNotNull()
+        .hasSize(3);
+
+    assertThat(gebouwCollection.get(0)).isNotNull()
+        .containsEntry("identificatie", "G0200.42b3d39246840268e0530a0a28492340")
+        .containsEntry("bouwjaar", "2006");
+
+    assertThat(gebouwCollection.get(1)).isNotNull()
+        .containsEntry("identificatie", "G0050.19cb5132f8b23142e053440a0c0a9802")
+        .containsEntry("bouwjaar", "1997");
+
+    assertThat(gebouwCollection.get(2)).isNotNull()
+        .containsEntry("identificatie", "G0050.5044e42a2f0f233fe053440a0c0a31e0")
+        .containsEntry("bouwjaar", null);
   }
 
   @Test
