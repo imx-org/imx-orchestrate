@@ -22,6 +22,10 @@ public class Cardinality {
 
   private final int max;
 
+  public boolean isSingular() {
+    return max == 1;
+  }
+
   public static Cardinality of(int min, int max) {
     return new Cardinality(min, max);
   }

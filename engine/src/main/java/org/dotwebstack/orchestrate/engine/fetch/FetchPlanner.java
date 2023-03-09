@@ -129,7 +129,7 @@ public final class FetchPlanner {
                 .toList();
 
             nextOperations.add(NextOperation.builder()
-                .propertyName(propertyName)
+                .property(inverseRelation)
                 .delegateOperation(CollectionFetchOperation.builder()
                     .source(source)
                     .objectType(originType)
@@ -150,7 +150,7 @@ public final class FetchPlanner {
             selectedProperties.add(new SelectedProperty(property, selectIdentity(targetType)));
 
             nextOperations.add(NextOperation.builder()
-                .propertyName(propertyName)
+                .property(relation)
                 .delegateOperation(fetchSourceObject(targetTypeRef, nestedSourcePaths, false,
                     UnaryOperator.identity()))
                 .inputMapper(FetchUtils.inputMapper(propertyName))

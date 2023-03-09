@@ -2,6 +2,7 @@ package org.dotwebstack.orchestrate.engine.fetch;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import lombok.Builder;
 import lombok.Singular;
@@ -11,7 +12,6 @@ import org.dotwebstack.orchestrate.source.SelectedProperty;
 import org.dotwebstack.orchestrate.source.Source;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @SuperBuilder(toBuilder = true)
 abstract class AbstractFetchOperation implements FetchOperation {
@@ -31,21 +31,19 @@ abstract class AbstractFetchOperation implements FetchOperation {
 
   public final Flux<ObjectResult> execute(FetchContext context) {
     return Flux.from(fetch(context))
-        .flatMap(objectResult -> executeNextOperations(objectResult, context))
+        .transform(resultFlux -> executeNextOperations(resultFlux, context))
         .map(resultMapper);
   }
 
   protected abstract Publisher<ObjectResult> fetch(FetchContext context);
 
-  private Mono<ObjectResult> executeNextOperations(ObjectResult objectResult, FetchContext context) {
+  private Publisher<ObjectResult> executeNextOperations(Flux<ObjectResult> resultFlux, FetchContext context) {
     if (nextOperations.isEmpty()) {
-      return Mono.just(objectResult);
+      return resultFlux;
     }
 
     return Flux.fromIterable(nextOperations)
-        .flatMap(nextOperation -> nextOperation.execute(objectResult, context))
-        .collect(objectResult::toBuilder, (builder, result) -> builder.relatedObject(result.getPropertyName(),
-            result.getObjectResult()))
-        .map(ObjectResult.ObjectResultBuilder::build);
+        .reduce(resultFlux, (acc, nextOperation) -> acc.transform(rf -> nextOperation.apply(rf, context)))
+        .flatMapMany(Function.identity());
   }
 }

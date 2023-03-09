@@ -4,14 +4,17 @@ import java.util.Map;
 import java.util.function.Function;
 import lombok.Builder;
 import lombok.Getter;
+import org.dotwebstack.orchestrate.engine.OrchestrateException;
+import org.dotwebstack.orchestrate.model.Property;
 import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Getter
 @Builder(toBuilder = true)
 public class NextOperation {
 
-  private final String propertyName;
+  private final Property property;
 
   private final FetchOperation delegateOperation;
 
@@ -19,17 +22,23 @@ public class NextOperation {
 
   private final boolean singleResult;
 
-  public Publisher<NextOperationResult> execute(ObjectResult objectResult, FetchContext context) {
-    var input = inputMapper.apply(objectResult);
-
-    if (input == null) {
-      return Mono.empty();
+  public Publisher<ObjectResult> apply(Flux<ObjectResult> resultFlux, FetchContext context) {
+    if (!property.getCardinality().isSingular()) {
+      throw new OrchestrateException("Nested lists are not (yet) supported.");
     }
 
-    var resultPublisher = delegateOperation.execute(context.withInput(input));
+    return resultFlux.flatMap(objectResult -> {
+      var input = inputMapper.apply(objectResult);
 
-    // TODO: Handle nested object lists
-    return Mono.from(resultPublisher)
-        .map(result -> new NextOperationResult(propertyName, result));
+      if (input == null) {
+        return Mono.just(objectResult);
+      }
+
+      return delegateOperation.execute(context.withInput(input))
+          .map(relatedObject -> objectResult.toBuilder()
+              .relatedObject(property.getName(), relatedObject)
+              .build())
+          .defaultIfEmpty(objectResult);
+    });
   }
 }
