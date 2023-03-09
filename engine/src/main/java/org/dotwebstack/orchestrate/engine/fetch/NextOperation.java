@@ -20,8 +20,6 @@ public class NextOperation {
 
   private final Function<ObjectResult, Map<String, Object>> inputMapper;
 
-  private final boolean singleResult;
-
   public Publisher<ObjectResult> apply(Flux<ObjectResult> resultFlux, FetchContext context) {
     if (!property.getCardinality().isSingular()) {
       throw new OrchestrateException("Nested lists are not (yet) supported.");

@@ -137,7 +137,6 @@ public final class FetchPlanner {
                     .selectedProperties(nestedProperties)
                     .build())
                 .inputMapper(FetchUtils.inputMapper(sourceType))
-                .singleResult(true)
                 .build());
 
             return;
@@ -154,7 +153,6 @@ public final class FetchPlanner {
                 .delegateOperation(fetchSourceObject(targetTypeRef, nestedSourcePaths, false,
                     UnaryOperator.identity()))
                 .inputMapper(FetchUtils.inputMapper(propertyName))
-                .singleResult(true)
                 .build());
 
             return;
