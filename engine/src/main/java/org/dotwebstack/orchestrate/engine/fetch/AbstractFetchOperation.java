@@ -29,21 +29,29 @@ abstract class AbstractFetchOperation implements FetchOperation {
   @Builder.Default
   protected final UnaryOperator<ObjectResult> resultMapper = UnaryOperator.identity();
 
-  public final Flux<ObjectResult> execute(FetchContext context) {
-    return Flux.from(fetch(context))
-        .transform(resultFlux -> executeNextOperations(resultFlux, context))
+  public final Flux<ObjectResult> execute(FetchInput input) {
+    return Flux.from(fetch(input))
+        .transform(this::executeNextOperations)
         .map(resultMapper);
   }
 
-  protected abstract Publisher<ObjectResult> fetch(FetchContext context);
+  public final Flux<ObjectResult> executeBatch(List<FetchInput> inputs) {
+    return Flux.from(fetchBatch(inputs))
+        .transform(this::executeNextOperations)
+        .map(resultMapper);
+  }
 
-  private Publisher<ObjectResult> executeNextOperations(Flux<ObjectResult> resultFlux, FetchContext context) {
+  protected abstract Publisher<ObjectResult> fetch(FetchInput input);
+
+  protected abstract Publisher<ObjectResult> fetchBatch(List<FetchInput> inputs);
+
+  private Publisher<ObjectResult> executeNextOperations(Flux<ObjectResult> resultFlux) {
     if (nextOperations.isEmpty()) {
       return resultFlux;
     }
 
     return Flux.fromIterable(nextOperations)
-        .reduce(resultFlux, (acc, nextOperation) -> acc.transform(rf -> nextOperation.apply(rf, context)))
+        .reduce(resultFlux, (acc, nextOperation) -> acc.transform(nextOperation::apply))
         .flatMapMany(Function.identity());
   }
 }

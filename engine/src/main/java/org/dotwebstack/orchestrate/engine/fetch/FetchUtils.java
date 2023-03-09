@@ -24,7 +24,8 @@ import reactor.util.function.Tuples;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class FetchUtils {
 
-  public static UnaryOperator<Map<String, Object>> keyExtractor(ObjectType targetType, ObjectTypeMapping targetMapping) {
+  public static UnaryOperator<Map<String, Object>> keyExtractor(ObjectType targetType,
+      ObjectTypeMapping targetMapping) {
     // TODO: Refactor & support nested keys
     var propertyMapping = targetType.getIdentityProperties()
         .stream()
@@ -44,13 +45,13 @@ final class FetchUtils {
         .collect(HashMap::new, (acc, t) -> acc.put(t.getT1(), input.get(t.getT2())), HashMap::putAll);
   }
 
-  public static Function<ObjectResult, Map<String, Object>> inputMapper(ObjectType objectType) {
+  public static Function<ObjectResult, Map<String, Object>> keyExtractor(ObjectType objectType) {
     return objectResult -> objectType.getIdentityProperties()
         .stream()
         .collect(Collectors.toMap(Property::getName, property -> objectResult.getProperty(property.getName())));
   }
 
-  public static Function<ObjectResult, Map<String, Object>> inputMapper(String propertyName) {
+  public static Function<ObjectResult, Map<String, Object>> propertyExtractor(String propertyName) {
     return objectResult -> cast(objectResult.getProperty(propertyName));
   }
 

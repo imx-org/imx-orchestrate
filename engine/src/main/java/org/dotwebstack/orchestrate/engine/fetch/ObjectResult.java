@@ -1,6 +1,8 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
 import static java.util.Collections.unmodifiableMap;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +27,10 @@ public class ObjectResult {
   private final Map<String, ObjectResult> relatedObjects;
 
   private final ObjectLineage lineage;
+
+  public Map<String, Object> getKey() {
+    return keyExtractor(type).apply(this);
+  }
 
   public Object getProperty(String name) {
     return properties.get(name);

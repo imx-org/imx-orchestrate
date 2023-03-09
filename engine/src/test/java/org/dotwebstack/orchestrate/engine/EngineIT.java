@@ -11,18 +11,18 @@ import static org.mockito.Mockito.when;
 
 import graphql.GraphQL;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.dotwebstack.orchestrate.engine.schema.SchemaConstants;
 import org.dotwebstack.orchestrate.engine.schema.SchemaFactory;
+import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.PropertyPath;
+import org.dotwebstack.orchestrate.source.BatchRequest;
 import org.dotwebstack.orchestrate.source.CollectionRequest;
 import org.dotwebstack.orchestrate.source.DataRepository;
 import org.dotwebstack.orchestrate.source.ObjectRequest;
-import org.dotwebstack.orchestrate.source.Source;
 import org.dotwebstack.orchestrate.source.file.FileSource;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -33,26 +33,40 @@ import reactor.core.publisher.Mono;
 @ExtendWith(MockitoExtension.class)
 class EngineIT {
 
-  private static final Map<String, Source> SOURCE_MAP = new HashMap<>();
+  private DataRepository bagRepository;
+
+  private DataRepository bgtRepository;
 
   @Mock
-  private DataRepository dataRepositoryStub;
+  private DataRepository bagRepositoryStub;
 
-  @BeforeAll
-  static void beforeAll() {
-    SOURCE_MAP.put("bag", new FileSource(createBagModel(), Paths.get("../data/bag")));
-    SOURCE_MAP.put("bgt", new FileSource(createBgtModel(), Paths.get("../data/bgt")));
+  @Mock
+  private DataRepository bgtRepositoryStub;
+
+  private GraphQL graphQL;
+
+  @BeforeEach
+  void setUp() {
+    bagRepository = new FileSource(createBagModel(), Paths.get("../data/bag")).getDataRepository();
+    bgtRepository = new FileSource(createBgtModel(), Paths.get("../data/bgt")).getDataRepository();
+
+    var orchestration = Orchestration.builder()
+        .modelMapping(createModelMapping())
+        .source("bag", () -> bagRepositoryStub)
+        .source("bgt", () -> bgtRepositoryStub)
+        .build();
+
+    graphQL = GraphQL.newGraphQL(SchemaFactory.create(orchestration))
+        .build();
   }
 
   @Test
   void queryObject_withCrossModelRelation() {
-    var orchestration = Orchestration.builder()
-        .modelMapping(createModelMapping())
-        .sources(SOURCE_MAP)
-        .build();
+    when(bgtRepositoryStub.findOne(any(ObjectRequest.class)))
+        .thenAnswer(invocation -> bgtRepository.findOne(invocation.getArgument(0)));
 
-    var graphQL = GraphQL.newGraphQL(SchemaFactory.create(orchestration))
-        .build();
+    when(bagRepositoryStub.findOne(any(ObjectRequest.class)))
+        .thenAnswer(invocation -> bagRepository.findOne(invocation.getArgument(0)));
 
     var result = graphQL.execute("""
           query {
@@ -74,10 +88,7 @@ class EngineIT {
   @Test
   @SuppressWarnings("unchecked")
   void queryObject_withoutBatchLoading() {
-    var bagRepository = SOURCE_MAP.get("bag")
-        .getDataRepository();
-
-    when(dataRepositoryStub.findOne(any(ObjectRequest.class)))
+    when(bagRepositoryStub.findOne(any(ObjectRequest.class)))
         .thenAnswer(invocation -> {
           var objectRequest = (ObjectRequest) invocation.getArgument(0);
           var objectType = objectRequest.getObjectType();
@@ -101,7 +112,7 @@ class EngineIT {
           };
         });
 
-    when(dataRepositoryStub.find(any(CollectionRequest.class)))
+    when(bagRepositoryStub.find(any(CollectionRequest.class)))
         .thenAnswer(invocation -> {
           var collectionRequest = (CollectionRequest) invocation.getArgument(0);
           var objectType = collectionRequest.getObjectType();
@@ -114,14 +125,6 @@ class EngineIT {
               yield Flux.error(() -> new RuntimeException("Error!"));
           };
         });
-
-    var orchestration = Orchestration.builder()
-        .modelMapping(createModelMapping())
-        .source("bag", () -> dataRepositoryStub)
-        .build();
-
-    var graphQL = GraphQL.newGraphQL(SchemaFactory.create(orchestration))
-        .build();
 
     var result = graphQL.execute("""
           query {
@@ -151,7 +154,7 @@ class EngineIT {
           }
         """);
 
-    verify(dataRepositoryStub, times(3)).findOne(any(ObjectRequest.class));
+    verify(bagRepositoryStub, times(3)).findOne(any(ObjectRequest.class));
 
     assertThat(result).isNotNull();
     assertThat(result.getErrors()).isEmpty();
@@ -185,74 +188,66 @@ class EngineIT {
   @Test
   @SuppressWarnings("unchecked")
   void queryObject_withBatchLoading() {
-    var bagRepository = SOURCE_MAP.get("bag")
-        .getDataRepository();
-
-    when(dataRepositoryStub.findOne(any(ObjectRequest.class)))
-        .thenAnswer(invocation -> {
-          var objectRequest = (ObjectRequest) invocation.getArgument(0);
-          var objectType = objectRequest.getObjectType();
-          var objectkey = objectRequest.getObjectKey();
-
-          return switch (objectType.getName()) {
-            case "OpenbareRuimte":
-              assertThat(objectRequest.getSelectedProperties()).hasSize(2);
-              assertThat(objectkey).isEqualTo(Map.of("identificatie", "0200300022472362"));
-              yield bagRepository.findOne(objectRequest);
-            default:
-              yield Mono.error(() -> new RuntimeException("Error!"));
-          };
-        });
-
-    when(dataRepositoryStub.find(any(CollectionRequest.class)))
+    when(bgtRepositoryStub.find(any(CollectionRequest.class)))
         .thenAnswer(invocation -> {
           var collectionRequest = (CollectionRequest) invocation.getArgument(0);
           var objectType = collectionRequest.getObjectType();
 
           return switch (objectType.getName()) {
-            case "Nummeraanduiding":
+            case "Pand":
               assertThat(collectionRequest.getSelectedProperties()).hasSize(2);
-              yield bagRepository.find(collectionRequest);
+              yield bgtRepository.find(collectionRequest);
             default:
-              yield Mono.error(() -> new RuntimeException("Error!"));
+              yield Flux.error(() -> new RuntimeException("Error!"));
           };
         });
 
-    var orchestration = Orchestration.builder()
-        .modelMapping(createModelMapping())
-        .source("bag", () -> dataRepositoryStub)
-        .build();
+    when(bagRepositoryStub.supportsBatchLoading(any(ObjectType.class))).thenReturn(true);
+    when(bagRepositoryStub.findBatch(any(BatchRequest.class)))
+        .thenAnswer(invocation -> {
+          var batchRequest = (BatchRequest) invocation.getArgument(0);
+          var objectType = batchRequest.getObjectType();
+          var objectkeys = batchRequest.getObjectKeys();
 
-    var graphQL = GraphQL.newGraphQL(SchemaFactory.create(orchestration))
-        .build();
+          return switch (objectType.getName()) {
+            case "Pand":
+              assertThat(batchRequest.getSelectedProperties()).hasSize(2);
+              assertThat(objectkeys).hasSize(3)
+                  .contains(Map.of("identificatie", "0200100000085932"))
+                  .contains(Map.of("identificatie", "0050100000356176"))
+                  .contains(Map.of("identificatie", "0000000000000000"));
+              yield bagRepository.findBatch(batchRequest);
+            default:
+              yield Flux.error(() -> new RuntimeException("Error!"));
+          };
+        });
 
     var result = graphQL.execute("""
           query {
-            adresCollection {
+            gebouwCollection {
               identificatie
-              straatnaam
+              bouwjaar
             }
           }
         """);
 
-    verify(dataRepositoryStub, times(3)).findOne(any(ObjectRequest.class));
+    verify(bgtRepositoryStub, times(1)).find(any(CollectionRequest.class));
+    verify(bagRepositoryStub, times(1)).supportsBatchLoading(any(ObjectType.class));
+    verify(bagRepositoryStub, times(1)).findBatch(any(BatchRequest.class));
 
     assertThat(result).isNotNull();
     assertThat(result.getErrors()).isEmpty();
     assertThat(result.isDataPresent()).isTrue();
 
     Map<String, List<Map<String, Object>>> data = result.getData();
-    var adresCollection = data.get("adresCollection");
+    var gebouwCollection = data.get("gebouwCollection");
 
-    assertThat(adresCollection).isNotNull();
+    assertThat(gebouwCollection).isNotNull();
   }
 
   @Test
   void queryCollection_withoutBatchLoading() {
-    var bagRepository = SOURCE_MAP.get("bag")
-        .getDataRepository();
-
-    when(dataRepositoryStub.findOne(any(ObjectRequest.class)))
+    when(bagRepositoryStub.findOne(any(ObjectRequest.class)))
         .thenAnswer(invocation -> {
           var objectRequest = (ObjectRequest) invocation.getArgument(0);
           var objectType = objectRequest.getObjectType();
@@ -271,7 +266,7 @@ class EngineIT {
           };
         });
 
-    when(dataRepositoryStub.find(any(CollectionRequest.class)))
+    when(bagRepositoryStub.find(any(CollectionRequest.class)))
         .thenAnswer(invocation -> {
           var collectionRequest = (CollectionRequest) invocation.getArgument(0);
           var objectType = collectionRequest.getObjectType();
@@ -288,17 +283,9 @@ class EngineIT {
               assertThat(filter.getValue()).isInstanceOf(String.class);
               yield bagRepository.find(collectionRequest);
             default:
-              yield Mono.error(() -> new RuntimeException("Error!"));
+              yield Flux.error(() -> new RuntimeException("Error!"));
           };
         });
-
-    var orchestration = Orchestration.builder()
-        .modelMapping(createModelMapping())
-        .source("bag", () -> dataRepositoryStub)
-        .build();
-
-    var graphQL = GraphQL.newGraphQL(SchemaFactory.create(orchestration))
-        .build();
 
     var result = graphQL.execute("""
           query {
@@ -316,8 +303,8 @@ class EngineIT {
           }
         """);
 
-    verify(dataRepositoryStub, times(4)).find(any(CollectionRequest.class));
-    verify(dataRepositoryStub, times(7)).findOne(any(ObjectRequest.class));
+    verify(bagRepositoryStub, times(4)).find(any(CollectionRequest.class));
+    verify(bagRepositoryStub, times(3)).findOne(any(ObjectRequest.class));
 
     assertThat(result).isNotNull();
     assertThat(result.getErrors()).isEmpty();

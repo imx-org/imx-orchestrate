@@ -1,8 +1,10 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
 import static java.util.Collections.unmodifiableMap;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.noopCombiner;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.pathResult;
+
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -37,7 +39,7 @@ class ObjectResultMapper implements UnaryOperator<ObjectResult> {
   public ObjectResult apply(ObjectResult objectResult) {
     var targetReference = ObjectReference.builder()
         .objectType(targetType.getName())
-        .objectKey(FetchUtils.inputMapper(objectResult.getType()).apply(objectResult))
+        .objectKey(keyExtractor(objectResult.getType()).apply(objectResult))
         .build();
 
     var objectLineageBuilder = ObjectLineage.builder();
@@ -112,7 +114,7 @@ class ObjectResultMapper implements UnaryOperator<ObjectResult> {
                 var sourceProperty = SourceProperty.builder()
                     .subject(ObjectReference.builder()
                         .objectType(resultType.getName())
-                        .objectKey(FetchUtils.inputMapper(resultType).apply(pathResult))
+                        .objectKey(keyExtractor(resultType).apply(pathResult))
                         .build())
                     .property(path.getLastSegment())
                     .propertyPath(path.getSegments())

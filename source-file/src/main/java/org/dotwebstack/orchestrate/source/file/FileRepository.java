@@ -10,6 +10,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+import org.dotwebstack.orchestrate.model.ObjectType;
+import org.dotwebstack.orchestrate.source.BatchRequest;
 import org.dotwebstack.orchestrate.source.CollectionRequest;
 import org.dotwebstack.orchestrate.source.DataRepository;
 import org.dotwebstack.orchestrate.source.DataRequest;
@@ -43,6 +45,21 @@ class FileRepository implements DataRepository {
         .toList();
 
     return Flux.fromIterable(objectList);
+  }
+
+  @Override
+  public Flux<Map<String, Object>> findBatch(BatchRequest batchRequest) {
+    return Flux.fromIterable(batchRequest.getObjectKeys())
+        .flatMap(objectKey -> findOne(ObjectRequest.builder()
+            .objectType(batchRequest.getObjectType())
+            .objectKey(objectKey)
+            .selectedProperties(batchRequest.getSelectedProperties())
+            .build()));
+  }
+
+  @Override
+  public boolean supportsBatchLoading(ObjectType objectType) {
+    return true;
   }
 
   private Predicate<ObjectNode> createFilter(FilterExpression filterExpression) {

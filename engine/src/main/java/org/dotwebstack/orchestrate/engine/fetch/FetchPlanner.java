@@ -9,6 +9,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toSet;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.propertyExtractor;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.selectIdentity;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -76,8 +77,8 @@ public final class FetchPlanner {
     var fetchOperation = fetchSourceObject(targetMapping.getSourceRoot(), unmodifiableSet(sourcePaths), isCollection,
         resultMapper);
 
-    var context = FetchContext.builder()
-        .input(keyExtractor(targetType, targetMapping)
+    var context = FetchInput.builder()
+        .data(keyExtractor(targetType, targetMapping)
             .apply(environment.getArguments()))
         .build();
 
@@ -136,7 +137,7 @@ public final class FetchPlanner {
                     .filter(filter)
                     .selectedProperties(nestedProperties)
                     .build())
-                .inputMapper(FetchUtils.inputMapper(sourceType))
+                .inputMapper(keyExtractor(sourceType))
                 .build());
 
             return;
@@ -152,7 +153,7 @@ public final class FetchPlanner {
                 .property(relation)
                 .delegateOperation(fetchSourceObject(targetTypeRef, nestedSourcePaths, false,
                     UnaryOperator.identity()))
-                .inputMapper(FetchUtils.inputMapper(propertyName))
+                .inputMapper(propertyExtractor(propertyName))
                 .build());
 
             return;
