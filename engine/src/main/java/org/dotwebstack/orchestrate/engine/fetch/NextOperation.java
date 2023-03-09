@@ -44,11 +44,7 @@ public class NextOperation {
       return Mono.just(objectResult);
     }
 
-    var input = FetchInput.builder()
-        .data(inputData)
-        .build();
-
-    return delegateOperation.execute(input)
+    return delegateOperation.execute(FetchInput.newInput(inputData))
         .singleOrEmpty()
         .map(nextResult -> objectResult.toBuilder()
             .relatedObject(property.getName(), nextResult)
@@ -61,9 +57,7 @@ public class NextOperation {
         .flatMap(objectResult -> Optional.ofNullable(inputMapper.apply(objectResult))
             .stream())
         .distinct()
-        .map(data -> FetchInput.builder()
-            .data(data)
-            .build())
+        .map(FetchInput::newInput)
         .toList();
 
     if (distinctInputs.isEmpty()) {

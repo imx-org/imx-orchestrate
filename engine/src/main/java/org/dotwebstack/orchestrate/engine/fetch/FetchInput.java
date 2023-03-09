@@ -4,19 +4,18 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 @Getter
-@Builder(toBuilder = true)
+@ToString
 @EqualsAndHashCode
+@Builder(toBuilder = true)
 public final class FetchInput {
-
-  private final FetchInput parent;
 
   private final Map<String, Object> data;
 
-  public FetchInput withData(Map<String, Object> data) {
-    return toBuilder()
-        .parent(this)
+  public static FetchInput newInput(Map<String, Object> data) {
+    return builder()
         .data(data)
         .build();
   }
