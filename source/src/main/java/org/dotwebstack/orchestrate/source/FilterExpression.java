@@ -11,4 +11,11 @@ public final class FilterExpression {
   private final PropertyPath propertyPath;
 
   private final Object value;
+
+  @Override
+  public String toString() {
+    return propertyPath.toString()
+        .concat(" = ")
+        .concat(value.toString());
+  }
 }
