@@ -60,7 +60,7 @@ class GatewayIT {
                           type
                         }
                         segments
-                        reference {
+                        references {
                           onderwerp {
                             identificatie
                             type
