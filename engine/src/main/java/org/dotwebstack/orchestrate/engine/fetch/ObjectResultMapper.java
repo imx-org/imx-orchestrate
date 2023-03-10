@@ -109,6 +109,11 @@ class ObjectResultMapper implements UnaryOperator<ObjectResult> {
                   return Stream.empty();
                 }
 
+                if (property instanceof Attribute attribute) {
+                  value = attribute.getType()
+                      .mapSourceValue(value);
+                }
+
                 var resultType = pathResult.getType();
 
                 var sourceProperty = SourceProperty.builder()
@@ -148,7 +153,6 @@ class ObjectResultMapper implements UnaryOperator<ObjectResult> {
     }
 
     if (property instanceof Attribute) {
-
       var orchestratedProperty = OrchestratedProperty.builder()
           .subject(targetReference)
           .property(property.getName())

@@ -9,6 +9,7 @@ import graphql.schema.GraphQLSchema;
 import java.nio.file.Paths;
 import org.dotwebstack.orchestrate.engine.Orchestration;
 import org.dotwebstack.orchestrate.engine.schema.SchemaFactory;
+import org.dotwebstack.orchestrate.ext.spatial.GeometryExtension;
 import org.dotwebstack.orchestrate.source.file.FileSource;
 import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -34,6 +35,7 @@ public class GatewayConfiguration {
             GatewayConfiguration.class.getResourceAsStream(gatewayProperties.getMapping())))
         .source("bag", new FileSource(createBagModel(), Paths.get(gatewayProperties.getDataPath(), "bag")))
         .source("bgt", new FileSource(createBgtModel(), Paths.get(gatewayProperties.getDataPath(), "bgt")))
+        .extension(new GeometryExtension())
         .build();
 
     var graphQL = GraphQL.newGraphQL(SchemaFactory.create(orchestration)).build();

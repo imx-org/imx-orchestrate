@@ -9,7 +9,10 @@ import static graphql.schema.idl.RuntimeWiring.newRuntimeWiring;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_COLLECTION_SUFFIX;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_TYPE;
+import static org.dotwebstack.orchestrate.engine.schema.SchemaUtils.requiredListType;
+import static org.dotwebstack.orchestrate.engine.schema.SchemaUtils.requiredType;
 import static org.dotwebstack.orchestrate.model.Cardinality.REQUIRED;
+
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.DeserializationConfig;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -18,7 +21,6 @@ import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import graphql.language.FieldDefinition;
 import graphql.language.InputValueDefinition;
-import graphql.language.ListType;
 import graphql.language.NonNullType;
 import graphql.language.ObjectTypeDefinition;
 import graphql.language.Type;
@@ -28,10 +30,13 @@ import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.Orchestration;
+import org.dotwebstack.orchestrate.engine.OrchestrationExtension;
 import org.dotwebstack.orchestrate.engine.fetch.FetchPlanner;
 import org.dotwebstack.orchestrate.engine.fetch.GenericDataFetcher;
 import org.dotwebstack.orchestrate.engine.fetch.ObjectKeyFetcher;
@@ -63,9 +68,11 @@ public final class SchemaFactory {
 
   private final UnaryOperator<String> lineageRenamer;
 
+  private final Set<OrchestrationExtension> extensions;
+
   public static GraphQLSchema create(Orchestration orchestration) {
     var modelMapping = orchestration.getModelMapping();
-    var objectMapper = getObjectMapperInstance(modelMapping);
+    var objectMapper = getObjectMapperInstance(modelMapping, orchestration.getExtensions());
 
     UnaryOperator<String> lineageRenamer =
         fieldName -> modelMapping.getLineageNameMapping().getOrDefault(fieldName, fieldName);
@@ -73,12 +80,14 @@ public final class SchemaFactory {
     var fetchPlanner = new FetchPlanner(modelMapping, orchestration.getSources(), objectMapper, lineageRenamer);
     var genericDataFetcher = new GenericDataFetcher(fetchPlanner);
 
-    return new SchemaFactory(modelMapping, genericDataFetcher, lineageRenamer).create();
+    return new SchemaFactory(modelMapping, genericDataFetcher, lineageRenamer, orchestration.getExtensions()).create();
   }
 
-  private static ObjectMapper getObjectMapperInstance(ModelMapping modelMapping) {
+  private static ObjectMapper getObjectMapperInstance(ModelMapping modelMapping,
+      Set<OrchestrationExtension> extensions) {
     var lineageMapping = modelMapping.getLineageNameMapping();
     var objectMapper = new ObjectMapper();
+
     if (!lineageMapping.isEmpty()) {
       var module = new SimpleModule()
           .setDeserializerModifier(new BeanDeserializerModifier() {
@@ -92,6 +101,11 @@ public final class SchemaFactory {
       objectMapper.registerModule(module);
     }
 
+    extensions.stream()
+        .map(OrchestrationExtension::getLineageSerializerModule)
+        .filter(Objects::nonNull)
+        .forEach(objectMapper::registerModule);
+
     return objectMapper;
   }
 
@@ -103,6 +117,7 @@ public final class SchemaFactory {
         .forEach(this::registerObjectType);
 
     typeDefinitionRegistry.add(queryTypeBuilder.build());
+    extensions.forEach(extension -> extension.enhanceSchema(typeDefinitionRegistry, codeRegistryBuilder));
 
     var runtimeWiring = newRuntimeWiring()
         .codeRegistry(codeRegistryBuilder.build())
@@ -263,9 +278,9 @@ public final class SchemaFactory {
     codeRegistryBuilder.dataFetcher(coordinates(lineageRenamer.apply(OrchestratedProperty.class.getSimpleName()),
             lineageRenamer.apply("value")), valueFetcher)
         .dataFetcher(coordinates(lineageRenamer.apply(SourceProperty.class.getSimpleName()),
-                lineageRenamer.apply("value")), valueFetcher)
+            lineageRenamer.apply("value")), valueFetcher)
         .dataFetcher(coordinates(lineageRenamer.apply(ObjectReference.class.getSimpleName()),
-                lineageRenamer.apply("objectKey")), objectKeyFetcher);
+            lineageRenamer.apply("objectKey")), objectKeyFetcher);
   }
 
   private ObjectTypeDefinition createObjectTypeDefinition(ObjectType objectType) {
@@ -298,8 +313,7 @@ public final class SchemaFactory {
 
     var type = switch (typeName) {
       case "Integer" -> new TypeName("Int");
-      case "String", "Boolean" -> new TypeName(typeName);
-      default -> throw new RuntimeException("Type unknown: " + typeName);
+      default -> new TypeName(typeName);
     };
 
     return REQUIRED.equals(attribute.getCardinality()) ? new NonNullType(type) : type;
@@ -313,13 +327,5 @@ public final class SchemaFactory {
             .type(mapAttributeType(attribute))
             .build())
         .toList();
-  }
-
-  private static Type<?> requiredType(String typeName) {
-    return new NonNullType(new TypeName(typeName));
-  }
-
-  private static Type<?> requiredListType(String typeName) {
-    return new NonNullType(new ListType(requiredType(typeName)));
   }
 }

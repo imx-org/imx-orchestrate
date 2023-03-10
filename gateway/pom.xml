@@ -20,6 +20,11 @@
         </dependency>
         <dependency>
             <groupId>org.dotwebstack.orchestrate</groupId>
+            <artifactId>orchestrate-ext-spatial</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.dotwebstack.orchestrate</groupId>
             <artifactId>orchestrate-parser-yaml</artifactId>
             <version>${project.version}</version>
         </dependency>

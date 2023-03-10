@@ -76,3 +76,9 @@ objectTypeMappings:
       bouwjaar:
         pathMapping:
           path: isGerelateerdAan/oorspronkelijkBouwjaar
+      bovenaanzichtgeometrie:
+        pathMapping:
+          path: isGerelateerdAan/geometrie
+      maaiveldgeometrie:
+        pathMapping:
+          path: geometrie2dGrondvlak

@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.dotwebstack.orchestrate.ext.spatial.GeometryType;
 import org.dotwebstack.orchestrate.model.Attribute;
 import org.dotwebstack.orchestrate.model.Cardinality;
 import org.dotwebstack.orchestrate.model.ComponentRegistry;
@@ -117,6 +118,11 @@ final class TestFixtures {
                 .type(ScalarTypes.STRING)
                 .cardinality(Cardinality.REQUIRED)
                 .build())
+            .property(Attribute.builder()
+                .name("geometrie")
+                .type(new GeometryType())
+                .cardinality(Cardinality.REQUIRED)
+                .build())
             .build())
         .objectType(ObjectType.builder()
             .name("Verblijfsobject")
@@ -157,6 +163,11 @@ final class TestFixtures {
             .property(Attribute.builder()
                 .name("bgt-status")
                 .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.REQUIRED)
+                .build())
+            .property(Attribute.builder()
+                .name("geometrie2dGrondvlak")
+                .type(new GeometryType())
                 .cardinality(Cardinality.REQUIRED)
                 .build())
             .property(Attribute.builder()
@@ -265,6 +276,16 @@ final class TestFixtures {
             .property(Attribute.builder()
                 .name("bouwjaar")
                 .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.OPTIONAL)
+                .build())
+            .property(Attribute.builder()
+                .name("maaiveldgeometrie")
+                .type(new GeometryType())
+                .cardinality(Cardinality.OPTIONAL)
+                .build())
+            .property(Attribute.builder()
+                .name("bovenaanzichtgeometrie")
+                .type(new GeometryType())
                 .cardinality(Cardinality.OPTIONAL)
                 .build())
             .build())

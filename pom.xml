@@ -29,6 +29,7 @@
         <spring-graphql.version>1.1.2</spring-graphql.version>
         <micrometer.version>1.10.4</micrometer.version>
         <commons-text.version>1.10.0</commons-text.version>
+        <jts.version>1.19.0</jts.version>
         <lombok.version>1.18.26</lombok.version>
         <jackson.version>2.14.2</jackson.version>
         <junit.version>5.9.2</junit.version>
@@ -47,6 +48,7 @@
 
     <modules>
         <module>engine</module>
+        <module>ext-spatial</module>
         <module>gateway</module>
         <module>model</module>
         <module>parser-yaml</module>
@@ -147,6 +149,16 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-text</artifactId>
                 <version>${commons-text.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.locationtech.jts</groupId>
+                <artifactId>jts-core</artifactId>
+                <version>${jts.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.locationtech.jts.io</groupId>
+                <artifactId>jts-io-common</artifactId>
+                <version>${jts.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.projectlombok</groupId>

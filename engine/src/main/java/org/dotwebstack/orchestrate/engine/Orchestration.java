@@ -1,6 +1,7 @@
 package org.dotwebstack.orchestrate.engine;
 
 import java.util.Map;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
@@ -15,4 +16,7 @@ public final class Orchestration {
 
   @Singular
   private final Map<String, Source> sources;
+
+  @Singular
+  private final Set<OrchestrationExtension> extensions;
 }

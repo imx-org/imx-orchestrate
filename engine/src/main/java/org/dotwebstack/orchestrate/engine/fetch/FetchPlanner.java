@@ -42,7 +42,7 @@ public final class FetchPlanner {
 
   private final Map<String, Source> sources;
 
-  private final ObjectMapper objectMapper;
+  private final ObjectMapper lineageMapper;
 
   private final UnaryOperator<String> lineageRenamer;
 
@@ -81,7 +81,7 @@ public final class FetchPlanner {
             .apply(environment.getArguments()));
 
     var fetchResult = fetchOperation.execute(input)
-        .map(objectResult -> objectResult.toMap(objectMapper, lineageRenamer));
+        .map(objectResult -> objectResult.toMap(lineageMapper, lineageRenamer));
 
     return isCollection ? fetchResult : fetchResult.singleOrEmpty();
   }
