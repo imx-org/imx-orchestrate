@@ -15,5 +15,5 @@ public class PropertyPath {
   private final List<String> segments;
 
   @Builder.Default
-  private final Set<SourceProperty> reference = new LinkedHashSet<>();
+  private final Set<SourceProperty> references = new LinkedHashSet<>();
 }

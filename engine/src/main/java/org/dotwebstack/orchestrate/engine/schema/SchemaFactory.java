@@ -203,7 +203,7 @@ public final class SchemaFactory {
             .type(requiredListType("String"))
             .build())
         .fieldDefinition(newFieldDefinition()
-            .name(lineageRenamer.apply("reference"))
+            .name(lineageRenamer.apply("references"))
             .type(requiredListType(lineageRenamer.apply(SourceProperty.class.getSimpleName())))
             .build())
         .build());

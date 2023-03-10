@@ -123,7 +123,7 @@ class ObjectResultMapper implements UnaryOperator<ObjectResult> {
 
                 sourceProperties.add(sourceProperty);
 
-                propertyPathMappingBuilder.addPath(pathBuilderForLineage.reference(Set.of(sourceProperty))
+                propertyPathMappingBuilder.addPath(pathBuilderForLineage.references(Set.of(sourceProperty))
                     .build());
 
                 return Stream.of(value);
