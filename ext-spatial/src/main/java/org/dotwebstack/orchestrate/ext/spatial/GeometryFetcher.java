@@ -18,6 +18,10 @@ class GeometryFetcher implements DataFetcher<Object> {
 
   private final WKBWriter wkbWriter = new WKBWriter();
 
+  public GeometryFetcher() {
+    geoJsonWriter.setEncodeCRS(false);
+  }
+
   @Override
   public Object get(DataFetchingEnvironment environment) {
     var source = environment.getSource();
