@@ -18,5 +18,5 @@ public final class Orchestration {
   private final Map<String, Source> sources;
 
   @Singular
-  private final Set<OrchestrationExtension> extensions;
+  private final Set<OrchestrateExtension> extensions;
 }

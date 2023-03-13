@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.Module;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.idl.TypeDefinitionRegistry;
 
-public interface OrchestrationExtension {
+public interface OrchestrateExtension {
 
   default void enhanceSchema(TypeDefinitionRegistry typeDefinitionRegistry, GraphQLCodeRegistry.Builder codeRegistryBuilder) {}
 

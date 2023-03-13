@@ -36,7 +36,7 @@ import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.Orchestration;
-import org.dotwebstack.orchestrate.engine.OrchestrationExtension;
+import org.dotwebstack.orchestrate.engine.OrchestrateExtension;
 import org.dotwebstack.orchestrate.engine.fetch.FetchPlanner;
 import org.dotwebstack.orchestrate.engine.fetch.GenericDataFetcher;
 import org.dotwebstack.orchestrate.engine.fetch.ObjectKeyFetcher;
@@ -68,7 +68,7 @@ public final class SchemaFactory {
 
   private final UnaryOperator<String> lineageRenamer;
 
-  private final Set<OrchestrationExtension> extensions;
+  private final Set<OrchestrateExtension> extensions;
 
   public static GraphQLSchema create(Orchestration orchestration) {
     var modelMapping = orchestration.getModelMapping();
@@ -84,7 +84,7 @@ public final class SchemaFactory {
   }
 
   private static ObjectMapper getObjectMapperInstance(ModelMapping modelMapping,
-      Set<OrchestrationExtension> extensions) {
+      Set<OrchestrateExtension> extensions) {
     var lineageMapping = modelMapping.getLineageNameMapping();
     var objectMapper = new ObjectMapper();
 
@@ -102,7 +102,7 @@ public final class SchemaFactory {
     }
 
     extensions.stream()
-        .map(OrchestrationExtension::getLineageSerializerModule)
+        .map(OrchestrateExtension::getLineageSerializerModule)
         .filter(Objects::nonNull)
         .forEach(objectMapper::registerModule);
 

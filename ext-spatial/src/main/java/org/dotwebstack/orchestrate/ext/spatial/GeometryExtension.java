@@ -10,10 +10,10 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import java.util.Map;
-import org.dotwebstack.orchestrate.engine.OrchestrationExtension;
+import org.dotwebstack.orchestrate.engine.OrchestrateExtension;
 import org.locationtech.jts.geom.Geometry;
 
-public final class GeometryExtension implements OrchestrationExtension {
+public final class GeometryExtension implements OrchestrateExtension {
 
   public static final String AS_GEOJSON = "asGeoJSON";
 
