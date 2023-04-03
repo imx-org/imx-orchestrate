@@ -34,7 +34,7 @@ class GeometryFetcher implements DataFetcher<Object> {
         case AS_WKB -> Base64.getEncoder()
             .encodeToString(wkbWriter.write(geometry));
         case AS_WKT -> geometry.toString();
-        default -> throw new OrchestrateException("Source value is not a JTS Geometry.");
+        default -> throw new OrchestrateException("Invalid field name: " + fieldName);
       };
     }
 

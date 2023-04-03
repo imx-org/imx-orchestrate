@@ -35,8 +35,8 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.dotwebstack.orchestrate.engine.Orchestration;
 import org.dotwebstack.orchestrate.engine.OrchestrateExtension;
+import org.dotwebstack.orchestrate.engine.Orchestration;
 import org.dotwebstack.orchestrate.engine.fetch.FetchPlanner;
 import org.dotwebstack.orchestrate.engine.fetch.GenericDataFetcher;
 import org.dotwebstack.orchestrate.engine.fetch.ObjectKeyFetcher;
@@ -72,19 +72,18 @@ public final class SchemaFactory {
 
   public static GraphQLSchema create(Orchestration orchestration) {
     var modelMapping = orchestration.getModelMapping();
-    var objectMapper = getObjectMapperInstance(modelMapping, orchestration.getExtensions());
+    var lineageMapper = getObjectMapperInstance(modelMapping, orchestration.getExtensions());
 
     UnaryOperator<String> lineageRenamer =
         fieldName -> modelMapping.getLineageNameMapping().getOrDefault(fieldName, fieldName);
 
-    var fetchPlanner = new FetchPlanner(modelMapping, orchestration.getSources(), objectMapper, lineageRenamer);
+    var fetchPlanner = new FetchPlanner(modelMapping, orchestration.getSources(), lineageMapper, lineageRenamer);
     var genericDataFetcher = new GenericDataFetcher(fetchPlanner);
 
     return new SchemaFactory(modelMapping, genericDataFetcher, lineageRenamer, orchestration.getExtensions()).create();
   }
 
-  private static ObjectMapper getObjectMapperInstance(ModelMapping modelMapping,
-      Set<OrchestrateExtension> extensions) {
+  private static ObjectMapper getObjectMapperInstance(ModelMapping modelMapping, Set<OrchestrateExtension> extensions) {
     var lineageMapping = modelMapping.getLineageNameMapping();
     var objectMapper = new ObjectMapper();
 
