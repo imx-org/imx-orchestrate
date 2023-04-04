@@ -9,9 +9,9 @@ import static graphql.schema.idl.RuntimeWiring.newRuntimeWiring;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_COLLECTION_SUFFIX;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_TYPE;
+import static org.dotwebstack.orchestrate.engine.schema.SchemaUtils.applyCardinality;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaUtils.requiredListType;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaUtils.requiredType;
-import static org.dotwebstack.orchestrate.model.Cardinality.REQUIRED;
 
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.DeserializationConfig;
@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import graphql.language.FieldDefinition;
 import graphql.language.InputValueDefinition;
-import graphql.language.NonNullType;
 import graphql.language.ObjectTypeDefinition;
 import graphql.language.Type;
 import graphql.language.TypeName;
@@ -295,7 +294,11 @@ public final class SchemaFactory {
     objectType.getProperties(Relation.class)
         .stream()
         .map(this::createFieldDefinition)
-        .forEach(objectTypeDefinitionBuilder::fieldDefinition);
+        .forEach(fieldDefinition -> {
+          objectTypeDefinitionBuilder.fieldDefinition(fieldDefinition);
+          codeRegistryBuilder.dataFetcher(coordinates(objectType.getName(), fieldDefinition.getName()),
+              genericDataFetcher);
+        });
 
     objectTypeDefinitionBuilder.fieldDefinition(newFieldDefinition()
         .name(lineageRenamer.apply(SchemaConstants.HAS_LINEAGE_FIELD))
@@ -308,20 +311,18 @@ public final class SchemaFactory {
   private FieldDefinition createFieldDefinition(Attribute attribute) {
     return newFieldDefinition()
         .name(attribute.getName())
-        .type(mapAttributeType(attribute))
+        .type(mapFieldType(attribute))
         .build();
   }
 
   private FieldDefinition createFieldDefinition(Relation relation) {
-    var target = relation.getTarget();
-
     return newFieldDefinition()
         .name(relation.getName())
-        .type(new TypeName(target.getName()))
+        .type(mapFieldType(relation))
         .build();
   }
 
-  private Type<?> mapAttributeType(Attribute attribute) {
+  private Type<?> mapFieldType(Attribute attribute) {
     var typeName = attribute.getType()
         .getName();
 
@@ -330,7 +331,14 @@ public final class SchemaFactory {
       default -> new TypeName(typeName);
     };
 
-    return REQUIRED.equals(attribute.getCardinality()) ? new NonNullType(type) : type;
+    return applyCardinality(type, attribute.getCardinality());
+  }
+
+  private Type<?> mapFieldType(Relation relation) {
+    var type = new TypeName(relation.getTarget()
+        .getName());
+
+    return applyCardinality(type, relation.getCardinality());
   }
 
   private List<InputValueDefinition> createIdentityArguments(ObjectType objectType) {
@@ -338,7 +346,7 @@ public final class SchemaFactory {
         .stream()
         .map(attribute -> InputValueDefinition.newInputValueDefinition()
             .name(attribute.getName())
-            .type(mapAttributeType(attribute))
+            .type(mapFieldType(attribute))
             .build())
         .toList();
   }

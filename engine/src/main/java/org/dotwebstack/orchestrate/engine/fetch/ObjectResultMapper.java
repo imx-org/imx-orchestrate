@@ -21,6 +21,7 @@ import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.Property;
 import org.dotwebstack.orchestrate.model.PropertyMapping;
 import org.dotwebstack.orchestrate.model.PropertyPathMapping;
+import org.dotwebstack.orchestrate.model.Relation;
 import org.dotwebstack.orchestrate.model.lineage.ObjectLineage;
 import org.dotwebstack.orchestrate.model.lineage.ObjectReference;
 import org.dotwebstack.orchestrate.model.lineage.OrchestratedProperty;
@@ -101,8 +102,20 @@ class ObjectResultMapper implements UnaryOperator<ObjectResult> {
                   return Stream.empty();
                 }
 
-                if (pathResult instanceof CollectionResult) {
-                  return Stream.empty();
+                if (pathResult instanceof CollectionResult collectionResult) {
+                  if (property instanceof Relation) {
+                    // TODO: Refactor
+                    var propertyName = pathMapping.getPaths()
+                        .get(0)
+                        .getLastSegment();
+
+                    return Stream.of(collectionResult.getObjectResults()
+                        .stream()
+                        .map(result -> result.getProperty(propertyName))
+                        .toList());
+                  }
+
+                  throw new OrchestrateException("Could not map collection result.");
                 }
 
                 if (pathResult instanceof ObjectResult pathObjectResult) {

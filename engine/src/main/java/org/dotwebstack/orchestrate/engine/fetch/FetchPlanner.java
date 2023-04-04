@@ -8,6 +8,7 @@ import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toSet;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.cast;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.extractKey;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.propertyExtractor;
@@ -18,6 +19,7 @@ import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLObjectType;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -37,6 +39,7 @@ import org.dotwebstack.orchestrate.source.FilterDefinition;
 import org.dotwebstack.orchestrate.source.SelectedProperty;
 import org.dotwebstack.orchestrate.source.Source;
 import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 
 @RequiredArgsConstructor
 public final class FetchPlanner {
@@ -74,6 +77,23 @@ public final class FetchPlanner {
         .targetType(targetType)
         .propertyMappings(propertyMappings)
         .build();
+
+    Map<String, Object> parentData = environment.getSource();
+
+    if (parentData != null && isCollection) {
+      List<Map<String, Object>> inputData = cast(parentData.get(environment.getField()
+          .getName()));
+
+      if (inputData == null) {
+        return Flux.empty();
+      }
+
+      return Flux.fromIterable(inputData)
+          .flatMap(objectKey -> fetchSourceObject(targetMapping.getSourceRoot(), sourcePaths, false, null)
+              .execute(FetchInput.newInput(objectKey))
+              .map(resultMapper)
+              .map(result -> result.toMap(lineageMapper, lineageRenamer)));
+    }
 
     var input = FetchInput.newInput(keyExtractor(targetType, targetMapping)
         .apply(environment.getArguments()));
