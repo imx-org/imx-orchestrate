@@ -82,3 +82,6 @@ objectTypeMappings:
       maaiveldgeometrie:
         pathMapping:
           path: geometrie2dGrondvlak
+      heeftAlsAdres:
+        pathMapping:
+          path: isGerelateerdAan/bevat/heeftAlsHoofdadres

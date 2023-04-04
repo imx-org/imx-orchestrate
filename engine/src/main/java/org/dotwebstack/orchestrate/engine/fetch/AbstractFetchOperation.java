@@ -3,8 +3,6 @@ package org.dotwebstack.orchestrate.engine.fetch;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
-import lombok.Builder;
 import lombok.Singular;
 import lombok.experimental.SuperBuilder;
 import org.dotwebstack.orchestrate.model.ObjectType;
@@ -26,19 +24,14 @@ abstract class AbstractFetchOperation implements FetchOperation {
   @Singular
   protected final Set<NextOperation> nextOperations;
 
-  @Builder.Default
-  protected final UnaryOperator<ObjectResult> resultMapper = UnaryOperator.identity();
-
   public final Flux<ObjectResult> execute(FetchInput input) {
     return Flux.from(fetch(input))
-        .transform(this::executeNextOperations)
-        .map(resultMapper);
+        .transform(this::executeNextOperations);
   }
 
   public final Flux<ObjectResult> executeBatch(List<FetchInput> inputs) {
     return Flux.from(fetchBatch(inputs))
-        .transform(this::executeNextOperations)
-        .map(resultMapper);
+        .transform(this::executeNextOperations);
   }
 
   protected abstract Publisher<ObjectResult> fetch(FetchInput input);

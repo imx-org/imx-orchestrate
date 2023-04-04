@@ -44,6 +44,7 @@ import org.dotwebstack.orchestrate.engine.fetch.PropertyValueFetcher;
 import org.dotwebstack.orchestrate.model.Attribute;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
+import org.dotwebstack.orchestrate.model.Relation;
 import org.dotwebstack.orchestrate.model.lineage.ObjectLineage;
 import org.dotwebstack.orchestrate.model.lineage.ObjectReference;
 import org.dotwebstack.orchestrate.model.lineage.OrchestratedProperty;
@@ -291,6 +292,11 @@ public final class SchemaFactory {
         .map(this::createFieldDefinition)
         .forEach(objectTypeDefinitionBuilder::fieldDefinition);
 
+    objectType.getProperties(Relation.class)
+        .stream()
+        .map(this::createFieldDefinition)
+        .forEach(objectTypeDefinitionBuilder::fieldDefinition);
+
     objectTypeDefinitionBuilder.fieldDefinition(newFieldDefinition()
         .name(lineageRenamer.apply(SchemaConstants.HAS_LINEAGE_FIELD))
         .type(requiredType(lineageRenamer.apply(ObjectLineage.class.getSimpleName())))
@@ -303,6 +309,15 @@ public final class SchemaFactory {
     return newFieldDefinition()
         .name(attribute.getName())
         .type(mapAttributeType(attribute))
+        .build();
+  }
+
+  private FieldDefinition createFieldDefinition(Relation relation) {
+    var target = relation.getTarget();
+
+    return newFieldDefinition()
+        .name(relation.getName())
+        .type(new TypeName(target.getName()))
         .build();
   }
 

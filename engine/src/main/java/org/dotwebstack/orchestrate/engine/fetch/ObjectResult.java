@@ -10,13 +10,14 @@ import java.util.function.UnaryOperator;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
+import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.engine.schema.SchemaConstants;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.lineage.ObjectLineage;
 
 @Getter
 @Builder(toBuilder = true)
-public class ObjectResult {
+public class ObjectResult implements Result {
 
   private final ObjectType type;
 
@@ -24,7 +25,7 @@ public class ObjectResult {
   private final Map<String, Object> properties;
 
   @Singular
-  private final Map<String, ObjectResult> relatedObjects;
+  private final Map<String, Result> nestedResults;
 
   private final ObjectLineage lineage;
 
@@ -36,14 +37,22 @@ public class ObjectResult {
     return properties.get(name);
   }
 
-  public ObjectResult getRelatedObject(String name) {
-    return relatedObjects.get(name);
+  public Result getNestedResult(String name) {
+    return nestedResults.get(name);
   }
 
   public Map<String, Object> toMap(ObjectMapper objectMapper, UnaryOperator<String> lineageRenamer) {
     var resultMap = new HashMap<>(properties);
-    relatedObjects.forEach((name, relatedObject) ->
-        resultMap.put(name, relatedObject.toMap(objectMapper, lineageRenamer)));
+
+    nestedResults.forEach((name, nestedResult) -> {
+      if (nestedResult instanceof CollectionResult collectionResult) {
+        resultMap.put(name, collectionResult.toList(objectMapper, lineageRenamer));
+      } else if (nestedResult instanceof ObjectResult objectResult) {
+        resultMap.put(name, objectResult.toMap(objectMapper, lineageRenamer));
+      } else {
+        throw new OrchestrateException("Could not map nested result.");
+      }
+    });
 
     var mappedLineage = objectMapper.convertValue(lineage, Object.class);
     resultMap.put(lineageRenamer.apply(SchemaConstants.HAS_LINEAGE_FIELD), mappedLineage);

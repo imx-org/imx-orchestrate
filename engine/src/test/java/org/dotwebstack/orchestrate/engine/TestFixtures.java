@@ -135,6 +135,13 @@ public final class TestFixtures {
                 .inverseName("isNevenadresVan")
                 .inverseCardinality(Cardinality.OPTIONAL)
                 .build())
+            .property(Relation.builder()
+                .name("maaktDeelUitVan")
+                .target(ObjectTypeRef.forType("Pand"))
+                .cardinality(Cardinality.of(1, Cardinality.INFINITE))
+                .inverseName("bevat")
+                .inverseCardinality(Cardinality.MULTI)
+                .build())
             .build())
         .build();
   }
@@ -230,6 +237,11 @@ public final class TestFixtures {
                 .name("bouwjaar")
                 .type(ScalarTypes.STRING)
                 .cardinality(Cardinality.OPTIONAL)
+                .build())
+            .property(Relation.builder()
+                .name("heeftAlsAdres")
+                .target(ObjectTypeRef.forType("Adres"))
+                .cardinality(Cardinality.MULTI)
                 .build())
             .build())
         .build();
@@ -333,6 +345,13 @@ public final class TestFixtures {
         .propertyMapping("bouwjaar", PropertyMapping.builder()
             .pathMapping(PropertyPathMapping.builder()
                 .path(PropertyPath.fromString("isGerelateerdAan/oorspronkelijkBouwjaar"))
+                .build())
+            .build())
+        .propertyMapping("heeftAlsAdres", PropertyMapping.builder()
+            .pathMapping(PropertyPathMapping.builder()
+                // TODO: how to deal with multiple relation paths?
+                // TODO: how to deal with multiple lists within a single path?
+                .path(PropertyPath.fromString("isGerelateerdAan/bevat/heeftAlsHoofdadres"))
                 .build())
             .build())
         .build();

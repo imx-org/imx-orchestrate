@@ -44,6 +44,14 @@ public final class PropertyPath {
     return new PropertyPath(segments);
   }
 
+  public static PropertyPath fromProperties(Property... properties) {
+    var segments = Arrays.stream(properties)
+        .map(Property::getName)
+        .toList();
+
+    return new PropertyPath(segments);
+  }
+
   @Override
   public String toString() {
     return String.join(PATH_SEPARATOR, segments);

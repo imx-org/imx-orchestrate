@@ -15,6 +15,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Builder;
+import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.Attribute;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.Property;
@@ -59,7 +60,6 @@ class ObjectResultMapper implements UnaryOperator<ObjectResult> {
   private Object mapPropertyResult(Property property, PropertyMapping propertyMapping, ObjectResult objectResult,
       ObjectReference targetReference, ObjectLineage.ObjectLineageBuilder objectLineageBuilder) {
     var sourceProperties = new LinkedHashSet<SourceProperty>();
-
     var propertyMappingPaths = new LinkedHashMap<PropertyPathMapping, PropertyPathMappingBuilder>();
 
     var resultValue = propertyMapping.getPathMappings()
@@ -68,8 +68,6 @@ class ObjectResultMapper implements UnaryOperator<ObjectResult> {
           var pathValue = pathMapping.getPaths()
               .stream()
               .flatMap(path -> {
-                var pathResult = pathResult(objectResult, path);
-
                 // lineage
                 PropertyPathMappingBuilder propertyPathMappingBuilder;
                 if (propertyMappingPaths.containsKey(pathMapping)) {
@@ -96,42 +94,51 @@ class ObjectResultMapper implements UnaryOperator<ObjectResult> {
                         .build());
                 // -------
 
+                var pathResult = pathResult(objectResult, path);
+
                 if (pathResult == null) {
                   propertyPathMappingBuilder.addPath(pathBuilderForLineage.build());
-
                   return Stream.empty();
                 }
 
-                var value = pathResult.getProperty(path.getLastSegment());
-
-                if (value == null) {
-                  propertyPathMappingBuilder.addPath(pathBuilderForLineage.build());
+                if (pathResult instanceof CollectionResult) {
                   return Stream.empty();
                 }
 
-                if (property instanceof Attribute attribute) {
-                  value = attribute.getType()
-                      .mapSourceValue(value);
+                if (pathResult instanceof ObjectResult pathObjectResult) {
+                  var value = pathObjectResult.getProperty(path.getLastSegment());
+
+                  if (value == null) {
+                    propertyPathMappingBuilder.addPath(pathBuilderForLineage.build());
+                    return Stream.empty();
+                  }
+
+                  if (property instanceof Attribute attribute) {
+                    value = attribute.getType()
+                        .mapSourceValue(value);
+                  }
+
+                  var resultType = pathObjectResult.getType();
+
+                  var sourceProperty = SourceProperty.builder()
+                      .subject(ObjectReference.builder()
+                          .objectType(resultType.getName())
+                          .objectKey(keyExtractor(resultType).apply(pathObjectResult))
+                          .build())
+                      .property(path.getLastSegment())
+                      .propertyPath(path.getSegments())
+                      .value(value)
+                      .build();
+
+                  sourceProperties.add(sourceProperty);
+
+                  propertyPathMappingBuilder.addPath(pathBuilderForLineage.references(Set.of(sourceProperty))
+                      .build());
+
+                  return Stream.of(value);
                 }
 
-                var resultType = pathResult.getType();
-
-                var sourceProperty = SourceProperty.builder()
-                    .subject(ObjectReference.builder()
-                        .objectType(resultType.getName())
-                        .objectKey(keyExtractor(resultType).apply(pathResult))
-                        .build())
-                    .property(path.getLastSegment())
-                    .propertyPath(path.getSegments())
-                    .value(value)
-                    .build();
-
-                sourceProperties.add(sourceProperty);
-
-                propertyPathMappingBuilder.addPath(pathBuilderForLineage.references(Set.of(sourceProperty))
-                    .build());
-
-                return Stream.of(value);
+                throw new OrchestrateException("Could not map result.");
               })
               .findFirst()
               .orElse(null);

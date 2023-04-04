@@ -36,6 +36,6 @@ final class CollectionFetchOperation extends AbstractFetchOperation {
 
   @Override
   protected Publisher<ObjectResult> fetchBatch(List<FetchInput> inputs) {
-    throw new OrchestrateException("Batch loading for connections is not (yet) supported.");
+    throw new OrchestrateException("Batch loading for collections is not (yet) supported.");
   }
 }

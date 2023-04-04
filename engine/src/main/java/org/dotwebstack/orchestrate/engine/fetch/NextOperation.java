@@ -7,7 +7,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Getter;
-import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.Property;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
@@ -24,10 +23,6 @@ public class NextOperation {
   private final Function<ObjectResult, Map<String, Object>> inputMapper;
 
   public Publisher<ObjectResult> apply(Flux<ObjectResult> resultFlux) {
-    if (!property.getCardinality().isSingular()) {
-      throw new OrchestrateException("Nested lists are not (yet) supported.");
-    }
-
     // TODO: handle only distinct inputs
     if (delegateOperation instanceof CollectionFetchOperation) {
       return resultFlux.flatMap(this::fetchCollection);
@@ -44,10 +39,21 @@ public class NextOperation {
       return Mono.just(objectResult);
     }
 
-    return delegateOperation.execute(FetchInput.newInput(inputData))
-        .singleOrEmpty()
+    var input = FetchInput.newInput(inputData);
+
+    if (!property.getCardinality().isSingular()) {
+      return delegateOperation.execute(input)
+          .collectList()
+          .map(objectResults -> objectResult.toBuilder()
+              .nestedResult(property.getName(), CollectionResult.builder()
+                  .objectResults(objectResults)
+                  .build())
+              .build());
+    }
+
+    return delegateOperation.execute(input)
         .map(nextResult -> objectResult.toBuilder()
-            .relatedObject(property.getName(), nextResult)
+            .nestedResult(property.getName(), nextResult)
             .build())
         .defaultIfEmpty(objectResult);
   }
@@ -89,7 +95,7 @@ public class NextOperation {
 
           return Optional.ofNullable(nextResults.get(nextInput))
               .map(nextResult -> objectResult.toBuilder()
-                  .relatedObject(property.getName(), nextResult)
+                  .nestedResult(property.getName(), nextResult)
                   .build())
               .orElse(objectResult);
         });

@@ -68,11 +68,19 @@ class EngineIT {
     when(bagRepositoryStub.findOne(any(ObjectRequest.class)))
         .thenAnswer(invocation -> bagRepository.findOne(invocation.getArgument(0)));
 
+    when(bagRepositoryStub.find(any(CollectionRequest.class)))
+        .thenAnswer(invocation -> bagRepository.find(invocation.getArgument(0)));
+
     var result = graphQL.execute("""
           query {
             gebouw(identificatie: "G0200.42b3d39246840268e0530a0a28492340") {
               identificatie
               bouwjaar
+              heeftAlsAdres {
+                identificatie
+                postcode
+                huisnummer
+              }
             }
           }
         """);
@@ -175,14 +183,19 @@ class EngineIT {
         .containsEntry("omschrijving", "Laan van Westenenk 701, 7334DP Apeldoorn");
 
     var lineage = (Map<String, Object>) adres.get(SchemaConstants.HAS_LINEAGE_FIELD);
-    var orchestratedProperty = ((List<Map<String, Object>>) lineage.get("orchestratedProperties")).get(0);
-    var sourceProperty = ((List<Map<String, Object>>) orchestratedProperty.get("isDerivedFrom")).get(0);
+    var orchestratedProperties = ((List<Map<String, Object>>) lineage.get("orchestratedProperties"));
 
-    assertThat(orchestratedProperty).isNotNull()
-        .containsEntry("property", "identificatie");
-    assertThat(sourceProperty).isNotNull()
-        .containsEntry("property", "identificatie")
-        .containsEntry("subject", Map.of("objectType", "Nummeraanduiding", "objectKey", "0200200000075716"));
+    assertThat(orchestratedProperties).isNotNull()
+        .hasSize(7)
+        .filteredOn("property", "identificatie")
+        .hasSize(1)
+        .first()
+        .satisfies(orchestratedProperty -> {
+          var sourceProperty = ((List<Map<String, Object>>) orchestratedProperty.get("isDerivedFrom")).get(0);
+          assertThat(sourceProperty).isNotNull()
+              .containsEntry("property", "identificatie")
+              .containsEntry("subject", Map.of("objectType", "Nummeraanduiding", "objectKey", "0200200000075716"));
+        });
   }
 
   @Test
@@ -259,6 +272,7 @@ class EngineIT {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void queryCollection_withoutBatchLoading() {
     when(bagRepositoryStub.findOne(any(ObjectRequest.class)))
         .thenAnswer(invocation -> {
@@ -291,9 +305,10 @@ class EngineIT {
             case "Verblijfsobject":
               assertThat(collectionRequest.getSelectedProperties()).hasSize(1);
               var filter = collectionRequest.getFilter();
-              assertThat(filter.getPropertyPath()).isEqualTo(PropertyPath.fromString("heeftAlsHoofdadres" +
-                  "/identificatie"));
-              assertThat(filter.getValue()).isInstanceOf(String.class);
+              assertThat(filter.getPropertyPath()).isEqualTo(PropertyPath.fromString("heeftAlsHoofdadres"));
+              var filterValue = (Map<String, Object>) filter.getValue();
+              assertThat(filterValue).isNotNull()
+                  .containsKey("identificatie");
               yield bagRepository.find(collectionRequest);
             default:
               yield Flux.error(() -> new RuntimeException("Error!"));

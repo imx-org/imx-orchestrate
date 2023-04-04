@@ -72,8 +72,23 @@ class FileRepository implements DataRepository {
 
     var jsonPointer = JsonPointer.compile("/".concat(filterExpression.getPropertyPath().toString()));
 
-    return objectNode -> objectNode.at(jsonPointer)
-        .equals(jsonValue);
+    return objectNode -> {
+      var propertyNode = objectNode.at(jsonPointer);
+
+      if (propertyNode.isArray()) {
+        var arrayElements = propertyNode.elements();
+
+        while (arrayElements.hasNext()) {
+          if (jsonValue.equals(arrayElements.next())) {
+            return true;
+          }
+        }
+
+        return false;
+      }
+
+      return propertyNode.equals(jsonValue);
+    };
   }
 
   public void add(String typeName, Map<String, Object> objectKey, ObjectNode objectNode) {

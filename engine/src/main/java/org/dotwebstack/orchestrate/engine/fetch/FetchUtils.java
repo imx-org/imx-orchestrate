@@ -46,9 +46,13 @@ final class FetchUtils {
   }
 
   public static Function<ObjectResult, Map<String, Object>> keyExtractor(ObjectType objectType) {
-    return objectResult -> objectType.getIdentityProperties()
+    return objectResult -> extractKey(objectType, objectResult.getProperties());
+  }
+
+  public static Map<String, Object> extractKey(ObjectType objectType, Map<String, Object> data) {
+    return objectType.getIdentityProperties()
         .stream()
-        .collect(Collectors.toMap(Property::getName, property -> objectResult.getProperty(property.getName())));
+        .collect(Collectors.toMap(Property::getName, property -> data.get(property.getName())));
   }
 
   public static Function<ObjectResult, Map<String, Object>> propertyExtractor(String propertyName) {
@@ -78,17 +82,21 @@ final class FetchUtils {
     };
   }
 
-  public static ObjectResult pathResult(ObjectResult objectResult, PropertyPath path) {
+  public static Result pathResult(Result result, PropertyPath path) {
     if (path.isLeaf()) {
-      return objectResult;
+      return result;
     }
 
-    var relatedObject = objectResult.getRelatedObject(path.getFirstSegment());
+    if (result instanceof ObjectResult objectResult) {
+      var nestedResult = objectResult.getNestedResult(path.getFirstSegment());
 
-    if (relatedObject == null) {
-      return null;
+      if (nestedResult == null) {
+        return null;
+      }
+
+      return pathResult(nestedResult, path.withoutFirstSegment());
     }
 
-    return pathResult(relatedObject, path.withoutFirstSegment());
+    throw new OrchestrateException("Could not handle result for path: " + path);
   }
 }

@@ -146,6 +146,13 @@ final class TestFixtures {
                 .inverseName("isNevenadresVan")
                 .inverseCardinality(Cardinality.OPTIONAL)
                 .build())
+            .property(Relation.builder()
+                .name("maaktDeelUitVan")
+                .target(ObjectTypeRef.forType("Pand"))
+                .cardinality(Cardinality.of(1, Cardinality.INFINITE))
+                .inverseName("bevat")
+                .inverseCardinality(Cardinality.MULTI)
+                .build())
             .build())
         .build();
   }
@@ -287,6 +294,11 @@ final class TestFixtures {
                 .name("bovenaanzichtgeometrie")
                 .type(new GeometryType())
                 .cardinality(Cardinality.OPTIONAL)
+                .build())
+            .property(Relation.builder()
+                .name("heeftAlsAdres")
+                .target(ObjectTypeRef.forType("Adres"))
+                .cardinality(Cardinality.MULTI)
                 .build())
             .build())
         .build();

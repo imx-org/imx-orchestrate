@@ -8,6 +8,7 @@ import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toSet;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.extractKey;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.propertyExtractor;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.selectIdentity;
@@ -17,17 +18,17 @@ import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLObjectType;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.InverseRelation;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.Property;
-import org.dotwebstack.orchestrate.model.PropertyMapping;
 import org.dotwebstack.orchestrate.model.PropertyPath;
 import org.dotwebstack.orchestrate.model.Relation;
 import org.dotwebstack.orchestrate.source.FilterDefinition;
@@ -49,22 +50,23 @@ public final class FetchPlanner {
   public Publisher<Map<String, Object>> fetch(DataFetchingEnvironment environment, GraphQLObjectType outputType) {
     var targetType = modelMapping.getTargetModel()
         .getObjectType(outputType.getName());
-
     var targetMapping = modelMapping.getObjectTypeMapping(targetType.getName());
-    var propertyMappings = new LinkedHashMap<Property, PropertyMapping>();
-    var sourcePaths = new HashSet<PropertyPath>();
 
-    environment.getSelectionSet()
+    var propertyMappings = environment.getSelectionSet()
         .getImmediateFields()
         .stream()
         .filter(not(field -> FetchUtils.isReservedField(field, lineageRenamer)))
-        .map(property -> targetType.getProperty(property.getName()))
-        .forEach(property -> {
-          var propertyMapping = targetMapping.getPropertyMapping(property.getName());
-          propertyMappings.put(property, propertyMapping);
-          propertyMapping.getPathMappings()
-              .forEach(pathMapping -> sourcePaths.addAll(pathMapping.getPaths()));
-        });
+        .map(selectedField -> targetType.getProperty(selectedField.getName()))
+        .collect(Collectors.toMap(Function.identity(),
+            property -> targetMapping.getPropertyMapping(property.getName())));
+
+    var sourcePaths = propertyMappings.values()
+        .stream()
+        .flatMap(propertyMapping -> propertyMapping.getPathMappings()
+            .stream()
+            .flatMap(pathMapping -> pathMapping.getPaths()
+                .stream()))
+        .collect(toSet());
 
     // TODO: Refactor
     var isCollection = isList(unwrapNonNull(environment.getFieldType()));
@@ -74,20 +76,19 @@ public final class FetchPlanner {
         .propertyMappings(propertyMappings)
         .build();
 
-    var fetchOperation = fetchSourceObject(targetMapping.getSourceRoot(), unmodifiableSet(sourcePaths), isCollection,
-        resultMapper);
-
     var input = FetchInput.newInput(keyExtractor(targetType, targetMapping)
-            .apply(environment.getArguments()));
+        .apply(environment.getArguments()));
 
-    var fetchResult = fetchOperation.execute(input)
-        .map(objectResult -> objectResult.toMap(lineageMapper, lineageRenamer));
+    var fetchResult = fetchSourceObject(targetMapping.getSourceRoot(), sourcePaths, isCollection)
+        .execute(input)
+        .map(resultMapper)
+        .map(result -> result.toMap(lineageMapper, lineageRenamer));
 
     return isCollection ? fetchResult : fetchResult.singleOrEmpty();
   }
 
   private FetchOperation fetchSourceObject(ObjectTypeRef sourceTypeRef, Set<PropertyPath> sourcePaths,
-      boolean isCollection, UnaryOperator<ObjectResult> resultMapper) {
+      boolean isCollection) {
     var source = sources.get(sourceTypeRef.getModelAlias());
     var sourceType = modelMapping.getSourceType(sourceTypeRef);
     var selectedProperties = new ArrayList<>(selectIdentity(sourceType));
@@ -108,19 +109,12 @@ public final class FetchPlanner {
           var property = sourceType.getProperty(propertyName);
 
           if (property instanceof InverseRelation inverseRelation) {
-            var originTypeRef = inverseRelation.getTarget(sourceTypeRef);
-            var originType = modelMapping.getSourceType(originTypeRef);
-            var originFieldName = inverseRelation.getOriginRelation()
-                .getName();
+            var originType = modelMapping.getSourceType(inverseRelation.getTarget(sourceTypeRef));
+            var originRelation = inverseRelation.getOriginRelation();
 
-            // TODO: How to handle composite keys?
             var filter = FilterDefinition.builder()
-                .propertyPath(nestedSourcePaths.iterator()
-                    .next()
-                    .prependSegment(originFieldName))
-                .valueExtractor(input -> input.get(sourceType.getIdentityProperties()
-                    .get(0)
-                    .getName()))
+                .propertyPath(PropertyPath.fromProperties(originRelation))
+                .valueExtractor(input -> extractKey(sourceType, input))
                 .build();
 
             var nestedProperties = nestedSourcePaths.stream()
@@ -149,8 +143,7 @@ public final class FetchPlanner {
 
             nextOperations.add(NextOperation.builder()
                 .property(relation)
-                .delegateOperation(fetchSourceObject(targetTypeRef, nestedSourcePaths, false,
-                    UnaryOperator.identity()))
+                .delegateOperation(fetchSourceObject(targetTypeRef, nestedSourcePaths, false))
                 .inputMapper(propertyExtractor(propertyName))
                 .build());
 
@@ -165,7 +158,6 @@ public final class FetchPlanner {
           .source(source)
           .objectType(sourceType)
           .selectedProperties(unmodifiableList(selectedProperties))
-          .resultMapper(resultMapper)
           .nextOperations(unmodifiableSet(nextOperations))
           .build();
     }
@@ -174,7 +166,6 @@ public final class FetchPlanner {
         .source(source)
         .objectType(sourceType)
         .selectedProperties(unmodifiableList(selectedProperties))
-        .resultMapper(resultMapper)
         .nextOperations(unmodifiableSet(nextOperations))
         .build();
   }
