@@ -23,12 +23,14 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.InverseRelation;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.Property;
+import org.dotwebstack.orchestrate.model.PropertyMapping;
 import org.dotwebstack.orchestrate.model.PropertyPath;
 import org.dotwebstack.orchestrate.model.Relation;
 import org.dotwebstack.orchestrate.source.FilterDefinition;
@@ -60,12 +62,9 @@ public final class FetchPlanner {
         .collect(Collectors.toMap(Function.identity(),
             property -> targetMapping.getPropertyMapping(property.getName())));
 
-    var sourcePaths = propertyMappings.values()
+    var sourcePaths = propertyMappings.entrySet()
         .stream()
-        .flatMap(propertyMapping -> propertyMapping.getPathMappings()
-            .stream()
-            .flatMap(pathMapping -> pathMapping.getPaths()
-                .stream()))
+        .flatMap(entry -> getSourcePaths(entry.getKey(), entry.getValue()))
         .collect(toSet());
 
     // TODO: Refactor
@@ -79,7 +78,7 @@ public final class FetchPlanner {
     var input = FetchInput.newInput(keyExtractor(targetType, targetMapping)
         .apply(environment.getArguments()));
 
-    var fetchResult = fetchSourceObject(targetMapping.getSourceRoot(), sourcePaths, isCollection)
+    var fetchResult = fetchSourceObject(targetMapping.getSourceRoot(), sourcePaths, isCollection, null)
         .execute(input)
         .map(resultMapper)
         .map(result -> result.toMap(lineageMapper, lineageRenamer));
@@ -87,8 +86,28 @@ public final class FetchPlanner {
     return isCollection ? fetchResult : fetchResult.singleOrEmpty();
   }
 
+  private Stream<PropertyPath> getSourcePaths(Property property, PropertyMapping propertyMapping) {
+    return propertyMapping.getPathMappings()
+        .stream()
+        .flatMap(pathMapping -> pathMapping.getPaths()
+            .stream()
+            .flatMap(path -> {
+              if (property instanceof Relation relation) {
+                // TODO: Check if the path is targeted towards the source root of the target type
+                var identityProperties = modelMapping.getTargetModel()
+                    .getObjectType(relation.getTarget())
+                    .getIdentityProperties();
+
+                return identityProperties.stream()
+                    .map(path::append);
+              }
+
+              return Stream.of(path);
+            }));
+  }
+
   private FetchOperation fetchSourceObject(ObjectTypeRef sourceTypeRef, Set<PropertyPath> sourcePaths,
-      boolean isCollection) {
+      boolean isCollection, FilterDefinition filter) {
     var source = sources.get(sourceTypeRef.getModelAlias());
     var sourceType = modelMapping.getSourceType(sourceTypeRef);
     var selectedProperties = new ArrayList<>(selectIdentity(sourceType));
@@ -109,26 +128,16 @@ public final class FetchPlanner {
           var property = sourceType.getProperty(propertyName);
 
           if (property instanceof InverseRelation inverseRelation) {
-            var originType = modelMapping.getSourceType(inverseRelation.getTarget(sourceTypeRef));
-            var originRelation = inverseRelation.getOriginRelation();
-
-            var filter = FilterDefinition.builder()
-                .propertyPath(PropertyPath.fromProperties(originRelation))
+            var filterDefinition = FilterDefinition.builder()
+                .propertyPath(PropertyPath.fromProperties(inverseRelation.getOriginRelation()))
                 .valueExtractor(input -> extractKey(sourceType, input))
                 .build();
 
-            var nestedProperties = nestedSourcePaths.stream()
-                .map(sourcePath -> new SelectedProperty(originType.getProperty(sourcePath.getFirstSegment())))
-                .toList();
+            var originTypeRef = inverseRelation.getTarget(sourceTypeRef);
 
             nextOperations.add(NextOperation.builder()
                 .property(inverseRelation)
-                .delegateOperation(CollectionFetchOperation.builder()
-                    .source(source)
-                    .objectType(originType)
-                    .filter(filter)
-                    .selectedProperties(nestedProperties)
-                    .build())
+                .delegateOperation(fetchSourceObject(originTypeRef, nestedSourcePaths, true, filterDefinition))
                 .inputMapper(keyExtractor(sourceType))
                 .build());
 
@@ -141,9 +150,19 @@ public final class FetchPlanner {
 
             selectedProperties.add(new SelectedProperty(property, selectIdentity(targetType)));
 
+            var identityPropertyPaths = targetType.getIdentityProperties()
+                .stream()
+                .map(PropertyPath::fromProperties)
+                .collect(Collectors.toSet());
+
+            // If only identity is selected, no next operation is needed
+            if (identityPropertyPaths.equals(nestedSourcePaths)) {
+              return;
+            }
+
             nextOperations.add(NextOperation.builder()
                 .property(relation)
-                .delegateOperation(fetchSourceObject(targetTypeRef, nestedSourcePaths, false))
+                .delegateOperation(fetchSourceObject(targetTypeRef, nestedSourcePaths, false, null))
                 .inputMapper(propertyExtractor(propertyName))
                 .build());
 
@@ -159,6 +178,7 @@ public final class FetchPlanner {
           .objectType(sourceType)
           .selectedProperties(unmodifiableList(selectedProperties))
           .nextOperations(unmodifiableSet(nextOperations))
+          .filter(filter)
           .build();
     }
 

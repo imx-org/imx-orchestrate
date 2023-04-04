@@ -48,4 +48,8 @@ public final class Model {
     return Optional.ofNullable(objectTypeMap.get(name))
         .orElseThrow(() -> new ModelException("Object type not found: " + name));
   }
+
+  public ObjectType getObjectType(ObjectTypeRef typeRef) {
+    return getObjectType(typeRef.getName());
+  }
 }
