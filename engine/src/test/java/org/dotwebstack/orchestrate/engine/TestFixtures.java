@@ -170,6 +170,8 @@ public final class TestFixtures {
                 .name("isGerelateerdAan")
                 .target(ObjectTypeRef.fromString("bag:Pand"))
                 .cardinality(Cardinality.OPTIONAL)
+//                .inverseName("isGerelateerdAan")
+//                .inverseCardinality(Cardinality.OPTIONAL)
                 .build())
             .build())
         .build();
@@ -242,6 +244,8 @@ public final class TestFixtures {
                 .name("heeftAlsAdres")
                 .target(ObjectTypeRef.forType("Adres"))
                 .cardinality(Cardinality.MULTI)
+                .inverseName("isAdresVan")
+                .inverseCardinality(Cardinality.of(1, Cardinality.INFINITE))
                 .build())
             .build())
         .build();

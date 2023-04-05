@@ -19,7 +19,6 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import graphql.language.FieldDefinition;
 import graphql.language.InputValueDefinition;
 import graphql.language.ObjectTypeDefinition;
 import graphql.language.Type;
@@ -34,16 +33,18 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.engine.OrchestrateExtension;
 import org.dotwebstack.orchestrate.engine.Orchestration;
 import org.dotwebstack.orchestrate.engine.fetch.FetchPlanner;
 import org.dotwebstack.orchestrate.engine.fetch.GenericDataFetcher;
 import org.dotwebstack.orchestrate.engine.fetch.ObjectKeyFetcher;
 import org.dotwebstack.orchestrate.engine.fetch.PropertyValueFetcher;
+import org.dotwebstack.orchestrate.model.AbstractRelation;
 import org.dotwebstack.orchestrate.model.Attribute;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
-import org.dotwebstack.orchestrate.model.Relation;
+import org.dotwebstack.orchestrate.model.Property;
 import org.dotwebstack.orchestrate.model.lineage.ObjectLineage;
 import org.dotwebstack.orchestrate.model.lineage.ObjectReference;
 import org.dotwebstack.orchestrate.model.lineage.OrchestratedProperty;
@@ -286,19 +287,13 @@ public final class SchemaFactory {
     var objectTypeDefinitionBuilder = newObjectTypeDefinition()
         .name(objectType.getName());
 
-    objectType.getProperties(Attribute.class)
+    objectType.getProperties()
         .stream()
-        .map(this::createFieldDefinition)
+        .map(property -> newFieldDefinition()
+            .name(property.getName())
+            .type(mapFieldType(objectType, property))
+            .build())
         .forEach(objectTypeDefinitionBuilder::fieldDefinition);
-
-    objectType.getProperties(Relation.class)
-        .stream()
-        .map(this::createFieldDefinition)
-        .forEach(fieldDefinition -> {
-          objectTypeDefinitionBuilder.fieldDefinition(fieldDefinition);
-          codeRegistryBuilder.dataFetcher(coordinates(objectType.getName(), fieldDefinition.getName()),
-              genericDataFetcher);
-        });
 
     objectTypeDefinitionBuilder.fieldDefinition(newFieldDefinition()
         .name(lineageRenamer.apply(SchemaConstants.HAS_LINEAGE_FIELD))
@@ -308,18 +303,21 @@ public final class SchemaFactory {
     return objectTypeDefinitionBuilder.build();
   }
 
-  private FieldDefinition createFieldDefinition(Attribute attribute) {
-    return newFieldDefinition()
-        .name(attribute.getName())
-        .type(mapFieldType(attribute))
-        .build();
-  }
+  private Type<?> mapFieldType(ObjectType objectType, Property property) {
+    if (property instanceof Attribute attribute) {
+      return mapFieldType(attribute);
+    }
 
-  private FieldDefinition createFieldDefinition(Relation relation) {
-    return newFieldDefinition()
-        .name(relation.getName())
-        .type(mapFieldType(relation))
-        .build();
+    if (property instanceof AbstractRelation relation) {
+      var target = relation.getTarget();
+
+      codeRegistryBuilder.dataFetcher(coordinates(objectType.getName(), property.getName()),
+          genericDataFetcher);
+
+      return applyCardinality(new TypeName(target.getName()), relation.getCardinality());
+    }
+
+    throw new OrchestrateException("Could not map field type");
   }
 
   private Type<?> mapFieldType(Attribute attribute) {
@@ -332,13 +330,6 @@ public final class SchemaFactory {
     };
 
     return applyCardinality(type, attribute.getCardinality());
-  }
-
-  private Type<?> mapFieldType(Relation relation) {
-    var type = new TypeName(relation.getTarget()
-        .getName());
-
-    return applyCardinality(type, relation.getCardinality());
   }
 
   private List<InputValueDefinition> createIdentityArguments(ObjectType objectType) {

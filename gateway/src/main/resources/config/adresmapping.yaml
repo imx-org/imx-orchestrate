@@ -67,6 +67,11 @@ objectTypeMappings:
             combiner:
               name: concat
               prefix: ' '
+      # TODO: auto-generatie inverse mappings
+      isAdresVan:
+        pathMapping:
+          path: isHoofdadresVan/maaktDeelUitVan/isGerelateerdAan
+
   Gebouw:
     sourceRoot: bgt:Pand
     propertyMappings:

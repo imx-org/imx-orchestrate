@@ -8,7 +8,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @ToString(callSuper = true)
 @SuperBuilder(toBuilder = true)
-abstract class AbstractProperty implements Property {
+public abstract class AbstractProperty implements Property {
 
   protected final String name;
 
