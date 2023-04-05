@@ -1,6 +1,8 @@
 package org.dotwebstack.orchestrate.engine;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
+import static org.assertj.core.api.InstanceOfAssertFactories.map;
 import static org.dotwebstack.orchestrate.engine.TestFixtures.createBagModel;
 import static org.dotwebstack.orchestrate.engine.TestFixtures.createBgtModel;
 import static org.dotwebstack.orchestrate.engine.TestFixtures.createModelMapping;
@@ -85,12 +87,21 @@ class EngineIT {
           }
         """);
 
-    Map<String, Map<String, Object>> data = result.getData();
+    Map<String, Object> data = result.getData();
+
+    assertThat(result.getErrors()).isEmpty();
     assertThat(data).isNotNull()
-        .containsKey("gebouw");
-    assertThat(data.get("gebouw")).isNotNull()
-        .containsEntry("identificatie", "G0200.42b3d39246840268e0530a0a28492340")
-        .containsEntry("bouwjaar", "2006");
+        .hasEntrySatisfying("gebouw", gebouw ->
+            assertThat(gebouw).isNotNull()
+                .isInstanceOf(Map.class)
+                .asInstanceOf(map(String.class, Object.class))
+                .containsEntry("identificatie", "G0200.42b3d39246840268e0530a0a28492340")
+                .containsEntry("bouwjaar", "2006")
+                .hasEntrySatisfying("heeftAlsAdres", heeftAlsAdres ->
+                    assertThat(heeftAlsAdres).isNotNull()
+                        .isInstanceOf(List.class)
+                        .asInstanceOf(list(Map.class))
+                        .hasSize(2)));
   }
 
   @Test
