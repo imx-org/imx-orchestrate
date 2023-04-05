@@ -44,8 +44,6 @@ public class NextOperation {
 
           if (input instanceof List<?>) {
             return Mono.fromCompletionStage(dataLoader.loadMany(cast(input)))
-                .flatMapMany(Flux::fromIterable)
-                .collectList()
                 .map(nestedList -> objectResult.toBuilder()
                     .nestedResult(property.getName(), CollectionResult.builder()
                         .objectResults(nestedList)
