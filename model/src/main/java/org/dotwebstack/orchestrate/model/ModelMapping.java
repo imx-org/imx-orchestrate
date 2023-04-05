@@ -24,9 +24,9 @@ public final class ModelMapping {
   @Builder.Default
   private final Map<String, String> lineageNameMapping = new HashMap<>();
 
-  public Model getSourceModel(String modelAlias) {
-    return Optional.ofNullable(sourceModels.get(modelAlias))
-        .orElseThrow(() -> new ModelException("Source model not found: " + modelAlias));
+  public Model getSourceModel(String alias) {
+    return Optional.ofNullable(sourceModels.get(alias))
+        .orElseThrow(() -> new ModelException("Source model not found: " + alias));
   }
 
   public ObjectType getSourceType(ObjectTypeRef sourceTypeRef) {

@@ -16,12 +16,16 @@ import lombok.ToString;
 @ToString(exclude = {"objectTypeMap"})
 public final class Model {
 
+  private final String alias;
+
   private final List<ObjectType> objectTypes;
 
   private final Map<String, ObjectType> objectTypeMap;
 
   @Builder(toBuilder = true)
-  private Model(@Singular List<ObjectType> objectTypes) {
+  private Model(String alias, @Singular List<ObjectType> objectTypes) {
+    this.alias = alias;
+
     // Pre-collect object types in map structure
     var mutableObjectTypeMap = objectTypes.stream()
         .collect(toMap(ObjectType::getName, Function.identity()));

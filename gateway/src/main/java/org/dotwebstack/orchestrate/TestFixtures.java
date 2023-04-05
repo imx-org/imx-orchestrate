@@ -29,6 +29,7 @@ final class TestFixtures {
 
   public static Model createBagModel() {
     return Model.builder()
+        .alias("bag")
         .objectType(ObjectType.builder()
             .name("Nummeraanduiding")
             .property(Attribute.builder()
@@ -159,6 +160,7 @@ final class TestFixtures {
 
   public static Model createBgtModel() {
     return Model.builder()
+        .alias("bgt")
         .objectType(ObjectType.builder()
             .name("Pand")
             .property(Attribute.builder()
