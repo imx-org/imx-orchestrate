@@ -6,13 +6,12 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import java.util.Map;
 import lombok.ToString;
 import org.dotwebstack.orchestrate.engine.OrchestrateException;
-import org.dotwebstack.orchestrate.model.types.ScalarType;
-import org.locationtech.jts.geom.Geometry;
+import org.dotwebstack.orchestrate.model.AttributeType;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
 
 @ToString
-public class GeometryType implements ScalarType<Geometry> {
+public class GeometryType implements AttributeType {
 
   private final ObjectMapper objectMapper = new JsonMapper();
 
@@ -20,12 +19,7 @@ public class GeometryType implements ScalarType<Geometry> {
 
   @Override
   public String getName() {
-    return Geometry.class.getSimpleName();
-  }
-
-  @Override
-  public Class<Geometry> getJavaType() {
-    return Geometry.class;
+    return "Geometry";
   }
 
   @Override
