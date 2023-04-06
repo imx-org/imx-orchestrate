@@ -221,8 +221,8 @@ final class TestFixtures {
 
     return modelMapping.toBuilder()
         .targetModel(targetModel)
-        .sourceModel("bag", createBagModel())
-        .sourceModel("bgt", createBgtModel())
+        .sourceModel(createBagModel())
+        .sourceModel(createBgtModel())
         .build();
   }
 

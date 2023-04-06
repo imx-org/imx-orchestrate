@@ -2,6 +2,7 @@ package org.dotwebstack.orchestrate.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 
@@ -11,10 +12,11 @@ class ModelMappingTest {
   void builder_Succeeds_Always() {
     var targetModel = mock(Model.class);
     var sourceModel = mock(Model.class);
+    when(sourceModel.getAlias()).thenReturn("src");
 
     var modelMapping = ModelMapping.builder()
         .targetModel(targetModel)
-        .sourceModel("src", sourceModel)
+        .sourceModel(sourceModel)
         .objectTypeMapping("Area", ObjectTypeMapping.builder()
             .sourceRoot(ObjectTypeRef.fromString("src:City"))
             .propertyMapping("code", PropertyMapping.builder()

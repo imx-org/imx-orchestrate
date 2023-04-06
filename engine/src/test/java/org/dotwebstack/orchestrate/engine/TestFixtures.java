@@ -366,8 +366,8 @@ public final class TestFixtures {
   public static ModelMapping createModelMapping() {
     return ModelMapping.builder()
         .targetModel(createTargetModel())
-        .sourceModel("bag", createBagModel())
-        .sourceModel("bgt", createBgtModel())
+        .sourceModel(createBagModel())
+        .sourceModel(createBgtModel())
         .objectTypeMapping("Adres", createAdresMapping())
         .objectTypeMapping("Gebouw", createGebouwMapping())
         .build();

@@ -54,6 +54,7 @@ class TestFixtures {
 
   public static Model createBgtModel() {
     return Model.builder()
+        .alias("bgt")
         .objectType(ObjectType.builder()
             .name("Pand")
             .property(Attribute.builder()
@@ -74,7 +75,7 @@ class TestFixtures {
   public static ModelMapping createModelMapping() {
     return ModelMapping.builder()
         .targetModel(createTargetModel())
-        .sourceModel("bgt", createBgtModel())
+        .sourceModel(createBgtModel())
         .objectTypeMapping("Gebouw", createGebouwMapping())
         .build();
   }
