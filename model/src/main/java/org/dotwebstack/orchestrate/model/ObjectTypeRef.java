@@ -4,10 +4,8 @@ import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 
 @Getter
-@ToString
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ObjectTypeRef {
 
@@ -16,6 +14,15 @@ public final class ObjectTypeRef {
   private final String modelAlias;
 
   private final String name;
+
+  @Override
+  public String toString() {
+    if (modelAlias != null) {
+      return String.format("%s:%s", modelAlias, name);
+    }
+
+    return name;
+  }
 
   public static ObjectTypeRef forType(String name) {
     return new ObjectTypeRef(null, name);

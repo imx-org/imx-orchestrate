@@ -52,4 +52,14 @@ public final class ObjectType {
     return Optional.ofNullable(propertyMap.get(name))
         .orElseThrow(() -> new ModelException("Attribute not found: " + name));
   }
+
+  public ObjectType appendProperty(Property property) {
+    if (propertyMap.containsKey(property.getName())) {
+      throw new ModelException("Property already exists:" + property.getName());
+    }
+
+    return toBuilder()
+        .property(property)
+        .build();
+  }
 }

@@ -19,6 +19,7 @@ class TestFixtures {
 
   public static Model createTargetModel() {
     return Model.builder()
+        .alias("geo")
         .objectType(ObjectType.builder()
             .name("Gebouw")
             .property(Attribute.builder()

@@ -11,6 +11,7 @@ class ModelMappingTest {
   @Test
   void builder_Succeeds_Always() {
     var targetModel = mock(Model.class);
+    when(targetModel.getAlias()).thenReturn("target");
     var sourceModel = mock(Model.class);
     when(sourceModel.getAlias()).thenReturn("src");
 

@@ -68,7 +68,7 @@ objectTypeMappings:
               name: concat
               prefix: ' '
       # TODO: auto-generatie inverse mappings
-      isAdresVan:
+      isAdresVanGebouw:
         pathMapping:
           path: isHoofdadresVan/maaktDeelUitVan/isGerelateerdAan
 

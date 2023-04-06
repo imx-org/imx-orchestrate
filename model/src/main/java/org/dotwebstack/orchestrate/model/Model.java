@@ -1,12 +1,12 @@
 package org.dotwebstack.orchestrate.model;
 
-import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toMap;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
@@ -25,27 +25,9 @@ public final class Model {
   @Builder(toBuilder = true)
   private Model(String alias, @Singular List<ObjectType> objectTypes) {
     this.alias = alias;
-
-    // Pre-collect object types in map structure
-    var mutableObjectTypeMap = objectTypes.stream()
+    this.objectTypes = objectTypes;
+    this.objectTypeMap = objectTypes.stream()
         .collect(toMap(ObjectType::getName, Function.identity()));
-
-    // Discover & add inverse relation properties
-    objectTypes.forEach(objectType -> objectType.getProperties(Relation.class)
-        .forEach(relation -> Optional.ofNullable(relation.getInverseName())
-            .ifPresent(inverseName -> {
-              var targetRef = relation.getTarget();
-
-              mutableObjectTypeMap.computeIfPresent(targetRef.getName(), (targetName, targetType) -> targetType.toBuilder()
-                  .property(InverseRelation.builder()
-                      .target(ObjectTypeRef.forType(objectType.getName()))
-                      .originRelation(relation)
-                      .build())
-                  .build());
-            })));
-
-    this.objectTypes = List.copyOf(mutableObjectTypeMap.values());
-    this.objectTypeMap = unmodifiableMap(mutableObjectTypeMap);
   }
 
   public ObjectType getObjectType(String name) {
@@ -55,5 +37,17 @@ public final class Model {
 
   public ObjectType getObjectType(ObjectTypeRef typeRef) {
     return getObjectType(typeRef.getName());
+  }
+
+  public Model replaceObjectType(ObjectType newObjectType) {
+    var remainingTypes = objectTypeMap.values()
+        .stream()
+        .filter(objectType -> !newObjectType.getName().equals(objectType.getName()));
+
+    return toBuilder()
+        .clearObjectTypes()
+        .objectTypes(Stream.concat(remainingTypes, Stream.of(newObjectType))
+            .toList())
+        .build();
   }
 }

@@ -1,10 +1,11 @@
 package org.dotwebstack.orchestrate.model;
 
+import static java.util.stream.Collectors.toMap;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
@@ -27,21 +28,58 @@ public final class ModelMapping {
   @Builder(toBuilder = true)
   public ModelMapping(Model targetModel, @Singular Set<Model> sourceModels,
       @Singular Map<String, ObjectTypeMapping> objectTypeMappings, Map<String, String> lineageNameMapping) {
-    this.targetModel = targetModel;
+    // TODO: Remove null-check once parser workaround has been resolved
+    if (targetModel != null) {
+      validateModel(targetModel);
+      this.targetModel = resolveInverseRelations(Set.of(targetModel))
+          .iterator()
+          .next();
+    } else {
+      this.targetModel = targetModel;
+    }
 
-    sourceModels.forEach(this::validateSourceModel);
-    this.sourceModels = sourceModels;
-    this.sourceModelMap = sourceModels.stream()
-        .collect(Collectors.toMap(Model::getAlias, Function.identity()));
+    sourceModels.forEach(this::validateModel);
+    this.sourceModels = resolveInverseRelations(sourceModels);
+    this.sourceModelMap = this.sourceModels.stream()
+        .collect(toMap(Model::getAlias, Function.identity()));
 
     this.objectTypeMappings = objectTypeMappings;
     this.lineageNameMapping = Optional.ofNullable(lineageNameMapping)
         .orElse(Map.of());
   }
 
-  private void validateSourceModel(Model model) {
+  private Set<Model> resolveInverseRelations(Set<Model> models) {
+    var mutableSourceModelMap = models.stream()
+        .collect(toMap(Model::getAlias, Function.identity()));
+
+    models.forEach(model -> model.getObjectTypes()
+        .forEach(objectType -> objectType.getProperties(Relation.class)
+            .stream()
+            .filter(relation -> relation.getInverseName() != null)
+            .forEach(relation -> {
+              var relTarget = relation.getTarget();
+
+              var relTargetModel = Optional.ofNullable(relTarget.getModelAlias())
+                  .or(() -> Optional.of(model.getAlias()))
+                  .map(mutableSourceModelMap::get)
+                  .orElseThrow(() -> new ModelException("Source model not found for relation target: " + relation));
+
+              var inverseRelation = InverseRelation.builder()
+                  .originRelation(relation)
+                  .target(ObjectTypeRef.forType(model.getAlias(), objectType.getName()))
+                  .build();
+
+              mutableSourceModelMap.put(relTargetModel.getAlias(), relTargetModel.replaceObjectType(
+                  relTargetModel.getObjectType(relTarget)
+                      .appendProperty(inverseRelation)));
+            })));
+
+    return Set.copyOf(mutableSourceModelMap.values());
+  }
+
+  private void validateModel(Model model) {
     if (model.getAlias() == null) {
-      throw new ModelException("Source models must contain an alias.");
+      throw new ModelException("Models must contain an alias.");
     }
   }
 

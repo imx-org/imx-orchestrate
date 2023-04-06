@@ -188,8 +188,8 @@ final class TestFixtures {
                 .name("isGerelateerdAan")
                 .target(ObjectTypeRef.fromString("bag:Pand"))
                 .cardinality(Cardinality.OPTIONAL)
-//                .inverseName("isGerelateerdAan")
-//                .inverseCardinality(Cardinality.OPTIONAL)
+                .inverseName("isGerelateerdAan")
+                .inverseCardinality(Cardinality.OPTIONAL)
                 .build())
             .build())
         .build();
@@ -219,6 +219,7 @@ final class TestFixtures {
 
     var modelMapping = yamlMapper.parse(mappingInputStream);
 
+    // TODO: Merge into one step
     return modelMapping.toBuilder()
         .targetModel(targetModel)
         .sourceModel(createBagModel())
@@ -228,6 +229,7 @@ final class TestFixtures {
 
   private static Model buildAdresTargetModel() {
     return Model.builder()
+        .alias("adr")
         .objectType(ObjectType.builder()
             .name("Adres")
             .property(Attribute.builder()
@@ -303,7 +305,7 @@ final class TestFixtures {
                 .name("heeftAlsAdres")
                 .target(ObjectTypeRef.forType("Adres"))
                 .cardinality(Cardinality.MULTI)
-                .inverseName("isAdresVan")
+                .inverseName("isAdresVanGebouw")
                 .inverseCardinality(Cardinality.of(1, Cardinality.INFINITE))
                 .build())
             .build())
@@ -312,6 +314,7 @@ final class TestFixtures {
 
   private static Model buildCoreLocationTargetModel() {
     return Model.builder()
+        .alias("loc")
         .objectType(ObjectType.builder()
             .name("Address")
             .property(Attribute.builder()
