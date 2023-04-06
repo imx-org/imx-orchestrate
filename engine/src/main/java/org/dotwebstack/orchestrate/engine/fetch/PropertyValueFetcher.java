@@ -30,6 +30,11 @@ public final class PropertyValueFetcher implements DataFetcher<Map<String, Objec
       return Map.of(fieldRenamer.apply("stringValue"), value);
     }
 
+    // TODO: refactor (see issue #1)
+    if (value instanceof Map) {
+      return Map.of(fieldRenamer.apply("objectValue"), Map.of(fieldRenamer.apply("objectKey"), value));
+    }
+
     throw new OrchestrateException("Could not map value: " + value.toString());
   }
 }

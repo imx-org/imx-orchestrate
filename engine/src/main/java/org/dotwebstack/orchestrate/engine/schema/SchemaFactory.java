@@ -269,6 +269,10 @@ public final class SchemaFactory {
             .name(lineageRenamer.apply("booleanValue"))
             .type(new TypeName("Boolean"))
             .build())
+        .fieldDefinition(newFieldDefinition()
+            .name(lineageRenamer.apply("objectValue"))
+            .type(requiredType(lineageRenamer.apply(ObjectReference.class.getSimpleName())))
+            .build())
         .build());
 
     var valueFetcher = new PropertyValueFetcher(lineageRenamer);

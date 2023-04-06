@@ -1,6 +1,7 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
 import static java.util.Collections.unmodifiableMap;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.noopCombiner;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.pathResult;
@@ -108,6 +109,30 @@ class ObjectResultMapper implements UnaryOperator<ObjectResult> {
                     var propertyName = pathMapping.getPaths()
                         .get(0)
                         .getLastSegment();
+                    ;
+
+                    var relationSourceProperties = collectionResult.getObjectResults()
+                        .stream()
+                        .map(objResult -> {
+
+                          var resultType = objResult.getType();
+
+                          return SourceProperty.builder()
+                              .subject(ObjectReference.builder()
+                                  .objectType(resultType.getName())
+                                  .objectKey(keyExtractor(resultType).apply(objResult))
+                                  .build())
+                              .property(propertyName)
+                              .propertyPath(path.getSegments())
+                              .value(objResult.getProperty(propertyName))
+                              .build();
+                        })
+                        .collect(toUnmodifiableSet());
+
+                    sourceProperties.addAll(relationSourceProperties);
+
+                    propertyPathMappingBuilder.addPath(pathBuilderForLineage.references(relationSourceProperties)
+                        .build());
 
                     return Stream.of(collectionResult.getObjectResults()
                         .stream()
@@ -172,24 +197,26 @@ class ObjectResultMapper implements UnaryOperator<ObjectResult> {
       return null;
     }
 
-    if (property instanceof Attribute) {
-      var orchestratedProperty = OrchestratedProperty.builder()
-          .subject(targetReference)
-          .property(property.getName())
-          .value(resultValue)
-          .isDerivedFrom(sourceProperties)
-          .wasGeneratedBy(PropertyMappingExecution.builder()
-              .used(
-                  org.dotwebstack.orchestrate.model.lineage.PropertyMapping.builder()
-                      .pathMapping(propertyMappingPaths.values()
-                          .stream()
-                          .map(PropertyPathMappingBuilder::build)
-                          .collect(Collectors.toSet()))
-                      .build())
-              .build())
-          .build();
+    if (resultValue instanceof List<?> resultList) {
+      resultList.forEach(result -> {
+        var orchestratedProperty = OrchestratedProperty.builder()
+            .subject(targetReference)
+            .property(property.getName())
+            .value(result)
+            .isDerivedFrom(sourceProperties)
+            .wasGeneratedBy(PropertyMappingExecution.builder()
+                .used(
+                    org.dotwebstack.orchestrate.model.lineage.PropertyMapping.builder()
+                        .pathMapping(propertyMappingPaths.values()
+                            .stream()
+                            .map(PropertyPathMappingBuilder::build)
+                            .collect(Collectors.toSet()))
+                        .build())
+                .build())
+            .build();
 
-      objectLineageBuilder.orchestratedProperty(orchestratedProperty);
+        objectLineageBuilder.orchestratedProperty(orchestratedProperty);
+      });
     }
 
     return resultValue;
