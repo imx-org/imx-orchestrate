@@ -198,28 +198,37 @@ class ObjectResultMapper implements UnaryOperator<ObjectResult> {
     }
 
     if (resultValue instanceof List<?> resultList) {
-      resultList.forEach(result -> {
-        var orchestratedProperty = OrchestratedProperty.builder()
-            .subject(targetReference)
-            .property(property.getName())
-            .value(result)
-            .isDerivedFrom(sourceProperties)
-            .wasGeneratedBy(PropertyMappingExecution.builder()
-                .used(
-                    org.dotwebstack.orchestrate.model.lineage.PropertyMapping.builder()
-                        .pathMapping(propertyMappingPaths.values()
-                            .stream()
-                            .map(PropertyPathMappingBuilder::build)
-                            .collect(Collectors.toSet()))
-                        .build())
-                .build())
-            .build();
-
-        objectLineageBuilder.orchestratedProperty(orchestratedProperty);
-      });
+      resultList.forEach(
+          result -> buildOrchestratedProperty(targetReference, property, result, sourceProperties, propertyMappingPaths,
+              objectLineageBuilder));
+    } else {
+      buildOrchestratedProperty(targetReference, property, resultValue, sourceProperties, propertyMappingPaths,
+          objectLineageBuilder);
     }
 
     return resultValue;
+  }
+
+  private void buildOrchestratedProperty(ObjectReference targetReference, Property property, Object result,
+      Set<SourceProperty> sourceProperties, Map<PropertyPathMapping, PropertyPathMappingBuilder> propertyMappingPaths,
+      ObjectLineage.ObjectLineageBuilder objectLineageBuilder) {
+    var orchestratedProperty = OrchestratedProperty.builder()
+        .subject(targetReference)
+        .property(property.getName())
+        .value(result)
+        .isDerivedFrom(sourceProperties)
+        .wasGeneratedBy(PropertyMappingExecution.builder()
+            .used(
+                org.dotwebstack.orchestrate.model.lineage.PropertyMapping.builder()
+                    .pathMapping(propertyMappingPaths.values()
+                        .stream()
+                        .map(PropertyPathMappingBuilder::build)
+                        .collect(Collectors.toSet()))
+                    .build())
+            .build())
+        .build();
+
+    objectLineageBuilder.orchestratedProperty(orchestratedProperty);
   }
 
   private Object transform(Object value, List<Transform> transforms) {
