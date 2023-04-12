@@ -34,7 +34,7 @@
         <jackson.version>2.14.2</jackson.version>
         <junit.version>5.9.2</junit.version>
         <assertj.version>3.24.2</assertj.version>
-        <mockito.version>5.2.0</mockito.version>
+        <mockito.version>5.3.0</mockito.version>
         <jacoco-maven-plugin.version>0.8.9</jacoco-maven-plugin.version>
         <sonar-maven-plugin.version>3.9.1.2184</sonar-maven-plugin.version>
         <sonar.organization>dotwebstack</sonar.organization>
