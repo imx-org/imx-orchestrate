@@ -53,6 +53,10 @@ public final class ObjectType {
         .orElseThrow(() -> new ModelException("Attribute not found: " + name));
   }
 
+  public boolean hasProperty(String name) {
+    return propertyMap.containsKey(name);
+  }
+
   public ObjectType appendProperty(Property property) {
     if (propertyMap.containsKey(property.getName())) {
       throw new ModelException("Property already exists:" + property.getName());

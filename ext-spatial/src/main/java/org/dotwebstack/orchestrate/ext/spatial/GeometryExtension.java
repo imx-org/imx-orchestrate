@@ -5,13 +5,10 @@ import static graphql.language.ObjectTypeDefinition.newObjectTypeDefinition;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaUtils.requiredType;
 import static org.dotwebstack.orchestrate.model.types.ScalarTypes.STRING;
 
-import com.fasterxml.jackson.databind.Module;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import java.util.Map;
 import org.dotwebstack.orchestrate.engine.OrchestrateExtension;
-import org.locationtech.jts.geom.Geometry;
 
 public final class GeometryExtension implements OrchestrateExtension {
 
@@ -44,11 +41,5 @@ public final class GeometryExtension implements OrchestrateExtension {
 
     codeRegistryBuilder.dataFetchers("Geometry", Map.of(
         AS_GEOJSON, geometryFetcher, AS_WKB, geometryFetcher, AS_WKT, geometryFetcher));
-  }
-
-  @Override
-  public Module getLineageSerializerModule() {
-    return new SimpleModule()
-        .addSerializer(Geometry.class, new GeometrySerializer());
   }
 }

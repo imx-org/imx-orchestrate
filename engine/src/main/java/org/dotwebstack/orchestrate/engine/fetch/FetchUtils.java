@@ -17,7 +17,7 @@ import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.ObjectTypeMapping;
 import org.dotwebstack.orchestrate.model.Property;
-import org.dotwebstack.orchestrate.model.PropertyPath;
+import org.dotwebstack.orchestrate.model.transforms.Transform;
 import org.dotwebstack.orchestrate.source.SelectedProperty;
 import reactor.util.function.Tuples;
 
@@ -76,27 +76,22 @@ final class FetchUtils {
     return (T) value;
   }
 
+  public static <T> T cast(Object value, Class<T> clazz) {
+    if (!clazz.isInstance(value)) {
+      throw new OrchestrateException("Could not cast value to class: " + clazz.getSimpleName());
+    }
+
+    return clazz.cast(value);
+  }
+
   public static <T> BinaryOperator<T> noopCombiner() {
     return (a, b) -> {
       throw new OrchestrateException("Combiner should never be called.");
     };
   }
 
-  public static Result pathResult(Result result, PropertyPath path) {
-    if (path.isLeaf()) {
-      return result;
-    }
-
-    if (result instanceof ObjectResult objectResult) {
-      var nestedResult = objectResult.getNestedResult(path.getFirstSegment());
-
-      if (nestedResult == null) {
-        return null;
-      }
-
-      return pathResult(nestedResult, path.withoutFirstSegment());
-    }
-
-    throw new OrchestrateException("Could not handle result for path: " + path);
+  public static Object transform(Object value, List<Transform> transforms) {
+    return transforms.stream()
+        .reduce(value, (acc, transform) -> transform.apply(acc), noopCombiner());
   }
 }

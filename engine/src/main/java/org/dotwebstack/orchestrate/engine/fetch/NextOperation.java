@@ -45,7 +45,7 @@ public class NextOperation {
           if (input instanceof List<?>) {
             return Mono.fromCompletionStage(dataLoader.loadMany(cast(input)))
                 .map(nestedList -> objectResult.toBuilder()
-                    .nestedResult(property.getName(), CollectionResult.builder()
+                    .property(property.getName(), CollectionResult.builder()
                         .objectResults(nestedList)
                         .build())
                     .build());
@@ -53,7 +53,7 @@ public class NextOperation {
 
           return Mono.fromCompletionStage(dataLoader.load(cast(input)))
               .map(nestedObject -> objectResult.toBuilder()
-                  .nestedResult(property.getName(), nestedObject)
+                  .property(property.getName(), nestedObject)
                   .build())
               .defaultIfEmpty(objectResult);
         });
@@ -85,7 +85,7 @@ public class NextOperation {
       return delegateOperation.execute(input)
           .collectList()
           .map(objectResults -> objectResult.toBuilder()
-              .nestedResult(property.getName(), CollectionResult.builder()
+              .property(property.getName(), CollectionResult.builder()
                   .objectResults(objectResults)
                   .build())
               .build());
@@ -93,7 +93,7 @@ public class NextOperation {
 
     return delegateOperation.execute(input)
         .map(nextResult -> objectResult.toBuilder()
-            .nestedResult(property.getName(), nextResult)
+            .property(property.getName(), nextResult)
             .build())
         .defaultIfEmpty(objectResult);
   }

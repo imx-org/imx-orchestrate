@@ -13,12 +13,6 @@ import static org.dotwebstack.orchestrate.engine.schema.SchemaUtils.applyCardina
 import static org.dotwebstack.orchestrate.engine.schema.SchemaUtils.requiredListType;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaUtils.requiredType;
 
-import com.fasterxml.jackson.databind.BeanDescription;
-import com.fasterxml.jackson.databind.DeserializationConfig;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import graphql.language.InputValueDefinition;
 import graphql.language.ObjectTypeDefinition;
 import graphql.language.Type;
@@ -28,7 +22,6 @@ import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
@@ -39,6 +32,7 @@ import org.dotwebstack.orchestrate.engine.Orchestration;
 import org.dotwebstack.orchestrate.engine.fetch.FetchPlanner;
 import org.dotwebstack.orchestrate.engine.fetch.GenericDataFetcher;
 import org.dotwebstack.orchestrate.engine.fetch.ObjectKeyFetcher;
+import org.dotwebstack.orchestrate.engine.fetch.ObjectLineageFetcher;
 import org.dotwebstack.orchestrate.engine.fetch.PropertyValueFetcher;
 import org.dotwebstack.orchestrate.model.AbstractRelation;
 import org.dotwebstack.orchestrate.model.Attribute;
@@ -67,46 +61,24 @@ public final class SchemaFactory {
 
   private final GenericDataFetcher genericDataFetcher;
 
+  private final ObjectLineageFetcher objectLineageFetcher;
+
   private final UnaryOperator<String> lineageRenamer;
 
   private final Set<OrchestrateExtension> extensions;
 
   public static GraphQLSchema create(Orchestration orchestration) {
     var modelMapping = orchestration.getModelMapping();
-    var lineageMapper = getObjectMapperInstance(modelMapping, orchestration.getExtensions());
 
     UnaryOperator<String> lineageRenamer =
         fieldName -> modelMapping.getLineageNameMapping().getOrDefault(fieldName, fieldName);
 
-    var fetchPlanner = new FetchPlanner(modelMapping, orchestration.getSources(), lineageMapper, lineageRenamer);
+    var fetchPlanner = new FetchPlanner(modelMapping, orchestration.getSources(), lineageRenamer);
     var genericDataFetcher = new GenericDataFetcher(fetchPlanner);
+    var objectLineageFetcher = new ObjectLineageFetcher(modelMapping.getLineageNameMapping());
 
-    return new SchemaFactory(modelMapping, genericDataFetcher, lineageRenamer, orchestration.getExtensions()).create();
-  }
-
-  private static ObjectMapper getObjectMapperInstance(ModelMapping modelMapping, Set<OrchestrateExtension> extensions) {
-    var lineageMapping = modelMapping.getLineageNameMapping();
-    var objectMapper = new ObjectMapper();
-
-    if (!lineageMapping.isEmpty()) {
-      var module = new SimpleModule()
-          .setDeserializerModifier(new BeanDeserializerModifier() {
-            @Override
-            public JsonDeserializer<?> modifyDeserializer(DeserializationConfig config, BeanDescription beanDesc,
-                JsonDeserializer<?> deserializer) {
-              return new FieldRenamingDeserializer(deserializer, lineageMapping);
-            }
-          });
-
-      objectMapper.registerModule(module);
-    }
-
-    extensions.stream()
-        .map(OrchestrateExtension::getLineageSerializerModule)
-        .filter(Objects::nonNull)
-        .forEach(objectMapper::registerModule);
-
-    return objectMapper;
+    return new SchemaFactory(modelMapping, genericDataFetcher, objectLineageFetcher, lineageRenamer,
+        orchestration.getExtensions()).create();
   }
 
   private GraphQLSchema create() {
@@ -171,7 +143,7 @@ public final class SchemaFactory {
             .build())
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("value"))
-            .type(requiredType("PropertyValue"))
+            .type(requiredType("PropertyResult"))
             .build())
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("wasGeneratedBy"))
@@ -239,7 +211,7 @@ public final class SchemaFactory {
             .build())
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("value"))
-            .type(requiredType(lineageRenamer.apply("PropertyValue")))
+            .type(requiredType(lineageRenamer.apply("PropertyResult")))
             .build())
         .build());
 
@@ -256,7 +228,7 @@ public final class SchemaFactory {
         .build());
 
     typeDefinitionRegistry.add(newObjectTypeDefinition()
-        .name(lineageRenamer.apply("PropertyValue"))
+        .name(lineageRenamer.apply("PropertyResult"))
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("stringValue"))
             .type(new TypeName("String"))
@@ -271,12 +243,11 @@ public final class SchemaFactory {
             .build())
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("objectValue"))
-            .type(requiredType(lineageRenamer.apply(ObjectReference.class.getSimpleName())))
+            .type(new TypeName(lineageRenamer.apply(ObjectReference.class.getSimpleName())))
             .build())
         .build());
 
     var valueFetcher = new PropertyValueFetcher(lineageRenamer);
-
     var objectKeyFetcher = new ObjectKeyFetcher(lineageRenamer);
 
     codeRegistryBuilder.dataFetcher(coordinates(lineageRenamer.apply(OrchestratedProperty.class.getSimpleName()),
@@ -299,10 +270,14 @@ public final class SchemaFactory {
             .build())
         .forEach(objectTypeDefinitionBuilder::fieldDefinition);
 
+    var lineageFieldName = lineageRenamer.apply(SchemaConstants.HAS_LINEAGE_FIELD);
+
     objectTypeDefinitionBuilder.fieldDefinition(newFieldDefinition()
-        .name(lineageRenamer.apply(SchemaConstants.HAS_LINEAGE_FIELD))
+        .name(lineageFieldName)
         .type(requiredType(lineageRenamer.apply(ObjectLineage.class.getSimpleName())))
         .build());
+
+    codeRegistryBuilder.dataFetcher(coordinates(objectType.getName(), lineageFieldName), objectLineageFetcher);
 
     return objectTypeDefinitionBuilder.build();
   }
@@ -314,10 +289,6 @@ public final class SchemaFactory {
 
     if (property instanceof AbstractRelation relation) {
       var target = relation.getTarget();
-
-      codeRegistryBuilder.dataFetcher(coordinates(objectType.getName(), property.getName()),
-          genericDataFetcher);
-
       return applyCardinality(new TypeName(target.getName()), relation.getCardinality());
     }
 

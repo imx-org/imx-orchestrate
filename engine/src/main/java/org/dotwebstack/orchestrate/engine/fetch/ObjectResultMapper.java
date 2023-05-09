@@ -1,187 +1,117 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
 import static java.util.Collections.unmodifiableMap;
-import static java.util.stream.Collectors.toUnmodifiableSet;
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.cast;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.noopCombiner;
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.pathResult;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.transform;
+import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.HAS_LINEAGE_FIELD;
 
+import graphql.schema.DataFetchingFieldSelectionSet;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.Builder;
-import org.dotwebstack.orchestrate.engine.OrchestrateException;
+import org.dotwebstack.orchestrate.model.AbstractRelation;
 import org.dotwebstack.orchestrate.model.Attribute;
-import org.dotwebstack.orchestrate.model.InverseRelation;
+import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
-import org.dotwebstack.orchestrate.model.Property;
 import org.dotwebstack.orchestrate.model.PropertyMapping;
-import org.dotwebstack.orchestrate.model.PropertyPathMapping;
-import org.dotwebstack.orchestrate.model.Relation;
+import org.dotwebstack.orchestrate.model.PropertyPath;
 import org.dotwebstack.orchestrate.model.lineage.ObjectLineage;
 import org.dotwebstack.orchestrate.model.lineage.ObjectReference;
 import org.dotwebstack.orchestrate.model.lineage.OrchestratedProperty;
 import org.dotwebstack.orchestrate.model.lineage.PropertyMappingExecution;
-import org.dotwebstack.orchestrate.model.lineage.PropertyPath;
-import org.dotwebstack.orchestrate.model.lineage.PropertyPathMapping.PropertyPathMappingBuilder;
 import org.dotwebstack.orchestrate.model.lineage.SourceProperty;
-import org.dotwebstack.orchestrate.model.transforms.Transform;
 
 @Builder
-class ObjectResultMapper implements UnaryOperator<ObjectResult> {
+public final class ObjectResultMapper {
 
-  private final ObjectType targetType;
+  private final ModelMapping modelMapping;
 
-  private final Map<Property, PropertyMapping> propertyMappings;
+  public Map<String, Object> map(ObjectResult objectResult, ObjectType targetType,
+      DataFetchingFieldSelectionSet selectionSet) {
+    var targetMapping = modelMapping.getObjectTypeMapping(targetType);
+    var resultMap = new HashMap<String, Object>();
+    var lineageBuilder = ObjectLineage.builder();
 
-  public ObjectResult apply(ObjectResult objectResult) {
-    var targetReference = ObjectReference.builder()
-        .objectType(targetType.getName())
-        .objectKey(keyExtractor(objectResult.getType()).apply(objectResult))
-        .build();
+    selectionSet.getImmediateFields()
+        .forEach(field -> {
+          if (!targetType.hasProperty(field.getName())) {
+            return;
+          }
 
-    var objectLineageBuilder = ObjectLineage.builder();
+          var property = targetType.getProperty(field.getName());
+          var propertyResult = mapProperty(objectResult, targetMapping.getPropertyMapping(property));
 
-    Map<String, Object> resultData = propertyMappings.entrySet()
-        .stream()
-        .collect(HashMap::new, (acc, entry) -> acc.put(entry.getKey().getName(), mapPropertyResult(entry.getKey(),
-            entry.getValue(), objectResult, targetReference, objectLineageBuilder)), HashMap::putAll);
+          if (!propertyResult.hasValue()) {
+            return;
+          }
 
-    return ObjectResult.builder()
-        .type(targetType)
-        .properties(unmodifiableMap(resultData))
-        .lineage(objectLineageBuilder.build())
-        .build();
+          Object propertyValue = null;
+
+          if (property instanceof Attribute attribute) {
+            propertyValue = mapAttribute(attribute, propertyResult.getValue());
+          }
+
+          if (property instanceof AbstractRelation relation) {
+            propertyValue = mapRelation(relation, propertyResult.getValue(), field.getSelectionSet());
+          }
+
+          if (propertyValue != null) {
+            resultMap.put(property.getName(), propertyValue);
+
+            lineageBuilder.orchestratedProperty(OrchestratedProperty.builder()
+                .subject(ObjectReference.builder()
+                    .objectType(targetType.getName())
+                    .objectKey(objectResult.getKey())
+                    .build())
+                .property(property.getName())
+                .value(propertyValue)
+                .isDerivedFrom(propertyResult.getSourceProperties())
+                .wasGeneratedBy(PropertyMappingExecution.builder()
+                    .used(org.dotwebstack.orchestrate.model.lineage.PropertyMapping.builder()
+                        .pathMapping(Set.of())
+                        .build())
+                    .build())
+                .build());
+          }
+        });
+
+    resultMap.put(HAS_LINEAGE_FIELD, lineageBuilder.build());
+    return unmodifiableMap(resultMap);
   }
 
-  private Object mapPropertyResult(Property property, PropertyMapping propertyMapping, ObjectResult objectResult,
-      ObjectReference targetReference, ObjectLineage.ObjectLineageBuilder objectLineageBuilder) {
-    var sourceProperties = new LinkedHashSet<SourceProperty>();
-    var propertyMappingPaths = new LinkedHashMap<PropertyPathMapping, PropertyPathMappingBuilder>();
+  private Object mapAttribute(Attribute attribute, Object value) {
+    return attribute.getType()
+        .mapSourceValue(value);
+  }
 
-    var resultValue = propertyMapping.getPathMappings()
+  private Object mapRelation(AbstractRelation relation, Object value, DataFetchingFieldSelectionSet selectionSet) {
+    var relType = modelMapping.getTargetType(relation.getTarget());
+
+    if (value instanceof ObjectResult nestedObjectResult) {
+      return map(nestedObjectResult, relType, selectionSet);
+    }
+
+    if (value instanceof CollectionResult nestedCollectionResult) {
+      return nestedCollectionResult.getObjectResults()
+          .stream()
+          .map(nestedObjectResult -> map(nestedObjectResult, relType, selectionSet))
+          .toList();
+    }
+
+    return null;
+  }
+
+  private PropertyResult mapProperty(ObjectResult objectResult, PropertyMapping propertyMapping) {
+    return propertyMapping.getPathMappings()
         .stream()
-        .reduce(null, (previousValue, pathMapping) -> {
+        .reduce(PropertyResult.newResult(), (prevResult, pathMapping) -> {
           var pathValue = pathMapping.getPaths()
               .stream()
-              .flatMap(path -> {
-                // lineage
-                PropertyPathMappingBuilder propertyPathMappingBuilder;
-                if (propertyMappingPaths.containsKey(pathMapping)) {
-                  propertyPathMappingBuilder = propertyMappingPaths.get(pathMapping);
-                } else {
-                  propertyPathMappingBuilder = org.dotwebstack.orchestrate.model.lineage.PropertyPathMapping.builder();
-                  propertyMappingPaths.put(pathMapping, propertyPathMappingBuilder);
-                }
-
-                var pathBuilderForLineage = PropertyPath.builder();
-                pathBuilderForLineage.segments(path.getSegments())
-                    .startNode(ObjectReference.builder()
-                        .objectType(objectResult.getType().getName())
-                        .objectKey(objectResult.getProperties()
-                            .entrySet()
-                            .stream()
-                            .filter(entry -> objectResult.getType()
-                                .getIdentityProperties()
-                                .stream()
-                                .map(Property::getName)
-                                .toList()
-                                .contains(entry.getKey()))
-                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
-                        .build());
-                // -------
-
-                var pathResult = pathResult(objectResult, path);
-
-                if (pathResult == null) {
-                  propertyPathMappingBuilder.addPath(pathBuilderForLineage.build());
-                  return Stream.empty();
-                }
-
-                if (pathResult instanceof CollectionResult collectionResult) {
-                  if (property instanceof Relation) {
-                    // TODO: Refactor
-                    var propertyName = pathMapping.getPaths()
-                        .get(0)
-                        .getLastSegment();
-
-                    var relationSourceProperties = collectionResult.getObjectResults()
-                        .stream()
-                        .map(objResult -> {
-                          var resultType = objResult.getType();
-
-                          return SourceProperty.builder()
-                              .subject(ObjectReference.builder()
-                                  .objectType(resultType.getName())
-                                  .objectKey(keyExtractor(resultType).apply(objResult))
-                                  .build())
-                              .property(propertyName)
-                              .propertyPath(path.getSegments())
-                              .value(objResult.getProperty(propertyName))
-                              .build();
-                        })
-                        .collect(toUnmodifiableSet());
-
-                    sourceProperties.addAll(relationSourceProperties);
-
-                    propertyPathMappingBuilder.addPath(pathBuilderForLineage.references(relationSourceProperties)
-                        .build());
-
-                    return Stream.of(collectionResult.getObjectResults()
-                        .stream()
-                        .map(result -> result.getProperty(propertyName))
-                        .toList());
-                  }
-
-                  if (property instanceof InverseRelation) {
-                    // TODO: Implement
-                    return Stream.of();
-                  }
-
-                  throw new OrchestrateException("Could not map collection result.");
-                }
-
-                if (pathResult instanceof ObjectResult pathObjectResult) {
-                  var value = pathObjectResult.getProperty(path.getLastSegment());
-
-                  if (value == null) {
-                    propertyPathMappingBuilder.addPath(pathBuilderForLineage.build());
-                    return Stream.empty();
-                  }
-
-                  if (property instanceof Attribute attribute) {
-                    value = attribute.getType()
-                        .mapSourceValue(value);
-                  }
-
-                  var resultType = pathObjectResult.getType();
-
-                  var sourceProperty = SourceProperty.builder()
-                      .subject(ObjectReference.builder()
-                          .objectType(resultType.getName())
-                          .objectKey(keyExtractor(resultType).apply(pathObjectResult))
-                          .build())
-                      .property(path.getLastSegment())
-                      .propertyPath(path.getSegments())
-                      .value(value)
-                      .build();
-
-                  sourceProperties.add(sourceProperty);
-
-                  propertyPathMappingBuilder.addPath(pathBuilderForLineage.references(Set.of(sourceProperty))
-                      .build());
-
-                  return Stream.of(value);
-                }
-
-                throw new OrchestrateException("Could not map result.");
-              })
+              .flatMap(path -> Optional.ofNullable(pathResult(objectResult, path)).stream())
               .findFirst()
               .orElse(null);
 
@@ -191,52 +121,56 @@ class ObjectResultMapper implements UnaryOperator<ObjectResult> {
 
           if (pathMapping.hasCombiner()) {
             pathValue = pathMapping.getCombiner()
-                .apply(pathValue, previousValue);
+                .apply(pathValue, prevResult.getValue());
           }
 
-          return pathValue;
+          return prevResult.withValue(pathValue, SourceProperty.builder()
+              .subject(ObjectReference.builder()
+                  .objectType(objectResult.getType().getName())
+                  .objectKey(objectResult.getKey())
+                  .build())
+              .property(pathMapping.getPaths()
+                  // TODO: Refactor
+                  .get(0)
+                  .getLastSegment())
+              .propertyPath(pathMapping.getPaths()
+                  // TODO: Refactor
+                  .get(0)
+                  .getSegments())
+              .value(pathValue)
+              .build());
         }, noopCombiner());
-
-    if (resultValue == null) {
-      return null;
-    }
-
-    if (resultValue instanceof List<?> resultList) {
-      resultList.forEach(
-          result -> buildOrchestratedProperty(targetReference, property, result, sourceProperties, propertyMappingPaths,
-              objectLineageBuilder));
-    } else {
-      buildOrchestratedProperty(targetReference, property, resultValue, sourceProperties, propertyMappingPaths,
-          objectLineageBuilder);
-    }
-
-    return resultValue;
   }
 
-  private void buildOrchestratedProperty(ObjectReference targetReference, Property property, Object result,
-      Set<SourceProperty> sourceProperties, Map<PropertyPathMapping, PropertyPathMappingBuilder> propertyMappingPaths,
-      ObjectLineage.ObjectLineageBuilder objectLineageBuilder) {
-    var orchestratedProperty = OrchestratedProperty.builder()
-        .subject(targetReference)
-        .property(property.getName())
-        .value(result)
-        .isDerivedFrom(sourceProperties)
-        .wasGeneratedBy(PropertyMappingExecution.builder()
-            .used(
-                org.dotwebstack.orchestrate.model.lineage.PropertyMapping.builder()
-                    .pathMapping(propertyMappingPaths.values()
-                        .stream()
-                        .map(PropertyPathMappingBuilder::build)
-                        .collect(Collectors.toSet()))
-                    .build())
-            .build())
-        .build();
+  private Object pathResult(ObjectResult objectResult, PropertyPath path) {
+    if (path.isLeaf()) {
+      return objectResult.getProperty(path.getFirstSegment());
+    }
 
-    objectLineageBuilder.orchestratedProperty(orchestratedProperty);
-  }
+    var nestedResult = objectResult.getProperty(path.getFirstSegment());
 
-  private Object transform(Object value, List<Transform> transforms) {
-    return transforms.stream()
-        .reduce(value, (acc, transform) -> transform.apply(acc), noopCombiner());
+    if (nestedResult == null) {
+      return nestedResult;
+    }
+
+    var remainingPath = path.withoutFirstSegment();
+
+    if (nestedResult instanceof ObjectResult nestedObjectResult) {
+      return pathResult(nestedObjectResult, remainingPath);
+    }
+
+    if (nestedResult instanceof CollectionResult nestedCollectionResult) {
+      List<ObjectResult> nestedObjectResults = nestedCollectionResult.getObjectResults()
+          .stream()
+          .map(nestedObjectResult -> pathResult(nestedObjectResult, remainingPath))
+          .map(nestedPathResult -> cast(nestedPathResult, ObjectResult.class))
+          .toList();
+
+      return CollectionResult.builder()
+          .objectResults(nestedObjectResults)
+          .build();
+    }
+
+    return null;
   }
 }
