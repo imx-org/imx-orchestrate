@@ -35,12 +35,9 @@ public final class PropertyPath {
     return new PropertyPath(segments.subList(1, segments.size()));
   }
 
-  public PropertyPath append(String segment) {
-    return new PropertyPath(Stream.concat(segments.stream(), Stream.of(segment)).toList());
-  }
-
-  public PropertyPath append(Property property) {
-    return append(property.getName());
+  public PropertyPath append(PropertyPath propertyPath) {
+    return new PropertyPath(Stream.concat(segments.stream(), propertyPath.getSegments().stream())
+        .toList());
   }
 
   public static PropertyPath fromString(String path) {

@@ -21,4 +21,8 @@ public final class ObjectTypeMapping {
     return Optional.ofNullable(propertyMappings.get(name))
         .orElseThrow(() -> new ModelException("Attribute mapping not found: " + name));
   }
+
+  public PropertyMapping getPropertyMapping(Property property) {
+    return getPropertyMapping(property.getName());
+  }
 }

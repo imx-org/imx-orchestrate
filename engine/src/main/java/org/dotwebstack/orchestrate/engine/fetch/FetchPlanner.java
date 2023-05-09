@@ -10,12 +10,14 @@ import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toSet;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.cast;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.extractKey;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.isReservedField;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.propertyExtractor;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.selectIdentity;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import graphql.schema.DataFetchingEnvironment;
+import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.GraphQLObjectType;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,14 +27,14 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.OrchestrateException;
+import org.dotwebstack.orchestrate.model.AbstractRelation;
 import org.dotwebstack.orchestrate.model.InverseRelation;
 import org.dotwebstack.orchestrate.model.ModelMapping;
+import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.Property;
-import org.dotwebstack.orchestrate.model.PropertyMapping;
 import org.dotwebstack.orchestrate.model.PropertyPath;
 import org.dotwebstack.orchestrate.model.Relation;
 import org.dotwebstack.orchestrate.source.FilterDefinition;
@@ -56,19 +58,15 @@ public final class FetchPlanner {
     var targetType = modelMapping.getTargetModel()
         .getObjectType(outputType.getName());
     var targetMapping = modelMapping.getObjectTypeMapping(targetType.getName());
+    var sourcePaths = resolveSourcePaths(targetType, environment.getSelectionSet(), PropertyPath.fromProperties());
 
     var propertyMappings = environment.getSelectionSet()
         .getImmediateFields()
         .stream()
-        .filter(not(field -> FetchUtils.isReservedField(field, lineageRenamer)))
+        .filter(not(field -> isReservedField(field, lineageRenamer)))
         .map(selectedField -> targetType.getProperty(selectedField.getName()))
         .collect(Collectors.toMap(Function.identity(),
             property -> targetMapping.getPropertyMapping(property.getName())));
-
-    var sourcePaths = propertyMappings.entrySet()
-        .stream()
-        .flatMap(entry -> getSourcePaths(entry.getKey(), entry.getValue()))
-        .collect(toSet());
 
     // TODO: Refactor
     var isCollection = isList(unwrapNonNull(environment.getFieldType()));
@@ -106,24 +104,33 @@ public final class FetchPlanner {
     return isCollection ? fetchResult : fetchResult.singleOrEmpty();
   }
 
-  private Stream<PropertyPath> getSourcePaths(Property property, PropertyMapping propertyMapping) {
-    return propertyMapping.getPathMappings()
+  public Set<PropertyPath> resolveSourcePaths(ObjectType objectType, DataFetchingFieldSelectionSet selectionSet,
+      PropertyPath basePath) {
+    var objectTypeMapping = modelMapping.getObjectTypeMapping(objectType);
+
+    return selectionSet.getImmediateFields()
         .stream()
-        .flatMap(pathMapping -> pathMapping.getPaths()
-            .stream()
-            .flatMap(path -> {
-              if (property instanceof Relation relation) {
-                // TODO: Check if the path is targeted towards the source root of the target type
-                var identityProperties = modelMapping.getTargetModel()
-                    .getObjectType(relation.getTarget())
-                    .getIdentityProperties();
+        .filter(not(field -> isReservedField(field, lineageRenamer)))
+        .flatMap(field -> {
+          var property = objectType.getProperty(field.getName());
+          var propertyMapping = objectTypeMapping.getPropertyMapping(property);
 
-                return identityProperties.stream()
-                    .map(path::append);
-              }
+          var sourcePaths = propertyMapping.getPathMappings()
+              .stream()
+              .flatMap(pathMapping -> pathMapping.getPaths()
+                  .stream()
+                  .map(basePath::append));
 
-              return Stream.of(path);
-            }));
+          if (property instanceof AbstractRelation relation) {
+            var targetType = modelMapping.getTargetType(relation.getTarget());
+
+            return sourcePaths.flatMap(sourcePath ->
+                resolveSourcePaths(targetType, field.getSelectionSet(), sourcePath).stream());
+          }
+
+          return sourcePaths;
+        })
+        .collect(toSet());
   }
 
   private FetchOperation fetchSourceObject(ObjectTypeRef sourceTypeRef, Set<PropertyPath> sourcePaths,

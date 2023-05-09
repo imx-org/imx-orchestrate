@@ -83,6 +83,10 @@ public final class ModelMapping {
     }
   }
 
+  public ObjectType getTargetType(ObjectTypeRef sourceTypeRef) {
+    return targetModel.getObjectType(sourceTypeRef.getName());
+  }
+
   public Model getSourceModel(String alias) {
     return Optional.ofNullable(sourceModelMap.get(alias))
         .orElseThrow(() -> new ModelException("Source model not found: " + alias));
@@ -100,5 +104,9 @@ public final class ModelMapping {
   public ObjectTypeMapping getObjectTypeMapping(String name) {
     return Optional.ofNullable(objectTypeMappings.get(name))
         .orElseThrow(() -> new ModelException("Object type mapping not found: " + name));
+  }
+
+  public ObjectTypeMapping getObjectTypeMapping(ObjectType objectType) {
+    return getObjectTypeMapping(objectType.getName());
   }
 }

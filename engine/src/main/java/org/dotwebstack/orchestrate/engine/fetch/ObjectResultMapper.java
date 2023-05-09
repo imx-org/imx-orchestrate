@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 import lombok.Builder;
 import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.Attribute;
+import org.dotwebstack.orchestrate.model.InverseRelation;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.Property;
 import org.dotwebstack.orchestrate.model.PropertyMapping;
@@ -109,12 +110,10 @@ class ObjectResultMapper implements UnaryOperator<ObjectResult> {
                     var propertyName = pathMapping.getPaths()
                         .get(0)
                         .getLastSegment();
-                    ;
 
                     var relationSourceProperties = collectionResult.getObjectResults()
                         .stream()
                         .map(objResult -> {
-
                           var resultType = objResult.getType();
 
                           return SourceProperty.builder()
@@ -138,6 +137,11 @@ class ObjectResultMapper implements UnaryOperator<ObjectResult> {
                         .stream()
                         .map(result -> result.getProperty(propertyName))
                         .toList());
+                  }
+
+                  if (property instanceof InverseRelation) {
+                    // TODO: Implement
+                    return Stream.of();
                   }
 
                   throw new OrchestrateException("Could not map collection result.");
