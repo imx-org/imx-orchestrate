@@ -2,6 +2,7 @@ package org.dotwebstack.orchestrate.engine.fetch;
 
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.cast;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
@@ -14,7 +15,8 @@ import org.dotwebstack.orchestrate.engine.schema.SchemaConstants;
 @RequiredArgsConstructor
 public class ObjectLineageFetcher implements DataFetcher<Map<String, Object>> {
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+      .setSerializationInclusion(Include.NON_NULL);
 
   private final Map<String, String> nameMapping;
 
@@ -22,7 +24,7 @@ public class ObjectLineageFetcher implements DataFetcher<Map<String, Object>> {
   public Map<String, Object> get(DataFetchingEnvironment environment) {
     Map<String, Object> source = environment.getSource();
     var objectLineage = source.get(SchemaConstants.HAS_LINEAGE_FIELD);
-    return renameKeys(cast(objectMapper.convertValue(objectLineage, Map.class)));
+    return renameKeys(cast(OBJECT_MAPPER.convertValue(objectLineage, Map.class)));
   }
 
   private Map<String, Object> renameKeys(Map<String, Object> map) {

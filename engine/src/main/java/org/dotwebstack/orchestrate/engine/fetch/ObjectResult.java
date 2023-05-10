@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import org.dotwebstack.orchestrate.model.ObjectType;
-import org.dotwebstack.orchestrate.model.lineage.ObjectLineage;
 
 @Getter
 @Builder(toBuilder = true)
@@ -17,8 +16,6 @@ public class ObjectResult {
 
   @Singular
   private final Map<String, Object> properties;
-
-  private final ObjectLineage lineage;
 
   public Map<String, Object> getKey() {
     return keyExtractor(type).apply(this);
