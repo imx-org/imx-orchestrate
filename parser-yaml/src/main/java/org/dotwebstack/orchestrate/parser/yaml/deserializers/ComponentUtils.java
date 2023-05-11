@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.dotwebstack.orchestrate.parser.yaml.YamlModelMappingParserException;
+import org.dotwebstack.orchestrate.parser.yaml.ParserException;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class ComponentUtils {
@@ -19,16 +19,16 @@ final class ComponentUtils {
   public static String parseType(TreeNode node) {
     if (node instanceof ObjectNode objectNode) {
       var typeNode = Optional.ofNullable(objectNode.get("type"))
-          .orElseThrow(() -> new YamlModelMappingParserException("Result mapper instances require a 'type' property."));
+          .orElseThrow(() -> new ParserException("Result mapper instances require a 'type' property."));
 
       if (typeNode.getNodeType() != JsonNodeType.STRING) {
-        throw new YamlModelMappingParserException("Result mapper `type` property must be a string.");
+        throw new ParserException("Result mapper `type` property must be a string.");
       }
 
       return typeNode.textValue();
     }
 
-    throw new YamlModelMappingParserException("Object node expected for component instances.");
+    throw new ParserException("Object node expected for component instances.");
   }
 
   public static Map<String, Object> parseOptions(TreeNode node) {
