@@ -3,22 +3,20 @@ package org.dotwebstack.orchestrate.engine.fetch;
 import static java.util.Collections.unmodifiableMap;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.cast;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.noopCombiner;
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.transform;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.HAS_LINEAGE_FIELD;
 
 import graphql.schema.DataFetchingFieldSelectionSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import lombok.Builder;
 import org.dotwebstack.orchestrate.model.AbstractRelation;
 import org.dotwebstack.orchestrate.model.Attribute;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
+import org.dotwebstack.orchestrate.model.Path;
 import org.dotwebstack.orchestrate.model.PropertyMapping;
-import org.dotwebstack.orchestrate.model.PropertyPath;
 import org.dotwebstack.orchestrate.model.lineage.ObjectLineage;
 import org.dotwebstack.orchestrate.model.lineage.ObjectReference;
 import org.dotwebstack.orchestrate.model.lineage.OrchestratedProperty;
@@ -109,40 +107,27 @@ public final class ObjectResultMapper {
     return propertyMapping.getPathMappings()
         .stream()
         .reduce(PropertyResult.newResult(), (prevResult, pathMapping) -> {
-          var pathValue = pathMapping.getPaths()
+          var pathResult = pathResult(objectResult, pathMapping.getPath());
+
+          var mappedPathResult = pathMapping.getResultMappers()
               .stream()
-              .flatMap(path -> Optional.ofNullable(pathResult(objectResult, path)).stream())
-              .findFirst()
-              .orElse(null);
+              .reduce(pathResult, (acc, resultMapper) -> resultMapper.apply(acc), noopCombiner());
 
-          if (pathMapping.hasTransforms()) {
-            pathValue = transform(pathValue, pathMapping.getTransforms());
-          }
-
-          if (pathMapping.hasCombiner()) {
-            pathValue = pathMapping.getCombiner()
-                .apply(pathValue, prevResult.getValue());
-          }
-
-          return prevResult.withValue(pathValue, SourceProperty.builder()
+          return prevResult.withValue(mappedPathResult, SourceProperty.builder()
               .subject(ObjectReference.builder()
                   .objectType(objectResult.getType().getName())
                   .objectKey(objectResult.getKey())
                   .build())
-              .property(pathMapping.getPaths()
-                  // TODO: Refactor
-                  .get(0)
+              .property(pathMapping.getPath()
                   .getLastSegment())
-              .propertyPath(pathMapping.getPaths()
-                  // TODO: Refactor
-                  .get(0)
+              .propertyPath(pathMapping.getPath()
                   .getSegments())
-              .value(pathValue)
+              .value(pathResult)
               .build());
         }, noopCombiner());
   }
 
-  private Object pathResult(ObjectResult objectResult, PropertyPath path) {
+  private Object pathResult(ObjectResult objectResult, Path path) {
     if (path.isLeaf()) {
       return objectResult.getProperty(path.getFirstSegment());
     }

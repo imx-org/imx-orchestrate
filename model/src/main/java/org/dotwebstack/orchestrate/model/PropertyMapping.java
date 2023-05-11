@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import lombok.extern.jackson.Jacksonized;
+import org.dotwebstack.orchestrate.model.combiners.ResultCombiner;
 
 @Getter
 @Jacksonized
@@ -12,5 +13,7 @@ import lombok.extern.jackson.Jacksonized;
 public final class PropertyMapping {
 
   @Singular
-  private final List<PropertyPathMapping> pathMappings;
+  private final List<PathMapping> pathMappings;
+
+  private final ResultCombiner combiner;
 }

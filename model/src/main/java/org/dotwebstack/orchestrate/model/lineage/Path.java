@@ -8,7 +8,7 @@ import lombok.Getter;
 
 @Getter
 @Builder(toBuilder = true)
-public class PropertyPath {
+public class Path {
 
   private final ObjectReference startNode;
 

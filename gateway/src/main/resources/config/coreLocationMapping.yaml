@@ -8,48 +8,60 @@ objectTypeMappings:
       locatorDesignator:
         pathMappings:
           - path: huisnummer
-            transform: toString
+            map:
+              type: toString
           - path: huisnummertoevoeging
-            combiner:
-              name: concat
-              prefix: ' '
+            map:
+              type: prepend
+              options:
+                prefix: ' '
           - path: huisletter
-            combiner:
-              name: concat
-              prefix: ' '
+            map:
+              type: prepend
+              options:
+                prefix: ' '
       postCode:
-        pathMapping:
+        pathMappings:
           path: postcode
       postName:
-        pathMapping:
-          paths:
-            - ligtIn/naam
-            - ligtAan/ligtIn/naam
+        pathMappings:
+          path: ligtIn/naam
+          next:
+            path: ligtAan/ligtIn/naam
+            ifMatch:
+              type: isNull
       thoroughfare:
-        pathMapping:
+        pathMappings:
           path: ligtAan/naam
       fullAddress:
         pathMappings:
-          - ligtAan/naam
+          - path: ligtAan/naam
           - path: huisnummer
-            combiner:
-              name: concat
-              prefix: ' '
+            map:
+              type: prepend
+              options:
+                prefix: ' '
           - path: huisletter
-            combiner:
-              name: concat
-              prefix: ' '
+            map:
+              type: prepend
+              options:
+                prefix: ' '
           - path: huisnummertoevoeging
-            combiner:
-              name: concat
-              prefix: '-'
+            map:
+              type: prepend
+              options:
+                prefix: '-'
           - path: postcode
-            combiner:
-              name: concat
-              prefix: ' '
-          - paths:
-              - ligtIn/naam
-              - ligtAan/ligtIn/naam
-            combiner:
-              name: concat
-              prefix: ' '
+            map:
+              type: prepend
+              options:
+                prefix: ' '
+          - path: ligtIn/naam
+            next:
+              path: ligtAan/ligtIn/naam
+              ifMatch:
+                type: isNull
+            map:
+              type: prepend
+              options:
+                prefix: ' '

@@ -9,9 +9,9 @@ import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.ObjectTypeMapping;
 import org.dotwebstack.orchestrate.model.ObjectTypeRef;
+import org.dotwebstack.orchestrate.model.Path;
 import org.dotwebstack.orchestrate.model.PropertyMapping;
-import org.dotwebstack.orchestrate.model.PropertyPath;
-import org.dotwebstack.orchestrate.model.PropertyPathMapping;
+import org.dotwebstack.orchestrate.model.PathMapping;
 import org.dotwebstack.orchestrate.model.types.ScalarTypes;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -41,13 +41,13 @@ class TestFixtures {
     return ObjectTypeMapping.builder()
         .sourceRoot(ObjectTypeRef.fromString("bgt:Pand"))
         .propertyMapping("identificatie", PropertyMapping.builder()
-            .pathMapping(PropertyPathMapping.builder()
-                .path(PropertyPath.fromString("identificatie"))
+            .pathMapping(PathMapping.builder()
+                .path(Path.fromString("identificatie"))
                 .build())
             .build())
         .propertyMapping("bovenaanzichtgeometrie", PropertyMapping.builder()
-            .pathMapping(PropertyPathMapping.builder()
-                .path(PropertyPath.fromString("geometrie2dGrondvlak"))
+            .pathMapping(PathMapping.builder()
+                .path(Path.fromString("geometrie2dGrondvlak"))
                 .build())
             .build())
         .build();

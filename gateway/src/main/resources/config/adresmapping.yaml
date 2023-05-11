@@ -16,77 +16,89 @@ objectTypeMappings:
     sourceRoot: bag:Nummeraanduiding
     propertyMappings:
       identificatie:
-        pathMapping:
+        pathMappings:
           path: identificatie
       huisnummer:
-        pathMapping:
+        pathMappings:
           path: huisnummer
       huisnummertoevoeging:
-        pathMapping:
+        pathMappings:
           path: huisnummertoevoeging
       huisletter:
-        pathMapping:
+        pathMappings:
           path: huisletter
       postcode:
-        pathMapping:
+        pathMappings:
           path: postcode
       straatnaam:
-        pathMapping:
+        pathMappings:
           path: ligtAan/naam
       plaatsnaam:
-        pathMapping:
-          paths:
-            - ligtIn/naam
-            - ligtAan/ligtIn/naam
+        pathMappings:
+          path: ligtIn/naam
+          next:
+            path: ligtAan/ligtIn/naam
+            ifMatch:
+              type: isNull
       isHoofdadres:
-        pathMapping:
+        pathMappings:
           path: isHoofdadresVan/identificatie
-          transform: nonNull
+          map:
+            type: cel
+            options:
+              expr: 'result != null'
       omschrijving:
         pathMappings:
-          - ligtAan/naam
+          - path: ligtAan/naam
           - path: huisnummer
-            combiner:
-              name: concat
-              prefix: ' '
+            map:
+              type: prepend
+              options:
+                prefix: ' '
           - path: huisletter
-            combiner:
-              name: concat
-              prefix: ' '
+            map:
+              type: prepend
+              options:
+                prefix: ' '
           - path: huisnummertoevoeging
-            combiner:
-              name: concat
-              prefix: '-'
+            map:
+              type: prepend
+              options:
+                prefix: '-'
           - path: postcode
-            combiner:
-              name: concat
-              prefix: ', '
-          - paths:
-              - ligtIn/naam
-              - ligtAan/ligtIn/naam
-            combiner:
-              name: concat
-              prefix: ' '
+            map:
+              type: prepend
+              options:
+                prefix: ', '
+          - path: ligtIn/naam
+            next:
+              path: ligtAan/ligtIn/naam
+              ifMatch:
+                type: isNull
+            map:
+              type: prepend
+              options:
+                prefix: ' '
       # TODO: auto-generatie inverse mappings
       isAdresVanGebouw:
-        pathMapping:
+        pathMappings:
           path: isHoofdadresVan/maaktDeelUitVan/isGerelateerdAan
 
   Gebouw:
     sourceRoot: bgt:Pand
     propertyMappings:
       identificatie:
-        pathMapping:
+        pathMappings:
           path: identificatie
       bouwjaar:
-        pathMapping:
+        pathMappings:
           path: isGerelateerdAan/oorspronkelijkBouwjaar
       bovenaanzichtgeometrie:
-        pathMapping:
+        pathMappings:
           path: isGerelateerdAan/geometrie
       maaiveldgeometrie:
-        pathMapping:
+        pathMappings:
           path: geometrie2dGrondvlak
       heeftAlsAdres:
-        pathMapping:
+        pathMappings:
           path: isGerelateerdAan/bevat/heeftAlsHoofdadres

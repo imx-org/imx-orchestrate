@@ -12,7 +12,7 @@ import lombok.Singular;
 @Getter
 @EqualsAndHashCode
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public final class PropertyPath {
+public final class Path {
 
   private static final String PATH_SEPARATOR = "/";
 
@@ -31,26 +31,26 @@ public final class PropertyPath {
     return segments.size() == 1;
   }
 
-  public PropertyPath withoutFirstSegment() {
-    return new PropertyPath(segments.subList(1, segments.size()));
+  public Path withoutFirstSegment() {
+    return new Path(segments.subList(1, segments.size()));
   }
 
-  public PropertyPath append(PropertyPath propertyPath) {
-    return new PropertyPath(Stream.concat(segments.stream(), propertyPath.getSegments().stream())
+  public Path append(Path path) {
+    return new Path(Stream.concat(segments.stream(), path.getSegments().stream())
         .toList());
   }
 
-  public static PropertyPath fromString(String path) {
+  public static Path fromString(String path) {
     var segments = Arrays.asList(path.split(PATH_SEPARATOR));
-    return new PropertyPath(segments);
+    return new Path(segments);
   }
 
-  public static PropertyPath fromProperties(Property... properties) {
+  public static Path fromProperties(Property... properties) {
     var segments = Arrays.stream(properties)
         .map(Property::getName)
         .toList();
 
-    return new PropertyPath(segments);
+    return new Path(segments);
   }
 
   @Override

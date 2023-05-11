@@ -8,5 +8,5 @@ import lombok.Getter;
 @Builder(toBuilder = true)
 public class PropertyMapping {
 
-  private final Set<PropertyPathMapping> pathMapping;
+  private final Set<PathMapping> pathMapping;
 }
