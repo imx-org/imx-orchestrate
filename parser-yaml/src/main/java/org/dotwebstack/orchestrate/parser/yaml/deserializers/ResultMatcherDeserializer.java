@@ -14,7 +14,7 @@ import org.dotwebstack.orchestrate.model.matchers.ResultMatcher;
 public final class ResultMatcherDeserializer extends StdDeserializer<ResultMatcher> {
 
   @Serial
-  private static final long serialVersionUID = 9062543896587214910L;
+  private static final long serialVersionUID = 7898902256110027311L;
 
   private final transient ComponentFactory componentFactory;
 
