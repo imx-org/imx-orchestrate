@@ -7,6 +7,7 @@ import java.util.Map;
 import lombok.ToString;
 import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.AttributeType;
+import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
 
@@ -34,5 +35,14 @@ public class GeometryType implements AttributeType {
     }
 
     throw new OrchestrateException("Failed mapping geometry value.");
+  }
+
+  @Override
+  public Object mapLineageValue(Object value) {
+    if (value instanceof Geometry geometry) {
+      return geometry.toString();
+    }
+
+    throw new OrchestrateException("Failed mapping lineage value.");
   }
 }

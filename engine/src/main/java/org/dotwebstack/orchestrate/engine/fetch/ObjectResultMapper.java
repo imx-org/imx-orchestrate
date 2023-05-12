@@ -56,13 +56,17 @@ public final class ObjectResultMapper {
           }
 
           Object propertyValue = null;
+          Object lineageValue = null;
 
           if (property instanceof Attribute attribute) {
             propertyValue = mapAttribute(attribute, propertyResult.getValue());
+            lineageValue = attribute.getType()
+                .mapLineageValue(propertyValue);
           }
 
           if (property instanceof AbstractRelation relation) {
             propertyValue = mapRelation(relation, propertyResult.getValue(), field.getSelectionSet());
+            lineageValue = propertyValue;
           }
 
           if (propertyValue != null) {
@@ -74,7 +78,7 @@ public final class ObjectResultMapper {
                     .objectKey(objectResult.getKey())
                     .build())
                 .property(property.getName())
-                .value(propertyValue)
+                .value(lineageValue)
                 .isDerivedFrom(propertyResult.getSourceProperties())
                 .wasGeneratedBy(PropertyMappingExecution.builder()
                     .used(org.dotwebstack.orchestrate.model.lineage.PropertyMapping.builder()

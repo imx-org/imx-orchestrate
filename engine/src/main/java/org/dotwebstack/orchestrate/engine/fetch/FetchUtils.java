@@ -5,7 +5,6 @@ import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.HAS_LINE
 
 import graphql.schema.SelectedField;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -17,7 +16,6 @@ import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.ObjectTypeMapping;
 import org.dotwebstack.orchestrate.model.Property;
-import org.dotwebstack.orchestrate.model.mappers.ResultMapper;
 import reactor.util.function.Tuples;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -79,10 +77,5 @@ final class FetchUtils {
     return (a, b) -> {
       throw new OrchestrateException("Combiner should never be called.");
     };
-  }
-
-  public static Object transform(Object value, List<ResultMapper> resultMappers) {
-    return resultMappers.stream()
-        .reduce(value, (acc, resultMapper) -> resultMapper.apply(acc), noopCombiner());
   }
 }

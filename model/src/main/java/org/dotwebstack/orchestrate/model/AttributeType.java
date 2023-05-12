@@ -7,4 +7,8 @@ public interface AttributeType {
   default Object mapSourceValue(Object sourceValue) {
     return sourceValue;
   }
+
+  default Object mapLineageValue(Object value) {
+    return value;
+  }
 }
