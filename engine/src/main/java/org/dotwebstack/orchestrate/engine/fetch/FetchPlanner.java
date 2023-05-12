@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.AbstractRelation;
@@ -31,6 +32,7 @@ import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.Path;
+import org.dotwebstack.orchestrate.model.PathMapping;
 import org.dotwebstack.orchestrate.model.Property;
 import org.dotwebstack.orchestrate.model.Relation;
 import org.dotwebstack.orchestrate.source.FilterDefinition;
@@ -83,7 +85,14 @@ public final class FetchPlanner {
 
           var sourcePaths = propertyMapping.getPathMappings()
               .stream()
-              .map(pathMapping -> basePath.append(pathMapping.getPath()));
+              .flatMap(pathMapping -> {
+                // TODO: Conditionality & recursion
+                var nextPaths = pathMapping.getNextPathMappings()
+                    .stream()
+                    .map(PathMapping::getPath);
+
+                return Stream.concat(Stream.of(basePath.append(pathMapping.getPath())), nextPaths);
+              });
 
           if (property instanceof AbstractRelation relation) {
             var targetType = modelMapping.getTargetType(relation.getTarget());

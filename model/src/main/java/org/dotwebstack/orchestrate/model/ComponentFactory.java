@@ -3,18 +3,19 @@ package org.dotwebstack.orchestrate.model;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.dotwebstack.orchestrate.model.combiners.Coalesce;
-import org.dotwebstack.orchestrate.model.combiners.Join;
+import org.dotwebstack.orchestrate.model.combiners.CoalesceType;
+import org.dotwebstack.orchestrate.model.combiners.JoinType;
+import org.dotwebstack.orchestrate.model.combiners.NoopType;
 import org.dotwebstack.orchestrate.model.combiners.ResultCombiner;
 import org.dotwebstack.orchestrate.model.combiners.ResultCombinerType;
-import org.dotwebstack.orchestrate.model.mappers.Append;
-import org.dotwebstack.orchestrate.model.mappers.Cel;
-import org.dotwebstack.orchestrate.model.mappers.Prepend;
+import org.dotwebstack.orchestrate.model.mappers.AppendType;
+import org.dotwebstack.orchestrate.model.mappers.CelType;
+import org.dotwebstack.orchestrate.model.mappers.PrependType;
 import org.dotwebstack.orchestrate.model.mappers.ResultMapper;
 import org.dotwebstack.orchestrate.model.mappers.ResultMapperType;
-import org.dotwebstack.orchestrate.model.mappers.ToString;
-import org.dotwebstack.orchestrate.model.matchers.IsNull;
-import org.dotwebstack.orchestrate.model.matchers.NotNull;
+import org.dotwebstack.orchestrate.model.mappers.ToStringType;
+import org.dotwebstack.orchestrate.model.matchers.IsNullType;
+import org.dotwebstack.orchestrate.model.matchers.NotNullType;
 import org.dotwebstack.orchestrate.model.matchers.ResultMatcher;
 import org.dotwebstack.orchestrate.model.matchers.ResultMatcherType;
 
@@ -27,9 +28,9 @@ public final class ComponentFactory {
   private final Map<String, ResultCombinerType> resultCombinerTypes = new HashMap<>();
 
   public ComponentFactory() {
-    register(new Append(), new Prepend(), new ToString(), new Cel());
-    register(new NotNull(), new IsNull());
-    register(new Coalesce(), new Join());
+    register(new AppendType(), new CelType(), new PrependType(), new ToStringType());
+    register(new IsNullType(), new NotNullType());
+    register(new CoalesceType(), new JoinType(), new NoopType());
   }
 
   public ComponentFactory register(ResultMapperType... resultMapperTypes) {

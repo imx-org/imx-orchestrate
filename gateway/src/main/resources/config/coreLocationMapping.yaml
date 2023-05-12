@@ -26,7 +26,7 @@ objectTypeMappings:
       postName:
         pathMappings:
           path: ligtIn/naam
-          next:
+          andThen:
             path: ligtAan/ligtIn/naam
             ifMatch:
               type: isNull
@@ -57,7 +57,7 @@ objectTypeMappings:
               options:
                 prefix: ' '
           - path: ligtIn/naam
-            next:
+            andThen:
               path: ligtAan/ligtIn/naam
               ifMatch:
                 type: isNull

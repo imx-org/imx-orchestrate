@@ -8,7 +8,7 @@ import org.dotwebstack.orchestrate.model.mappers.ResultMapper;
 
 public abstract class PathMappingMixin {
 
-  @JsonAlias("next")
+  @JsonAlias("andThen")
   @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
   private List<PathMapping> nextPathMappings;
 

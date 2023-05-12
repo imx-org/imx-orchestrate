@@ -329,7 +329,9 @@ public final class TestFixtures {
                     .path(Path.fromString("ligtAan/ligtIn/naam"))
                     .ifMatch(componentRegistry.createResultMatcher("isNull"))
                     .build())
+                .resultMapper(componentRegistry.createResultMapper("prepend", Map.of("prefix", " ")))
                 .build())
+            .combiner(componentRegistry.createResultCombiner("join"))
             .build())
         .build();
   }

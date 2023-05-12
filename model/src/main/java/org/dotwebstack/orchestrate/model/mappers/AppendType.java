@@ -2,7 +2,7 @@ package org.dotwebstack.orchestrate.model.mappers;
 
 import java.util.Map;
 
-public class Append implements ResultMapperType {
+public class AppendType implements ResultMapperType {
 
   @Override
   public String getName() {

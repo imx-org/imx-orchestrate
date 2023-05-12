@@ -1,18 +1,16 @@
 package org.dotwebstack.orchestrate.model.mappers;
 
 import java.util.Map;
-import java.util.Objects;
 
-public class Cel implements ResultMapperType {
+public class ToStringType implements ResultMapperType {
 
   @Override
   public String getName() {
-    return "cel";
+    return "toString";
   }
 
   @Override
   public ResultMapper create(Map<String, Object> options) {
-    // TODO: Implement CEL evaluation
-    return Objects::nonNull;
+    return String::valueOf;
   }
 }

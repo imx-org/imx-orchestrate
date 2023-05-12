@@ -36,7 +36,7 @@ objectTypeMappings:
       plaatsnaam:
         pathMappings:
           path: ligtIn/naam
-          next:
+          andThen:
             path: ligtAan/ligtIn/naam
             ifMatch:
               type: isNull
@@ -71,7 +71,7 @@ objectTypeMappings:
               options:
                 prefix: ', '
           - path: ligtIn/naam
-            next:
+            andThen:
               path: ligtAan/ligtIn/naam
               ifMatch:
                 type: isNull
@@ -79,6 +79,8 @@ objectTypeMappings:
               type: prepend
               options:
                 prefix: ' '
+        combiner:
+          type: join
       # TODO: auto-generatie inverse mappings
       isAdresVanGebouw:
         pathMappings:

@@ -47,7 +47,7 @@ public class YamlModelMappingParser {
     try {
       return yamlObjectMapper.readValue(inputStream, new TypeReference<>() {});
     } catch (IOException e) {
-      throw new ParserException(String.format("An error occurred while processing model mapping:%n%s",
+      throw new YamlModelMappingParserException(String.format("An error occurred while processing model mapping:%n%s",
           e.getMessage()), e);
     }
   }

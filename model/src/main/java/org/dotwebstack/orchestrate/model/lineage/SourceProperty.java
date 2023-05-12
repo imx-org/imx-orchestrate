@@ -12,7 +12,7 @@ public final class SourceProperty implements PropertyLineage {
 
   private final String property;
 
-  private final List<String> propertyPath;
+  private final List<String> path;
 
   private final Object value;
 }
