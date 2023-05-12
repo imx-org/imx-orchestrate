@@ -1,8 +1,8 @@
 package org.dotwebstack.orchestrate.source;
 
-import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 
-import java.util.List;
+import java.util.Set;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +15,10 @@ public final class SelectedProperty {
 
   private final Property property;
 
-  private final List<SelectedProperty> selectedProperties;
+  private final Set<SelectedProperty> selectedProperties;
 
   public SelectedProperty(Property property) {
-    this(property, emptyList());
+    this(property, emptySet());
   }
 
   @Override

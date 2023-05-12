@@ -16,7 +16,6 @@ import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.GraphQLObjectType;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.UnaryOperator;
@@ -189,7 +188,7 @@ public final class FetchPlanner {
         .build();
   }
 
-  private List<SelectedProperty> selectIdentity(ObjectTypeRef typeRef) {
+  private Set<SelectedProperty> selectIdentity(ObjectTypeRef typeRef) {
     return modelMapping.getSourceType(typeRef)
         .getIdentityProperties()
         .stream()
@@ -200,6 +199,6 @@ public final class FetchPlanner {
 
           return new SelectedProperty(property);
         })
-        .toList();
+        .collect(toSet());
   }
 }
