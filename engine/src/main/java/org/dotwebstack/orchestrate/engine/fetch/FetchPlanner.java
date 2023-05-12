@@ -91,7 +91,8 @@ public final class FetchPlanner {
                     .stream()
                     .map(PathMapping::getPath);
 
-                return Stream.concat(Stream.of(basePath.append(pathMapping.getPath())), nextPaths);
+                return Stream.concat(Stream.of(pathMapping.getPath()), nextPaths)
+                    .map(basePath::append);
               });
 
           if (property instanceof AbstractRelation relation) {
