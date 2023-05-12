@@ -17,7 +17,7 @@ import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.ObjectTypeMapping;
 import org.dotwebstack.orchestrate.model.Property;
-import org.dotwebstack.orchestrate.model.transforms.Transform;
+import org.dotwebstack.orchestrate.model.mappers.ResultMapper;
 import org.dotwebstack.orchestrate.source.SelectedProperty;
 import reactor.util.function.Tuples;
 
@@ -33,8 +33,7 @@ final class FetchUtils {
           var sourcePath = targetMapping.getPropertyMapping(property.getName())
               .getPathMappings()
               .get(0)
-              .getPaths()
-              .get(0)
+              .getPath()
               .getFirstSegment();
 
           return Tuples.of(sourcePath, property.getName());
@@ -90,8 +89,8 @@ final class FetchUtils {
     };
   }
 
-  public static Object transform(Object value, List<Transform> transforms) {
-    return transforms.stream()
-        .reduce(value, (acc, transform) -> transform.apply(acc), noopCombiner());
+  public static Object transform(Object value, List<ResultMapper> resultMappers) {
+    return resultMappers.stream()
+        .reduce(value, (acc, resultMapper) -> resultMapper.apply(acc), noopCombiner());
   }
 }

@@ -1,55 +1,39 @@
 package org.dotwebstack.orchestrate.parser.yaml;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.BeanDescription;
-import com.fasterxml.jackson.databind.DeserializationConfig;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
-import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.Set;
-import org.dotwebstack.orchestrate.model.ComponentRegistry;
+import org.dotwebstack.orchestrate.model.ComponentFactory;
 import org.dotwebstack.orchestrate.model.ModelMapping;
+import org.dotwebstack.orchestrate.model.PathMapping;
 import org.dotwebstack.orchestrate.model.PropertyMapping;
-import org.dotwebstack.orchestrate.model.PropertyPathMapping;
-import org.dotwebstack.orchestrate.model.combiners.Combiner;
-import org.dotwebstack.orchestrate.model.transforms.Transform;
-import org.dotwebstack.orchestrate.parser.yaml.config.CombinerMixin;
-import org.dotwebstack.orchestrate.parser.yaml.config.PropertyMappingMixin;
-import org.dotwebstack.orchestrate.parser.yaml.config.PropertyPathMappingDeserializer;
-import org.dotwebstack.orchestrate.parser.yaml.config.PropertyPathMappingMixin;
-import org.dotwebstack.orchestrate.parser.yaml.config.TransformDeserializer;
+import org.dotwebstack.orchestrate.model.combiners.ResultCombiner;
+import org.dotwebstack.orchestrate.model.mappers.ResultMapper;
+import org.dotwebstack.orchestrate.model.matchers.ResultMatcher;
+import org.dotwebstack.orchestrate.parser.yaml.deserializers.ResultCombinerDeserializer;
+import org.dotwebstack.orchestrate.parser.yaml.deserializers.ResultMapperDeserializer;
+import org.dotwebstack.orchestrate.parser.yaml.deserializers.ResultMatcherDeserializer;
+import org.dotwebstack.orchestrate.parser.yaml.mixins.PathMappingMixin;
+import org.dotwebstack.orchestrate.parser.yaml.mixins.PropertyMappingMixin;
 
 public class YamlModelMappingParser {
 
   private final ObjectMapper yamlObjectMapper;
 
-  public static YamlModelMappingParser getInstance(Map<String, Class<?>> componentMap, ComponentRegistry componentRegistry) {
+  public static YamlModelMappingParser getInstance() {
+    var componentFactory = new ComponentFactory();
+
     var module = new SimpleModule()
         .setMixInAnnotation(PropertyMapping.PropertyMappingBuilder.class, PropertyMappingMixin.class)
-        .setMixInAnnotation(PropertyPathMapping.PropertyPathMappingBuilder.class, PropertyPathMappingMixin.class)
-        .setMixInAnnotation(Combiner.class, CombinerMixin.class)
-        .setDeserializerModifier(new BeanDeserializerModifier() {
-          @Override
-          public JsonDeserializer<?> modifyDeserializer(DeserializationConfig config, BeanDescription beanDesc,
-                                                        JsonDeserializer<?> deserializer) {
-            if (beanDesc.getBeanClass() == PropertyPathMapping.PropertyPathMappingBuilder.class) {
-              return new PropertyPathMappingDeserializer(deserializer);
-            }
-            if (beanDesc.getBeanClass() == Transform.class) {
-              return new TransformDeserializer(deserializer, componentRegistry);
-            }
-            return deserializer;
-          }
-        });
-
-    componentMap.forEach((name, componentClass) -> module.registerSubtypes(new NamedType(componentClass, name)));
+        .setMixInAnnotation(PathMapping.PathMappingBuilder.class, PathMappingMixin.class)
+        .addDeserializer(ResultCombiner.class, new ResultCombinerDeserializer(componentFactory))
+        .addDeserializer(ResultMapper.class, new ResultMapperDeserializer(componentFactory))
+        .addDeserializer(ResultMatcher.class, new ResultMatcherDeserializer(componentFactory));
 
     return new YamlModelMappingParser(new YAMLFactory(), Set.of(module));
   }
@@ -62,11 +46,9 @@ public class YamlModelMappingParser {
   public ModelMapping parse(InputStream inputStream) {
     try {
       return yamlObjectMapper.readValue(inputStream, new TypeReference<>() {});
-    } catch (IOException ioException) {
-      throw new YamlModelMappingParserException(
-          String.format("An error occurred while processing model mapping:%n%s", ioException.getMessage()),
-          ioException);
+    } catch (IOException e) {
+      throw new YamlModelMappingParserException(String.format("An error occurred while processing model mapping:%n%s",
+          e.getMessage()), e);
     }
   }
-
 }

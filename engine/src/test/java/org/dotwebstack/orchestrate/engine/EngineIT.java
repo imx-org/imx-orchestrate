@@ -18,7 +18,7 @@ import java.util.Map;
 import org.dotwebstack.orchestrate.engine.schema.SchemaConstants;
 import org.dotwebstack.orchestrate.engine.schema.SchemaFactory;
 import org.dotwebstack.orchestrate.model.ObjectType;
-import org.dotwebstack.orchestrate.model.PropertyPath;
+import org.dotwebstack.orchestrate.model.Path;
 import org.dotwebstack.orchestrate.source.BatchRequest;
 import org.dotwebstack.orchestrate.source.CollectionRequest;
 import org.dotwebstack.orchestrate.source.DataRepository;
@@ -316,7 +316,7 @@ class EngineIT {
             case "Verblijfsobject":
               assertThat(collectionRequest.getSelectedProperties()).hasSize(1);
               var filter = collectionRequest.getFilter();
-              assertThat(filter.getPropertyPath()).isEqualTo(PropertyPath.fromString("heeftAlsHoofdadres"));
+              assertThat(filter.getPath()).isEqualTo(Path.fromString("heeftAlsHoofdadres"));
               var filterValue = (Map<String, Object>) filter.getValue();
               assertThat(filterValue).isNotNull()
                   .containsKey("identificatie");

@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.AbstractRelation;
@@ -30,8 +31,9 @@ import org.dotwebstack.orchestrate.model.InverseRelation;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.ObjectTypeRef;
+import org.dotwebstack.orchestrate.model.Path;
+import org.dotwebstack.orchestrate.model.PathMapping;
 import org.dotwebstack.orchestrate.model.Property;
-import org.dotwebstack.orchestrate.model.PropertyPath;
 import org.dotwebstack.orchestrate.model.Relation;
 import org.dotwebstack.orchestrate.source.FilterDefinition;
 import org.dotwebstack.orchestrate.source.SelectedProperty;
@@ -51,7 +53,7 @@ public final class FetchPlanner {
     var targetType = modelMapping.getTargetModel()
         .getObjectType(outputType.getName());
     var targetMapping = modelMapping.getObjectTypeMapping(targetType.getName());
-    var sourcePaths = resolveSourcePaths(targetType, environment.getSelectionSet(), PropertyPath.fromProperties());
+    var sourcePaths = resolveSourcePaths(targetType, environment.getSelectionSet(), Path.fromProperties());
 
     // TODO: Refactor
     var isCollection = isList(unwrapNonNull(environment.getFieldType()));
@@ -70,8 +72,8 @@ public final class FetchPlanner {
     return isCollection ? fetchResult : fetchResult.singleOrEmpty();
   }
 
-  public Set<PropertyPath> resolveSourcePaths(ObjectType objectType, DataFetchingFieldSelectionSet selectionSet,
-      PropertyPath basePath) {
+  public Set<Path> resolveSourcePaths(ObjectType objectType, DataFetchingFieldSelectionSet selectionSet,
+      Path basePath) {
     var objectTypeMapping = modelMapping.getObjectTypeMapping(objectType);
 
     return selectionSet.getImmediateFields()
@@ -83,9 +85,14 @@ public final class FetchPlanner {
 
           var sourcePaths = propertyMapping.getPathMappings()
               .stream()
-              .flatMap(pathMapping -> pathMapping.getPaths()
-                  .stream()
-                  .map(basePath::append));
+              .flatMap(pathMapping -> {
+                // TODO: Conditionality & recursion
+                var nextPaths = pathMapping.getNextPathMappings()
+                    .stream()
+                    .map(PathMapping::getPath);
+
+                return Stream.concat(Stream.of(basePath.append(pathMapping.getPath())), nextPaths);
+              });
 
           if (property instanceof AbstractRelation relation) {
             var targetType = modelMapping.getTargetType(relation.getTarget());
@@ -99,14 +106,14 @@ public final class FetchPlanner {
         .collect(toSet());
   }
 
-  private FetchOperation fetchSourceObject(ObjectTypeRef sourceTypeRef, Set<PropertyPath> sourcePaths,
+  private FetchOperation fetchSourceObject(ObjectTypeRef sourceTypeRef, Set<Path> sourcePaths,
       boolean isCollection, FilterDefinition filter) {
     var source = sources.get(sourceTypeRef.getModelAlias());
     var sourceType = modelMapping.getSourceType(sourceTypeRef);
     var selectedProperties = new ArrayList<>(selectIdentity(sourceType));
 
     sourcePaths.stream()
-        .filter(PropertyPath::isLeaf)
+        .filter(Path::isLeaf)
         .map(sourcePath -> sourceType.getProperty(sourcePath.getFirstSegment()))
         .filter(not(Property::isIdentifier))
         .map(SelectedProperty::new)
@@ -115,14 +122,14 @@ public final class FetchPlanner {
     var nextOperations = new HashSet<NextOperation>();
 
     sourcePaths.stream()
-        .filter(not(PropertyPath::isLeaf))
-        .collect(groupingBy(PropertyPath::getFirstSegment, mapping(PropertyPath::withoutFirstSegment, toSet())))
+        .filter(not(Path::isLeaf))
+        .collect(groupingBy(Path::getFirstSegment, mapping(Path::withoutFirstSegment, toSet())))
         .forEach((propertyName, nestedSourcePaths) -> {
           var property = sourceType.getProperty(propertyName);
 
           if (property instanceof InverseRelation inverseRelation) {
             var filterDefinition = FilterDefinition.builder()
-                .propertyPath(PropertyPath.fromProperties(inverseRelation.getOriginRelation()))
+                .path(Path.fromProperties(inverseRelation.getOriginRelation()))
                 .valueExtractor(input -> extractKey(sourceType, input))
                 .build();
 
@@ -145,7 +152,7 @@ public final class FetchPlanner {
 
             var identityPropertyPaths = targetType.getIdentityProperties()
                 .stream()
-                .map(PropertyPath::fromProperties)
+                .map(Path::fromProperties)
                 .collect(Collectors.toSet());
 
             // If only identity is selected, no next operation is needed

@@ -1,22 +1,16 @@
 package org.dotwebstack.orchestrate;
 
 import java.io.InputStream;
-import java.util.Map;
-import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.dotwebstack.orchestrate.ext.spatial.GeometryType;
 import org.dotwebstack.orchestrate.model.Attribute;
 import org.dotwebstack.orchestrate.model.Cardinality;
-import org.dotwebstack.orchestrate.model.ComponentRegistry;
 import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.Relation;
-import org.dotwebstack.orchestrate.model.combiners.Concat;
-import org.dotwebstack.orchestrate.model.transforms.FunctionTransform;
-import org.dotwebstack.orchestrate.model.transforms.TestPredicate;
 import org.dotwebstack.orchestrate.model.types.ScalarTypes;
 import org.dotwebstack.orchestrate.parser.yaml.YamlModelMappingParser;
 
@@ -204,19 +198,7 @@ final class TestFixtures {
       targetModel = buildCoreLocationTargetModel();
     }
 
-    var componentRegistry = new ComponentRegistry()
-        .registerTransform(TestPredicate.builder()
-            .name("nonNull")
-            .predicate(Objects::nonNull)
-            .build())
-        .registerTransform(FunctionTransform.builder()
-            .name("toString")
-            .function(Objects::toString)
-            .build());
-
-    var yamlMapper = YamlModelMappingParser.getInstance(Map.of("concat", Concat.class, "nonNull", TestPredicate.class),
-        componentRegistry);
-
+    var yamlMapper = YamlModelMappingParser.getInstance();
     var modelMapping = yamlMapper.parse(mappingInputStream);
 
     // TODO: Merge into one step

@@ -7,9 +7,8 @@ import lombok.Singular;
 
 @Getter
 @Builder(toBuilder = true)
-public class PropertyPathMapping {
+public class PathMapping {
 
   @Singular("addPath")
-  private List<PropertyPath> path;
+  private List<Path> path;
 }
-

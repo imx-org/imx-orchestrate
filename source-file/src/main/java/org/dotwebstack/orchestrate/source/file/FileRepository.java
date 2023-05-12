@@ -70,7 +70,7 @@ class FileRepository implements DataRepository {
     var jsonValue = new ObjectMapper()
         .valueToTree(filterExpression.getValue());
 
-    var jsonPointer = JsonPointer.compile("/".concat(filterExpression.getPropertyPath().toString()));
+    var jsonPointer = JsonPointer.compile("/".concat(filterExpression.getPath().toString()));
 
     return objectNode -> {
       var propertyNode = objectNode.at(jsonPointer);

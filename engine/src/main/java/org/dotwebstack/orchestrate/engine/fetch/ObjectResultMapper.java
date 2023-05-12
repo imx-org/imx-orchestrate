@@ -3,22 +3,28 @@ package org.dotwebstack.orchestrate.engine.fetch;
 import static java.util.Collections.unmodifiableMap;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.cast;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.noopCombiner;
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.transform;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.HAS_LINEAGE_FIELD;
 
 import graphql.schema.DataFetchingFieldSelectionSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import lombok.Builder;
+import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.AbstractRelation;
 import org.dotwebstack.orchestrate.model.Attribute;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
+import org.dotwebstack.orchestrate.model.Path;
+import org.dotwebstack.orchestrate.model.PathMapping;
+import org.dotwebstack.orchestrate.model.PathResult;
+import org.dotwebstack.orchestrate.model.Property;
 import org.dotwebstack.orchestrate.model.PropertyMapping;
-import org.dotwebstack.orchestrate.model.PropertyPath;
+import org.dotwebstack.orchestrate.model.PropertyResult;
+import org.dotwebstack.orchestrate.model.combiners.CoalesceType;
+import org.dotwebstack.orchestrate.model.combiners.NoopType;
 import org.dotwebstack.orchestrate.model.lineage.ObjectLineage;
 import org.dotwebstack.orchestrate.model.lineage.ObjectReference;
 import org.dotwebstack.orchestrate.model.lineage.OrchestratedProperty;
@@ -43,9 +49,9 @@ public final class ObjectResultMapper {
           }
 
           var property = targetType.getProperty(field.getName());
-          var propertyResult = mapProperty(objectResult, targetMapping.getPropertyMapping(property));
+          var propertyResult = mapProperty(objectResult, property, targetMapping.getPropertyMapping(property));
 
-          if (!propertyResult.hasValue()) {
+          if (propertyResult == null) {
             return;
           }
 
@@ -95,9 +101,9 @@ public final class ObjectResultMapper {
       return map(nestedObjectResult, relType, selectionSet);
     }
 
-    if (value instanceof CollectionResult nestedCollectionResult) {
-      return nestedCollectionResult.getObjectResults()
-          .stream()
+    if (value instanceof List<?> nestedObjectResultList) {
+      return nestedObjectResultList.stream()
+          .map(ObjectResult.class::cast)
           .map(nestedObjectResult -> map(nestedObjectResult, relType, selectionSet))
           .toList();
     }
@@ -105,72 +111,95 @@ public final class ObjectResultMapper {
     return null;
   }
 
-  private PropertyResult mapProperty(ObjectResult objectResult, PropertyMapping propertyMapping) {
-    return propertyMapping.getPathMappings()
+  private PropertyResult mapProperty(ObjectResult objectResult, Property property, PropertyMapping propertyMapping) {
+    var pathResults = propertyMapping.getPathMappings()
         .stream()
-        .reduce(PropertyResult.newResult(), (prevResult, pathMapping) -> {
-          var pathValue = pathMapping.getPaths()
-              .stream()
-              .flatMap(path -> Optional.ofNullable(pathResult(objectResult, path)).stream())
-              .findFirst()
-              .orElse(null);
+        .flatMap(pathMapping -> pathResult(objectResult, pathMapping))
+        .toList();
 
-          if (pathMapping.hasTransforms()) {
-            pathValue = transform(pathValue, pathMapping.getTransforms());
-          }
+    var combiner = propertyMapping.getCombiner();
 
-          if (pathMapping.hasCombiner()) {
-            pathValue = pathMapping.getCombiner()
-                .apply(pathValue, prevResult.getValue());
-          }
+    if (combiner == null) {
+      var hasMultiCardinality = !property.getCardinality()
+          .isSingular();
 
-          return prevResult.withValue(pathValue, SourceProperty.builder()
+      combiner = hasMultiCardinality
+          ? new NoopType().create(Map.of())
+          : new CoalesceType().create(Map.of());
+    }
+
+    return combiner.apply(pathResults);
+  }
+
+  private Stream<PathResult> pathResult(ObjectResult objectResult, PathMapping pathMapping) {
+    var pathResults = pathResult(objectResult, pathMapping.getPath(), pathMapping.getPath());
+
+    return pathResults.flatMap(pathResult -> {
+      // TODO: Lazy fetching & multi cardinality
+      var nextedPathResult = pathMapping.getNextPathMappings()
+          .stream()
+          .flatMap(nextPathMapping -> {
+            var ifMatch = nextPathMapping.getIfMatch();
+
+            if (ifMatch != null && ifMatch.test(pathResult.getValue())) {
+              return pathResult(objectResult, nextPathMapping);
+            }
+
+            return Stream.of(pathResult);
+          })
+          .findFirst()
+          .orElse(pathResult);
+
+      var mappedValue = pathMapping.getResultMappers()
+          .stream()
+          .reduce(nextedPathResult.getValue(), (acc, resultMapper) -> resultMapper.apply(acc), noopCombiner());
+
+      return Stream.of(nextedPathResult.withValue(mappedValue));
+    });
+  }
+
+  private Stream<PathResult> pathResult(ObjectResult objectResult, Path path, Path fullPath) {
+    if (path.isLeaf()) {
+      var propertyValue = objectResult.getProperty(path.getFirstSegment());
+
+      var pathResult = PathResult.builder()
+          .value(propertyValue)
+          .sourceProperty(SourceProperty.builder()
               .subject(ObjectReference.builder()
                   .objectType(objectResult.getType().getName())
                   .objectKey(objectResult.getKey())
                   .build())
-              .property(pathMapping.getPaths()
-                  // TODO: Refactor
-                  .get(0)
-                  .getLastSegment())
-              .propertyPath(pathMapping.getPaths()
-                  // TODO: Refactor
-                  .get(0)
-                  .getSegments())
-              .value(pathValue)
-              .build());
-        }, noopCombiner());
-  }
+              .property(path.getFirstSegment())
+              .value(propertyValue)
+              .path(fullPath.getSegments())
+              .build())
+          .build();
 
-  private Object pathResult(ObjectResult objectResult, PropertyPath path) {
-    if (path.isLeaf()) {
-      return objectResult.getProperty(path.getFirstSegment());
+      return Stream.of(pathResult);
     }
 
     var nestedResult = objectResult.getProperty(path.getFirstSegment());
 
     if (nestedResult == null) {
-      return nestedResult;
+      return Stream.of(PathResult.empty());
     }
 
     var remainingPath = path.withoutFirstSegment();
 
     if (nestedResult instanceof ObjectResult nestedObjectResult) {
-      return pathResult(nestedObjectResult, remainingPath);
+      return pathResult(nestedObjectResult, remainingPath, fullPath);
     }
 
     if (nestedResult instanceof CollectionResult nestedCollectionResult) {
-      List<ObjectResult> nestedObjectResults = nestedCollectionResult.getObjectResults()
+      return nestedCollectionResult.getObjectResults()
           .stream()
-          .map(nestedObjectResult -> pathResult(nestedObjectResult, remainingPath))
-          .map(nestedPathResult -> cast(nestedPathResult, ObjectResult.class))
-          .toList();
-
-      return CollectionResult.builder()
-          .objectResults(nestedObjectResults)
-          .build();
+          .flatMap(nestedObjectResult -> pathResult(nestedObjectResult, remainingPath, fullPath));
     }
 
-    return null;
+    if (nestedResult instanceof Map<?, ?> mapResult) {
+      return pathResult(objectResult.withProperties(cast(mapResult)), remainingPath, fullPath);
+    }
+
+    throw new OrchestrateException("Could not map path: " + path);
   }
 }

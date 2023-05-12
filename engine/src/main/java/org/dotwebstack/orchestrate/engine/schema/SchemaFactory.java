@@ -44,8 +44,8 @@ import org.dotwebstack.orchestrate.model.lineage.ObjectReference;
 import org.dotwebstack.orchestrate.model.lineage.OrchestratedProperty;
 import org.dotwebstack.orchestrate.model.lineage.PropertyMapping;
 import org.dotwebstack.orchestrate.model.lineage.PropertyMappingExecution;
-import org.dotwebstack.orchestrate.model.lineage.PropertyPath;
-import org.dotwebstack.orchestrate.model.lineage.PropertyPathMapping;
+import org.dotwebstack.orchestrate.model.lineage.Path;
+import org.dotwebstack.orchestrate.model.lineage.PathMapping;
 import org.dotwebstack.orchestrate.model.lineage.SourceProperty;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -167,20 +167,20 @@ public final class SchemaFactory {
         .name(lineageRenamer.apply(PropertyMapping.class.getSimpleName()))
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("pathMapping"))
-            .type(requiredListType(lineageRenamer.apply(PropertyPathMapping.class.getSimpleName())))
+            .type(requiredListType(lineageRenamer.apply(PathMapping.class.getSimpleName())))
             .build())
         .build());
 
     typeDefinitionRegistry.add(newObjectTypeDefinition()
-        .name(lineageRenamer.apply(PropertyPathMapping.class.getSimpleName()))
+        .name(lineageRenamer.apply(PathMapping.class.getSimpleName()))
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("path"))
-            .type(requiredListType(lineageRenamer.apply(PropertyPath.class.getSimpleName())))
+            .type(requiredListType(lineageRenamer.apply(Path.class.getSimpleName())))
             .build())
         .build());
 
     typeDefinitionRegistry.add(newObjectTypeDefinition()
-        .name(lineageRenamer.apply(PropertyPath.class.getSimpleName()))
+        .name(lineageRenamer.apply(Path.class.getSimpleName()))
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("startNode"))
             .type(requiredType(lineageRenamer.apply(ObjectReference.class.getSimpleName())))
@@ -206,7 +206,7 @@ public final class SchemaFactory {
             .type(requiredType("String"))
             .build())
         .fieldDefinition(newFieldDefinition()
-            .name(lineageRenamer.apply("propertyPath"))
+            .name(lineageRenamer.apply("path"))
             .type(requiredListType("String"))
             .build())
         .fieldDefinition(newFieldDefinition()

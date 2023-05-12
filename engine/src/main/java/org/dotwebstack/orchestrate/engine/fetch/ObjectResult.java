@@ -24,4 +24,10 @@ public class ObjectResult {
   public Object getProperty(String name) {
     return properties.get(name);
   }
+
+  public ObjectResult withProperties(Map<String, Object> properties) {
+    return toBuilder()
+        .properties(properties)
+        .build();
+  }
 }
