@@ -132,7 +132,7 @@ public final class ObjectResultMapper {
   }
 
   private Stream<PathResult> pathResult(ObjectResult objectResult, PathMapping pathMapping) {
-    var pathResults = pathResult(objectResult, pathMapping.getPath());
+    var pathResults = pathResult(objectResult, pathMapping.getPath(), pathMapping.getPath());
 
     return pathResults.flatMap(pathResult -> {
       // TODO: Lazy fetching & multi cardinality
@@ -158,7 +158,7 @@ public final class ObjectResultMapper {
     });
   }
 
-  private Stream<PathResult> pathResult(ObjectResult objectResult, Path path) {
+  private Stream<PathResult> pathResult(ObjectResult objectResult, Path path, Path fullPath) {
     if (path.isLeaf()) {
       var propertyValue = objectResult.getProperty(path.getFirstSegment());
 
@@ -171,7 +171,7 @@ public final class ObjectResultMapper {
                   .build())
               .property(path.getFirstSegment())
               .value(propertyValue)
-              .path(path.getSegments())
+              .path(fullPath.getSegments())
               .build())
           .build();
 
@@ -187,19 +187,19 @@ public final class ObjectResultMapper {
     var remainingPath = path.withoutFirstSegment();
 
     if (nestedResult instanceof ObjectResult nestedObjectResult) {
-      return pathResult(nestedObjectResult, remainingPath);
+      return pathResult(nestedObjectResult, remainingPath, fullPath);
     }
 
     if (nestedResult instanceof CollectionResult nestedCollectionResult) {
       return nestedCollectionResult.getObjectResults()
           .stream()
-          .flatMap(nestedObjectResult -> pathResult(nestedObjectResult, remainingPath));
+          .flatMap(nestedObjectResult -> pathResult(nestedObjectResult, remainingPath, fullPath));
     }
 
     if (nestedResult instanceof Map<?, ?> mapResult) {
-      return pathResult(objectResult.withProperties(cast(mapResult)), remainingPath);
+      return pathResult(objectResult.withProperties(cast(mapResult)), remainingPath, fullPath);
     }
 
-    throw new OrchestrateException("Could not map path: " + path.toString());
+    throw new OrchestrateException("Could not map path: " + path);
   }
 }
