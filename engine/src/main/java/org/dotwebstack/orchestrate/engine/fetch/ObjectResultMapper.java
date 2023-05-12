@@ -101,10 +101,19 @@ public final class ObjectResultMapper {
       return map(nestedObjectResult, relType, selectionSet);
     }
 
-    if (value instanceof List<?> nestedObjectResultList) {
-      return nestedObjectResultList.stream()
-          .map(ObjectResult.class::cast)
-          .map(nestedObjectResult -> map(nestedObjectResult, relType, selectionSet))
+    if (value instanceof List<?> nestedResultList) {
+      return nestedResultList.stream()
+          .map(nestedResult -> {
+            if (nestedResult instanceof ObjectResult nestedObjectResult) {
+              return map(nestedObjectResult, relType, selectionSet);
+            }
+
+            if (nestedResult instanceof Map<?, ?> nestedMapResult) {
+              return cast(nestedMapResult);
+            }
+
+            throw new OrchestrateException("Could not map nested result");
+          })
           .toList();
     }
 

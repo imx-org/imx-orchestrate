@@ -151,13 +151,13 @@ public final class FetchPlanner {
 
             selectedProperties.add(new SelectedProperty(property, selectIdentity(targetType)));
 
-            var identityPropertyPaths = targetType.getIdentityProperties()
+            var identityPaths = targetType.getIdentityProperties()
                 .stream()
                 .map(Path::fromProperties)
                 .collect(Collectors.toSet());
 
             // If only identity is selected, no next operation is needed
-            if (identityPropertyPaths.equals(nestedSourcePaths)) {
+            if (identityPaths.equals(nestedSourcePaths)) {
               return;
             }
 
