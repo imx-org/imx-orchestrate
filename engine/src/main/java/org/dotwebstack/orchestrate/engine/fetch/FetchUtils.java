@@ -18,7 +18,6 @@ import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.ObjectTypeMapping;
 import org.dotwebstack.orchestrate.model.Property;
 import org.dotwebstack.orchestrate.model.mappers.ResultMapper;
-import org.dotwebstack.orchestrate.source.SelectedProperty;
 import reactor.util.function.Tuples;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -56,13 +55,6 @@ final class FetchUtils {
 
   public static Function<ObjectResult, Map<String, Object>> propertyExtractor(String propertyName) {
     return objectResult -> cast(objectResult.getProperty(propertyName));
-  }
-
-  public static List<SelectedProperty> selectIdentity(ObjectType objectType) {
-    return objectType.getIdentityProperties()
-        .stream()
-        .map(SelectedProperty::new)
-        .toList();
   }
 
   public static boolean isReservedField(SelectedField selectedField, UnaryOperator<String> lineageRenamer) {

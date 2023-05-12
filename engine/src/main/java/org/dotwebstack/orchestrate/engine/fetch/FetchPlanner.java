@@ -2,7 +2,6 @@ package org.dotwebstack.orchestrate.engine.fetch;
 
 import static graphql.schema.GraphQLTypeUtil.isList;
 import static graphql.schema.GraphQLTypeUtil.unwrapNonNull;
-import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
@@ -12,13 +11,12 @@ import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.extractKey;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.isReservedField;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.propertyExtractor;
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.selectIdentity;
 
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.GraphQLObjectType;
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.UnaryOperator;
@@ -111,7 +109,7 @@ public final class FetchPlanner {
       boolean isCollection, FilterDefinition filter) {
     var source = sources.get(sourceTypeRef.getModelAlias());
     var sourceType = modelMapping.getSourceType(sourceTypeRef);
-    var selectedProperties = new ArrayList<>(selectIdentity(sourceType));
+    var selectedProperties = new HashSet<>(selectIdentity(sourceTypeRef));
 
     sourcePaths.stream()
         .filter(Path::isLeaf)
@@ -149,7 +147,7 @@ public final class FetchPlanner {
             var targetTypeRef = relation.getTarget(sourceTypeRef);
             var targetType = modelMapping.getSourceType(targetTypeRef);
 
-            selectedProperties.add(new SelectedProperty(property, selectIdentity(targetType)));
+            selectedProperties.add(new SelectedProperty(property, selectIdentity(targetTypeRef)));
 
             var identityPaths = targetType.getIdentityProperties()
                 .stream()
@@ -177,7 +175,7 @@ public final class FetchPlanner {
       return CollectionFetchOperation.builder()
           .source(source)
           .objectType(sourceType)
-          .selectedProperties(unmodifiableList(selectedProperties))
+          .selectedProperties(unmodifiableSet(selectedProperties))
           .nextOperations(unmodifiableSet(nextOperations))
           .filter(filter)
           .build();
@@ -186,8 +184,22 @@ public final class FetchPlanner {
     return ObjectFetchOperation.builder()
         .source(source)
         .objectType(sourceType)
-        .selectedProperties(unmodifiableList(selectedProperties))
+        .selectedProperties(unmodifiableSet(selectedProperties))
         .nextOperations(unmodifiableSet(nextOperations))
         .build();
+  }
+
+  private List<SelectedProperty> selectIdentity(ObjectTypeRef typeRef) {
+    return modelMapping.getSourceType(typeRef)
+        .getIdentityProperties()
+        .stream()
+        .map(property -> {
+          if (property instanceof Relation relation) {
+            return new SelectedProperty(property, selectIdentity(relation.getTarget(typeRef)));
+          }
+
+          return new SelectedProperty(property);
+        })
+        .toList();
   }
 }
