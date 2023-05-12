@@ -104,3 +104,22 @@ objectTypeMappings:
       heeftAlsAdres:
         pathMappings:
           path: isGerelateerdAan/bevat/heeftAlsHoofdadres
+      bevindtZichOpPerceel:
+        pathMappings:
+          path: isGerelateerdAan/bevat/heeftAlsHoofdadres/betreftInverse/heeft
+
+  Perceel:
+    sourceRoot: brk:Perceel
+    propertyMappings:
+      identificatie:
+        pathMappings:
+          path: identificatie
+      laatsteKoopsom:
+        pathMappings:
+          path: koopsom
+      oppervlak:
+        pathMappings:
+          path: kadastraleGrootte
+      begrenzing:
+        pathMappings:
+          path: begrenzing

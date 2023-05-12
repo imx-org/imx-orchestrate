@@ -2,6 +2,7 @@ package org.dotwebstack.orchestrate;
 
 import static org.dotwebstack.orchestrate.TestFixtures.createBagModel;
 import static org.dotwebstack.orchestrate.TestFixtures.createBgtModel;
+import static org.dotwebstack.orchestrate.TestFixtures.createBrkModel;
 import static org.dotwebstack.orchestrate.TestFixtures.createModelMapping;
 
 import graphql.GraphQL;
@@ -35,6 +36,7 @@ public class GatewayConfiguration {
             GatewayConfiguration.class.getResourceAsStream(gatewayProperties.getMapping())))
         .source("bag", new FileSource(createBagModel(), Paths.get(gatewayProperties.getDataPath(), "bag")))
         .source("bgt", new FileSource(createBgtModel(), Paths.get(gatewayProperties.getDataPath(), "bgt")))
+        .source("brk", new FileSource(createBrkModel(), Paths.get(gatewayProperties.getDataPath(), "brk")))
         .extension(new GeometryExtension())
         .build();
 

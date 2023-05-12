@@ -1,5 +1,7 @@
 package org.dotwebstack.orchestrate;
 
+import static org.dotwebstack.orchestrate.model.Cardinality.INFINITE;
+
 import java.io.InputStream;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -144,7 +146,7 @@ final class TestFixtures {
             .property(Relation.builder()
                 .name("maaktDeelUitVan")
                 .target(ObjectTypeRef.forType("Pand"))
-                .cardinality(Cardinality.of(1, Cardinality.INFINITE))
+                .cardinality(Cardinality.of(1, INFINITE))
                 .inverseName("bevat")
                 .inverseCardinality(Cardinality.MULTI)
                 .build())
@@ -189,29 +191,79 @@ final class TestFixtures {
         .build();
   }
 
+  public static Model createBrkModel() {
+    return Model.builder()
+        .alias("brk")
+        .objectType(ObjectType.builder()
+            .name("Perceel")
+            .property(Attribute.builder()
+                .name("identificatie")
+                .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.REQUIRED)
+                .identifier(true)
+                .build())
+            .property(Attribute.builder()
+                .name("kadastraleGrootte")
+                .type(ScalarTypes.INTEGER)
+                .cardinality(Cardinality.REQUIRED)
+                .build())
+            .property(Attribute.builder()
+                .name("koopsom")
+                .type(ScalarTypes.INTEGER)
+                .cardinality(Cardinality.OPTIONAL)
+                .build())
+            .property(Attribute.builder()
+                .name("begrenzing")
+                .type(new GeometryType())
+                .cardinality(Cardinality.REQUIRED)
+                .build())
+            .build())
+        .objectType(ObjectType.builder()
+            .name("LocatieKadastraalObject")
+            .property(Relation.builder()
+                .name("heeft")
+                .identifier(true)
+                .target(ObjectTypeRef.fromString("Perceel"))
+                .cardinality(Cardinality.REQUIRED)
+                .inverseName("heeftInverse")
+                .inverseCardinality(Cardinality.MULTI)
+                .build())
+            .property(Relation.builder()
+                .name("betreft")
+                .identifier(true)
+                .target(ObjectTypeRef.fromString("bag:Nummeraanduiding"))
+                .cardinality(Cardinality.REQUIRED)
+                .inverseName("betreftInverse")
+                .inverseCardinality(Cardinality.MULTI)
+                .build())
+            .build())
+        .build();
+  }
+
   public static ModelMapping createModelMapping(TargetModelType targetModelType, InputStream mappingInputStream) {
     Model targetModel = null;
 
     if (targetModelType == TargetModelType.ADRES) {
-      targetModel = buildAdresTargetModel();
+      targetModel = createImxGeoModel();
     } else if (targetModelType == TargetModelType.CORE_LOCATION) {
       targetModel = buildCoreLocationTargetModel();
     }
 
     var yamlMapper = YamlModelMappingParser.getInstance();
-    var modelMapping = yamlMapper.parse(mappingInputStream);
 
     // TODO: Merge into one step
-    return modelMapping.toBuilder()
+    return yamlMapper.parse(mappingInputStream)
+        .toBuilder()
         .targetModel(targetModel)
         .sourceModel(createBagModel())
         .sourceModel(createBgtModel())
+        .sourceModel(createBrkModel())
         .build();
   }
 
-  private static Model buildAdresTargetModel() {
+  private static Model createImxGeoModel() {
     return Model.builder()
-        .alias("adr")
+        .alias("imxgeo")
         .objectType(ObjectType.builder()
             .name("Adres")
             .property(Attribute.builder()
@@ -288,7 +340,36 @@ final class TestFixtures {
                 .target(ObjectTypeRef.forType("Adres"))
                 .cardinality(Cardinality.MULTI)
                 .inverseName("isAdresVanGebouw")
-                .inverseCardinality(Cardinality.of(1, Cardinality.INFINITE))
+                .inverseCardinality(Cardinality.of(1, INFINITE))
+                .build())
+            .property(Relation.builder()
+                .name("bevindtZichOpPerceel")
+                .target(ObjectTypeRef.forType("Perceel"))
+                .cardinality(Cardinality.of(1, INFINITE))
+                .build())
+            .build())
+        .objectType(ObjectType.builder()
+            .name("Perceel")
+            .property(Attribute.builder()
+                .name("identificatie")
+                .type(ScalarTypes.STRING)
+                .cardinality(Cardinality.REQUIRED)
+                .identifier(true)
+                .build())
+            .property(Attribute.builder()
+                .name("oppervlak")
+                .type(ScalarTypes.INTEGER)
+                .cardinality(Cardinality.REQUIRED)
+                .build())
+            .property(Attribute.builder()
+                .name("laatsteKoopsom")
+                .type(ScalarTypes.INTEGER)
+                .cardinality(Cardinality.OPTIONAL)
+                .build())
+            .property(Attribute.builder()
+                .name("begrenzing")
+                .type(new GeometryType())
+                .cardinality(Cardinality.REQUIRED)
                 .build())
             .build())
         .build();
