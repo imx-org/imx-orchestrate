@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.Singular;
 import lombok.extern.jackson.Jacksonized;
 import org.dotwebstack.orchestrate.model.mappers.ResultMapper;
-import org.dotwebstack.orchestrate.model.matchers.ResultMatcher;
+import org.dotwebstack.orchestrate.model.matchers.Matcher;
 
 @Getter
 @Jacksonized
@@ -17,7 +17,7 @@ public class PathMapping {
 
   private final PathRepeat repeat;
 
-  private final ResultMatcher ifMatch;
+  private final Matcher ifMatch;
 
   @Singular
   private final List<PathMapping> nextPathMappings;

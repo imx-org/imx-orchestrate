@@ -9,25 +9,25 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
 import java.io.Serial;
 import org.dotwebstack.orchestrate.model.ComponentFactory;
-import org.dotwebstack.orchestrate.model.matchers.ResultMatcher;
+import org.dotwebstack.orchestrate.model.matchers.Matcher;
 
-public final class ResultMatcherDeserializer extends StdDeserializer<ResultMatcher> {
+public final class MatcherDeserializer extends StdDeserializer<Matcher> {
 
   @Serial
   private static final long serialVersionUID = 7898902256110027311L;
 
   private final transient ComponentFactory componentFactory;
 
-  public ResultMatcherDeserializer(ComponentFactory componentFactory) {
-    super(ResultMatcher.class);
+  public MatcherDeserializer(ComponentFactory componentFactory) {
+    super(Matcher.class);
     this.componentFactory = componentFactory;
   }
 
   @Override
-  public ResultMatcher deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+  public Matcher deserialize(JsonParser parser, DeserializationContext context) throws IOException {
     var node = parser.getCodec()
         .readTree(parser);
 
-    return componentFactory.createResultMatcher(parseType(node), parseOptions(node));
+    return componentFactory.createMatcher(parseType(node), parseOptions(node));
   }
 }

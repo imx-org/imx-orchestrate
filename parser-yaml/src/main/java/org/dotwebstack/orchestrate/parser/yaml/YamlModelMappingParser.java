@@ -14,10 +14,10 @@ import org.dotwebstack.orchestrate.model.PathMapping;
 import org.dotwebstack.orchestrate.model.PropertyMapping;
 import org.dotwebstack.orchestrate.model.combiners.ResultCombiner;
 import org.dotwebstack.orchestrate.model.mappers.ResultMapper;
-import org.dotwebstack.orchestrate.model.matchers.ResultMatcher;
+import org.dotwebstack.orchestrate.model.matchers.Matcher;
 import org.dotwebstack.orchestrate.parser.yaml.deserializers.ResultCombinerDeserializer;
 import org.dotwebstack.orchestrate.parser.yaml.deserializers.ResultMapperDeserializer;
-import org.dotwebstack.orchestrate.parser.yaml.deserializers.ResultMatcherDeserializer;
+import org.dotwebstack.orchestrate.parser.yaml.deserializers.MatcherDeserializer;
 import org.dotwebstack.orchestrate.parser.yaml.mixins.PathMappingMixin;
 import org.dotwebstack.orchestrate.parser.yaml.mixins.PropertyMappingMixin;
 
@@ -33,7 +33,7 @@ public class YamlModelMappingParser {
         .setMixInAnnotation(PathMapping.PathMappingBuilder.class, PathMappingMixin.class)
         .addDeserializer(ResultCombiner.class, new ResultCombinerDeserializer(componentFactory))
         .addDeserializer(ResultMapper.class, new ResultMapperDeserializer(componentFactory))
-        .addDeserializer(ResultMatcher.class, new ResultMatcherDeserializer(componentFactory));
+        .addDeserializer(Matcher.class, new MatcherDeserializer(componentFactory));
 
     return new YamlModelMappingParser(new YAMLFactory(), Set.of(module));
   }

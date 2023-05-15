@@ -8,30 +8,30 @@ import org.dotwebstack.orchestrate.model.combiners.JoinType;
 import org.dotwebstack.orchestrate.model.combiners.NoopType;
 import org.dotwebstack.orchestrate.model.combiners.ResultCombiner;
 import org.dotwebstack.orchestrate.model.combiners.ResultCombinerType;
+import org.dotwebstack.orchestrate.model.combiners.SumType;
 import org.dotwebstack.orchestrate.model.mappers.AppendType;
 import org.dotwebstack.orchestrate.model.mappers.CelType;
 import org.dotwebstack.orchestrate.model.mappers.PrependType;
 import org.dotwebstack.orchestrate.model.mappers.ResultMapper;
 import org.dotwebstack.orchestrate.model.mappers.ResultMapperType;
-import org.dotwebstack.orchestrate.model.combiners.SumType;
 import org.dotwebstack.orchestrate.model.mappers.ToStringType;
 import org.dotwebstack.orchestrate.model.matchers.IsNullType;
+import org.dotwebstack.orchestrate.model.matchers.Matcher;
+import org.dotwebstack.orchestrate.model.matchers.MatcherType;
 import org.dotwebstack.orchestrate.model.matchers.NotNullType;
-import org.dotwebstack.orchestrate.model.matchers.ResultMatcher;
-import org.dotwebstack.orchestrate.model.matchers.ResultMatcherType;
 
 public final class ComponentFactory {
 
   private final Map<String, ResultMapperType> resultMapperTypes = new HashMap<>();
 
-  private final Map<String, ResultMatcherType> resultMatcherTypes = new HashMap<>();
-
   private final Map<String, ResultCombinerType> resultCombinerTypes = new HashMap<>();
+
+  private final Map<String, MatcherType> matcherTypes = new HashMap<>();
 
   public ComponentFactory() {
     register(new AppendType(), new CelType(), new PrependType(), new ToStringType());
-    register(new IsNullType(), new NotNullType());
     register(new CoalesceType(), new JoinType(), new NoopType(), new SumType());
+    register(new IsNullType(), new NotNullType());
   }
 
   public ComponentFactory register(ResultMapperType... resultMapperTypes) {
@@ -40,15 +40,15 @@ public final class ComponentFactory {
     return this;
   }
 
-  public ComponentFactory register(ResultMatcherType... resultMatcherTypes) {
-    Arrays.stream(resultMatcherTypes).forEach(resultMatcherType ->
-        this.resultMatcherTypes.put(resultMatcherType.getName(), resultMatcherType));
-    return this;
-  }
-
   public ComponentFactory register(ResultCombinerType... resultCombinerTypes) {
     Arrays.stream(resultCombinerTypes).forEach(resultCombinerType ->
         this.resultCombinerTypes.put(resultCombinerType.getName(), resultCombinerType));
+    return this;
+  }
+
+  public ComponentFactory register(MatcherType... matcherTypes) {
+    Arrays.stream(matcherTypes).forEach(matcherType ->
+        this.matcherTypes.put(matcherType.getName(), matcherType));
     return this;
   }
 
@@ -61,21 +61,21 @@ public final class ComponentFactory {
         .create(options);
   }
 
-  public ResultMatcher createResultMatcher(String type) {
-    return createResultMatcher(type, Map.of());
-  }
-
-  public ResultMatcher createResultMatcher(String type, Map<String, Object> options) {
-    return resultMatcherTypes.get(type)
-        .create(options);
-  }
-
   public ResultCombiner createResultCombiner(String type) {
     return createResultCombiner(type, Map.of());
   }
 
   public ResultCombiner createResultCombiner(String type, Map<String, Object> options) {
     return resultCombinerTypes.get(type)
+        .create(options);
+  }
+
+  public Matcher createMatcher(String type) {
+    return createMatcher(type, Map.of());
+  }
+
+  public Matcher createMatcher(String type, Map<String, Object> options) {
+    return matcherTypes.get(type)
         .create(options);
   }
 }
