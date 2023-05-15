@@ -13,6 +13,7 @@ import org.dotwebstack.orchestrate.model.mappers.CelType;
 import org.dotwebstack.orchestrate.model.mappers.PrependType;
 import org.dotwebstack.orchestrate.model.mappers.ResultMapper;
 import org.dotwebstack.orchestrate.model.mappers.ResultMapperType;
+import org.dotwebstack.orchestrate.model.combiners.SumType;
 import org.dotwebstack.orchestrate.model.mappers.ToStringType;
 import org.dotwebstack.orchestrate.model.matchers.IsNullType;
 import org.dotwebstack.orchestrate.model.matchers.NotNullType;
@@ -30,7 +31,7 @@ public final class ComponentFactory {
   public ComponentFactory() {
     register(new AppendType(), new CelType(), new PrependType(), new ToStringType());
     register(new IsNullType(), new NotNullType());
-    register(new CoalesceType(), new JoinType(), new NoopType());
+    register(new CoalesceType(), new JoinType(), new NoopType(), new SumType());
   }
 
   public ComponentFactory register(ResultMapperType... resultMapperTypes) {

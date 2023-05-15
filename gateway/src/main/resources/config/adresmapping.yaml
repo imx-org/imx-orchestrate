@@ -104,6 +104,11 @@ objectTypeMappings:
       heeftAlsAdres:
         pathMappings:
           path: isGerelateerdAan/bevat/heeftAlsHoofdadres
+      totaalPerceelOppervlak:
+        pathMappings:
+          path: isGerelateerdAan/bevat/heeftAlsHoofdadres/betreftInverse/heeft/kadastraleGrootte
+        combiner:
+          type: sum
       bevindtZichOpPerceel:
         pathMappings:
           path: isGerelateerdAan/bevat/heeftAlsHoofdadres/betreftInverse/heeft
