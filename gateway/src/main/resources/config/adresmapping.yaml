@@ -46,7 +46,7 @@ objectTypeMappings:
           map:
             type: cel
             options:
-              expr: 'result != null'
+              expr: 'type(result) != null_type'
       omschrijving:
         pathMappings:
           - path: ligtAan/naam
