@@ -15,9 +15,11 @@ import org.dotwebstack.orchestrate.model.mappers.PrependType;
 import org.dotwebstack.orchestrate.model.mappers.ResultMapper;
 import org.dotwebstack.orchestrate.model.mappers.ResultMapperType;
 import org.dotwebstack.orchestrate.model.mappers.ToStringType;
+import org.dotwebstack.orchestrate.model.matchers.EqualsType;
 import org.dotwebstack.orchestrate.model.matchers.IsNullType;
 import org.dotwebstack.orchestrate.model.matchers.Matcher;
 import org.dotwebstack.orchestrate.model.matchers.MatcherType;
+import org.dotwebstack.orchestrate.model.matchers.NotEqualsType;
 import org.dotwebstack.orchestrate.model.matchers.NotNullType;
 
 public final class ComponentFactory {
@@ -31,7 +33,7 @@ public final class ComponentFactory {
   public ComponentFactory() {
     register(new AppendType(), new CelType(), new PrependType(), new ToStringType());
     register(new CoalesceType(), new JoinType(), new NoopType(), new SumType());
-    register(new IsNullType(), new NotNullType());
+    register(new EqualsType(), new IsNullType(), new NotEqualsType(), new NotNullType());
   }
 
   public ComponentFactory register(ResultMapperType... resultMapperTypes) {
