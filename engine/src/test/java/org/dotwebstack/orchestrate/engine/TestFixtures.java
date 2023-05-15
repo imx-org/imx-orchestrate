@@ -300,7 +300,7 @@ public final class TestFixtures {
         .propertyMapping("isHoofdadres", PropertyMapping.builder()
             .pathMapping(PathMapping.builder()
                 .path(Path.fromString("isHoofdadresVan/identificatie"))
-                .resultMapper(componentRegistry.createResultMapper("cel", Map.of("expr", "result != null")))
+                .resultMapper(componentRegistry.createResultMapper("cel", Map.of("expr", "type(result) != null_type")))
                 .build())
             .build())
         .propertyMapping("omschrijving", PropertyMapping.builder()
