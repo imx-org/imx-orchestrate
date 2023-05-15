@@ -20,7 +20,7 @@ import org.dotwebstack.orchestrate.parser.yaml.YamlModelMappingParser;
 final class TestFixtures {
 
   public enum TargetModelType {
-    ADRES, CORE_LOCATION
+    IMXGEO, CORELOCATION
   }
 
   public static Model createBagModel() {
@@ -243,10 +243,10 @@ final class TestFixtures {
   public static ModelMapping createModelMapping(TargetModelType targetModelType, InputStream mappingInputStream) {
     Model targetModel = null;
 
-    if (targetModelType == TargetModelType.ADRES) {
+    if (targetModelType == TargetModelType.IMXGEO) {
       targetModel = createImxGeoModel();
-    } else if (targetModelType == TargetModelType.CORE_LOCATION) {
-      targetModel = buildCoreLocationTargetModel();
+    } else if (targetModelType == TargetModelType.CORELOCATION) {
+      targetModel = createCoreLocationModel();
     }
 
     var yamlMapper = YamlModelMappingParser.getInstance();
@@ -380,16 +380,16 @@ final class TestFixtures {
         .build();
   }
 
-  private static Model buildCoreLocationTargetModel() {
+  private static Model createCoreLocationModel() {
     return Model.builder()
         .alias("loc")
         .objectType(ObjectType.builder()
             .name("Address")
-            .property(Attribute.builder()
-                .name("_id")
-                .type(ScalarTypes.STRING)
-                .cardinality(Cardinality.REQUIRED)
-                .build())
+//            .property(Attribute.builder()
+//                .name("_id")
+//                .type(ScalarTypes.STRING)
+//                .cardinality(Cardinality.REQUIRED)
+//                .build())
 //            .property(Attribute.builder()
 //                .name("addressArea")
 //                .type(ScalarTypes.STRING)

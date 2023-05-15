@@ -8,8 +8,6 @@ objectTypeMappings:
       locatorDesignator:
         pathMappings:
           - path: huisnummer
-            map:
-              type: toString
           - path: huisnummertoevoeging
             map:
               type: prepend
@@ -19,7 +17,9 @@ objectTypeMappings:
             map:
               type: prepend
               options:
-                prefix: ' '
+                prefix: '-'
+        combiner:
+          type: join
       postCode:
         pathMappings:
           path: postcode
@@ -55,7 +55,7 @@ objectTypeMappings:
             map:
               type: prepend
               options:
-                prefix: ' '
+                prefix: ', '
           - path: ligtIn/naam
             andThen:
               path: ligtAan/ligtIn/naam
@@ -65,3 +65,5 @@ objectTypeMappings:
               type: prepend
               options:
                 prefix: ' '
+        combiner:
+          type: join

@@ -1,4 +1,4 @@
 orchestrate:
   gateway:
-    targetModel: coreLocation
-    mapping: /config/coreLocationMapping.yaml
+    targetModel: corelocation
+    mapping: /mapping/corelocation.yaml

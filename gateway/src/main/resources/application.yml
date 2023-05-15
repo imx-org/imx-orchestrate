@@ -19,6 +19,6 @@ management:
 
 orchestrate:
   gateway:
-    targetModel: ${TARGET_MODEL:adres}
-    mapping: ${MODEL_MAPPING:/config/adresmapping.yaml}
+    targetModel: ${TARGET_MODEL:imxgeo}
+    mapping: ${MODEL_MAPPING:/mapping/imxgeo.yaml}
     dataPath: ${DATA_PATH:./data}
