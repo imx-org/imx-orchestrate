@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 import org.dotwebstack.orchestrate.model.PathResult;
 import org.dotwebstack.orchestrate.model.PropertyResult;
 
-public final class JoinType implements ResultCombinerType {
+public final class JoinCombinerType implements ResultCombinerType {
 
   @Override
   public String getName() {

@@ -3,11 +3,11 @@ package org.dotwebstack.orchestrate.model.matchers;
 import java.util.Collection;
 import java.util.Map;
 
-public class NotEqualsType implements MatcherType {
+public final class EqualsMatcherType implements MatcherType {
 
   @Override
   public String getName() {
-    return "notEquals";
+    return "equals";
   }
 
   @Override
@@ -16,10 +16,10 @@ public class NotEqualsType implements MatcherType {
 
     return input -> {
       if (value instanceof Collection<?> collectionValue) {
-        return !collectionValue.contains(input);
+        return collectionValue.contains(input);
       }
 
-      return !value.equals(input);
+      return value.equals(input);
     };
   }
 }

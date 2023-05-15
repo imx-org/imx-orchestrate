@@ -23,8 +23,8 @@ import org.dotwebstack.orchestrate.model.PathResult;
 import org.dotwebstack.orchestrate.model.Property;
 import org.dotwebstack.orchestrate.model.PropertyMapping;
 import org.dotwebstack.orchestrate.model.PropertyResult;
-import org.dotwebstack.orchestrate.model.combiners.CoalesceType;
-import org.dotwebstack.orchestrate.model.combiners.NoopType;
+import org.dotwebstack.orchestrate.model.combiners.CoalesceCombinerType;
+import org.dotwebstack.orchestrate.model.combiners.NoopCombinerType;
 import org.dotwebstack.orchestrate.model.lineage.ObjectLineage;
 import org.dotwebstack.orchestrate.model.lineage.ObjectReference;
 import org.dotwebstack.orchestrate.model.lineage.OrchestratedProperty;
@@ -137,8 +137,8 @@ public final class ObjectResultMapper {
           .isSingular();
 
       combiner = hasMultiCardinality
-          ? new NoopType().create(Map.of())
-          : new CoalesceType().create(Map.of());
+          ? new NoopCombinerType().create(Map.of())
+          : new CoalesceCombinerType().create(Map.of());
     }
 
     return combiner.apply(pathResults);

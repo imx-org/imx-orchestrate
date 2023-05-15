@@ -6,7 +6,7 @@ import java.util.Map;
 import org.dotwebstack.orchestrate.model.PathResult;
 import org.dotwebstack.orchestrate.model.PropertyResult;
 
-public final class NoopType implements ResultCombinerType {
+public final class NoopCombinerType implements ResultCombinerType {
 
   @Override
   public String getName() {

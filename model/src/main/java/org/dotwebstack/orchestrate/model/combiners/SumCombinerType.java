@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 import org.dotwebstack.orchestrate.model.PathResult;
 import org.dotwebstack.orchestrate.model.PropertyResult;
 
-public class SumType implements ResultCombinerType {
+public final class SumCombinerType implements ResultCombinerType {
 
   @Override
   public String getName() {

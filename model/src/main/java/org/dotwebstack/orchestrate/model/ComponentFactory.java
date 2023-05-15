@@ -3,24 +3,25 @@ package org.dotwebstack.orchestrate.model;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.dotwebstack.orchestrate.model.combiners.CoalesceType;
-import org.dotwebstack.orchestrate.model.combiners.JoinType;
-import org.dotwebstack.orchestrate.model.combiners.NoopType;
+import org.dotwebstack.orchestrate.model.combiners.CoalesceCombinerType;
+import org.dotwebstack.orchestrate.model.combiners.JoinCombinerType;
+import org.dotwebstack.orchestrate.model.combiners.NoopCombinerType;
 import org.dotwebstack.orchestrate.model.combiners.ResultCombiner;
 import org.dotwebstack.orchestrate.model.combiners.ResultCombinerType;
-import org.dotwebstack.orchestrate.model.combiners.SumType;
-import org.dotwebstack.orchestrate.model.mappers.AppendType;
-import org.dotwebstack.orchestrate.model.mappers.CelType;
-import org.dotwebstack.orchestrate.model.mappers.PrependType;
+import org.dotwebstack.orchestrate.model.combiners.SumCombinerType;
+import org.dotwebstack.orchestrate.model.mappers.AppendMapperType;
+import org.dotwebstack.orchestrate.model.mappers.CelMapperType;
+import org.dotwebstack.orchestrate.model.mappers.PrependMapperType;
 import org.dotwebstack.orchestrate.model.mappers.ResultMapper;
 import org.dotwebstack.orchestrate.model.mappers.ResultMapperType;
-import org.dotwebstack.orchestrate.model.mappers.ToStringType;
-import org.dotwebstack.orchestrate.model.matchers.EqualsType;
-import org.dotwebstack.orchestrate.model.matchers.IsNullType;
+import org.dotwebstack.orchestrate.model.mappers.ToStringMapperType;
+import org.dotwebstack.orchestrate.model.matchers.CelMatcherType;
+import org.dotwebstack.orchestrate.model.matchers.EqualsMatcherType;
+import org.dotwebstack.orchestrate.model.matchers.IsNullMatcherType;
 import org.dotwebstack.orchestrate.model.matchers.Matcher;
 import org.dotwebstack.orchestrate.model.matchers.MatcherType;
-import org.dotwebstack.orchestrate.model.matchers.NotEqualsType;
-import org.dotwebstack.orchestrate.model.matchers.NotNullType;
+import org.dotwebstack.orchestrate.model.matchers.NotEqualsMatcherType;
+import org.dotwebstack.orchestrate.model.matchers.NotNullMatcherType;
 
 public final class ComponentFactory {
 
@@ -31,9 +32,10 @@ public final class ComponentFactory {
   private final Map<String, MatcherType> matcherTypes = new HashMap<>();
 
   public ComponentFactory() {
-    register(new AppendType(), new CelType(), new PrependType(), new ToStringType());
-    register(new CoalesceType(), new JoinType(), new NoopType(), new SumType());
-    register(new EqualsType(), new IsNullType(), new NotEqualsType(), new NotNullType());
+    register(new AppendMapperType(), new CelMapperType(), new PrependMapperType(), new ToStringMapperType());
+    register(new CoalesceCombinerType(), new JoinCombinerType(), new NoopCombinerType(), new SumCombinerType());
+    register(new CelMatcherType(), new EqualsMatcherType(), new IsNullMatcherType(), new NotEqualsMatcherType(),
+        new NotNullMatcherType());
   }
 
   public ComponentFactory register(ResultMapperType... resultMapperTypes) {

@@ -3,7 +3,7 @@ package org.dotwebstack.orchestrate.model.matchers;
 import java.util.Map;
 import java.util.Objects;
 
-public class IsNullType implements MatcherType {
+public final class IsNullMatcherType implements MatcherType {
 
   @Override
   public String getName() {

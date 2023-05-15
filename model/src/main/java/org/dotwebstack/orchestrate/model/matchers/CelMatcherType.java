@@ -1,4 +1,4 @@
-package org.dotwebstack.orchestrate.model.mappers;
+package org.dotwebstack.orchestrate.model.matchers;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +9,7 @@ import org.projectnessie.cel.tools.ScriptCreateException;
 import org.projectnessie.cel.tools.ScriptException;
 import org.projectnessie.cel.tools.ScriptHost;
 
-public class CelType implements ResultMapperType {
+public final class CelMatcherType implements MatcherType {
 
   @Override
   public String getName() {
@@ -17,7 +17,7 @@ public class CelType implements ResultMapperType {
   }
 
   @Override
-  public ResultMapper create(Map<String, Object> options) {
+  public Matcher create(Map<String, Object> options) {
     var scriptHost = ScriptHost.newBuilder()
         .build();
 
@@ -26,18 +26,18 @@ public class CelType implements ResultMapperType {
 
     try {
       script = scriptHost.buildScript(expr)
-          .withDeclarations(Decls.newVar("result", Decls.Any))
+          .withDeclarations(Decls.newVar("value", Decls.Any))
           .build();
     } catch (ScriptCreateException e) {
       throw new ModelException("Could not parse expression: " + expr, e);
     }
 
-    return result -> {
+    return value -> {
       var arguments = new HashMap<String, Object>();
-      arguments.put("result", result);
+      arguments.put("value", value);
 
       try {
-        return script.execute(Object.class, arguments);
+        return script.execute(Boolean.class, arguments);
       } catch (ScriptException e) {
         throw new ModelException("Could not evaluate expression: " + expr, e);
       }

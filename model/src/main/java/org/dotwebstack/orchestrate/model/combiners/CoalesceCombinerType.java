@@ -8,7 +8,7 @@ import java.util.Set;
 import org.dotwebstack.orchestrate.model.PathResult;
 import org.dotwebstack.orchestrate.model.PropertyResult;
 
-public final class CoalesceType implements ResultCombinerType {
+public final class CoalesceCombinerType implements ResultCombinerType {
 
   @Override
   public String getName() {
