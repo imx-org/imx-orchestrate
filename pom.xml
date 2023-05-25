@@ -30,7 +30,7 @@
         <micrometer.version>1.11.0</micrometer.version>
         <commons-text.version>1.10.0</commons-text.version>
         <jts.version>1.19.0</jts.version>
-        <lombok.version>1.18.26</lombok.version>
+        <lombok.version>1.18.28</lombok.version>
         <jackson.version>2.15.1</jackson.version>
         <cel.version>0.3.16</cel.version>
         <junit.version>5.9.3</junit.version>
