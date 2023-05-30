@@ -18,7 +18,7 @@ public final class CoalesceCombinerType implements ResultCombinerType {
   @Override
   public ResultCombiner create(Map<String, Object> options) {
     return pathResults -> pathResults.stream()
-        .filter(PathResult::notEmpty)
+        .filter(PathResult::isNotNull)
         .map(pathResult -> PropertyResult.builder()
             .value(pathResult.getValue())
             .sourceProperties(Optional.ofNullable(pathResult.getSourceProperty())

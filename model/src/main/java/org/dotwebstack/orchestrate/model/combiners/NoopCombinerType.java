@@ -18,7 +18,7 @@ public final class NoopCombinerType implements ResultCombinerType {
     return pathResults -> {
       var nonEmptyResults = pathResults
           .stream()
-          .filter(PathResult::notEmpty)
+          .filter(PathResult::isNotNull)
           .toList();
 
       return PropertyResult.builder()

@@ -8,8 +8,6 @@ objectTypeMappings:
       locatorDesignator:
         pathMappings:
           - path: huisnummer
-            map:
-              type: toString
           - path: huisnummertoevoeging
             map:
               type: prepend

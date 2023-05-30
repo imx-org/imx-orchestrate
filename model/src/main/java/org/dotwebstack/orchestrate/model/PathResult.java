@@ -12,12 +12,12 @@ public class PathResult {
 
   private final SourceProperty sourceProperty;
 
-  public boolean isEmpty() {
+  public boolean isNull() {
     return value == null;
   }
 
-  public boolean notEmpty() {
-    return !isEmpty();
+  public boolean isNotNull() {
+    return value != null;
   }
 
   public PathResult withValue(Object newValue) {

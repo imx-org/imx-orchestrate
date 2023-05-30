@@ -163,11 +163,11 @@ public final class ObjectResultMapper {
           .findFirst()
           .orElse(pathResult);
 
-      var mappedValue = pathMapping.getResultMappers()
+      var mappedPathResult = pathMapping.getResultMappers()
           .stream()
-          .reduce(nextedPathResult.getValue(), (acc, resultMapper) -> resultMapper.apply(acc), noopCombiner());
+          .reduce(nextedPathResult, (acc, resultMapper) -> resultMapper.apply(acc, null), noopCombiner());
 
-      return Stream.of(nextedPathResult.withValue(mappedValue));
+      return Stream.of(mappedPathResult);
     });
   }
 

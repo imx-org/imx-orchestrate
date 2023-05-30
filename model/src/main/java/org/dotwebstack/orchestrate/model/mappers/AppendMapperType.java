@@ -13,12 +13,13 @@ public final class AppendMapperType implements ResultMapperType {
   public ResultMapper create(Map<String, Object> options) {
     var suffix = (String) options.get("suffix");
 
-    return result -> {
-      if (result == null) {
-        return null;
+    return (result, property) -> {
+      if (result.isNull()) {
+        return result;
       }
 
-      return String.valueOf(result).concat(suffix);
+      var mappedValue = String.valueOf(result.getValue()).concat(suffix);
+      return result.withValue(mappedValue);
     };
   }
 }

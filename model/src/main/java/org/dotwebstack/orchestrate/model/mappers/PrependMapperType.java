@@ -13,12 +13,13 @@ public final class PrependMapperType implements ResultMapperType {
   public ResultMapper create(Map<String, Object> options) {
     var prefix = (String) options.get("prefix");
 
-    return result -> {
-      if (result == null) {
-        return null;
+    return (result, property) -> {
+      if (result.isNull()) {
+        return result;
       }
 
-      return prefix.concat(String.valueOf(result));
+      var mappedValue = prefix.concat(String.valueOf(result.getValue()));
+      return result.withValue(mappedValue);
     };
   }
 }

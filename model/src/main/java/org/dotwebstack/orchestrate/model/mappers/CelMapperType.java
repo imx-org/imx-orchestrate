@@ -32,12 +32,13 @@ public final class CelMapperType implements ResultMapperType {
       throw new ModelException("Could not parse expression: " + expr, e);
     }
 
-    return result -> {
+    return (result, property) -> {
       var arguments = new HashMap<String, Object>();
-      arguments.put("result", result);
+      arguments.put("result", result.getValue());
 
       try {
-        return script.execute(Object.class, arguments);
+        var mappedValue = script.execute(Object.class, arguments);
+        return result.withValue(mappedValue);
       } catch (ScriptException e) {
         throw new ModelException("Could not evaluate expression: " + expr, e);
       }

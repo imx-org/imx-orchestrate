@@ -17,7 +17,7 @@ public final class JoinCombinerType implements ResultCombinerType {
     return pathResults -> {
       var nonEmptyResults = pathResults
           .stream()
-          .filter(PathResult::notEmpty)
+          .filter(PathResult::isNotNull)
           .toList();
 
       if (nonEmptyResults.isEmpty()) {

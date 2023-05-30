@@ -14,7 +14,6 @@ import org.dotwebstack.orchestrate.model.mappers.CelMapperType;
 import org.dotwebstack.orchestrate.model.mappers.PrependMapperType;
 import org.dotwebstack.orchestrate.model.mappers.ResultMapper;
 import org.dotwebstack.orchestrate.model.mappers.ResultMapperType;
-import org.dotwebstack.orchestrate.model.mappers.ToStringMapperType;
 import org.dotwebstack.orchestrate.model.matchers.CelMatcherType;
 import org.dotwebstack.orchestrate.model.matchers.EqualsMatcherType;
 import org.dotwebstack.orchestrate.model.matchers.IsNullMatcherType;
@@ -32,7 +31,7 @@ public final class ComponentFactory {
   private final Map<String, MatcherType> matcherTypes = new HashMap<>();
 
   public ComponentFactory() {
-    register(new AppendMapperType(), new CelMapperType(), new PrependMapperType(), new ToStringMapperType());
+    register(new AppendMapperType(), new CelMapperType(), new PrependMapperType());
     register(new CoalesceCombinerType(), new JoinCombinerType(), new NoopCombinerType(), new SumCombinerType());
     register(new CelMatcherType(), new EqualsMatcherType(), new IsNullMatcherType(), new NotEqualsMatcherType(),
         new NotNullMatcherType());
