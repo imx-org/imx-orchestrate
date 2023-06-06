@@ -127,7 +127,7 @@ public final class ObjectResultMapper {
   private PropertyResult mapProperty(ObjectResult objectResult, Property property, PropertyMapping propertyMapping) {
     var pathResults = propertyMapping.getPathMappings()
         .stream()
-        .flatMap(pathMapping -> pathResult(objectResult, pathMapping))
+        .flatMap(pathMapping -> pathResult(objectResult, property, pathMapping))
         .toList();
 
     var combiner = propertyMapping.getCombiner();
@@ -144,7 +144,7 @@ public final class ObjectResultMapper {
     return combiner.apply(pathResults);
   }
 
-  private Stream<PathResult> pathResult(ObjectResult objectResult, PathMapping pathMapping) {
+  private Stream<PathResult> pathResult(ObjectResult objectResult, Property property, PathMapping pathMapping) {
     var pathResults = pathResult(objectResult, pathMapping.getPath(), pathMapping.getPath());
 
     return pathResults.flatMap(pathResult -> {
@@ -155,7 +155,7 @@ public final class ObjectResultMapper {
             var ifMatch = nextPathMapping.getIfMatch();
 
             if (ifMatch != null && ifMatch.test(pathResult.getValue())) {
-              return pathResult(objectResult, nextPathMapping);
+              return pathResult(objectResult, property, nextPathMapping);
             }
 
             return Stream.of(pathResult);
@@ -165,7 +165,7 @@ public final class ObjectResultMapper {
 
       var mappedPathResult = pathMapping.getResultMappers()
           .stream()
-          .reduce(nextedPathResult, (acc, resultMapper) -> resultMapper.apply(acc, null), noopCombiner());
+          .reduce(nextedPathResult, (acc, resultMapper) -> resultMapper.apply(acc, property), noopCombiner());
 
       return Stream.of(mappedPathResult);
     });
