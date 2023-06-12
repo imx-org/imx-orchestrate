@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.dotwebstack.orchestrate.model.combiners.CoalesceCombinerType;
 import org.dotwebstack.orchestrate.model.combiners.JoinCombinerType;
+import org.dotwebstack.orchestrate.model.combiners.MergeCombinerType;
 import org.dotwebstack.orchestrate.model.combiners.NoopCombinerType;
 import org.dotwebstack.orchestrate.model.combiners.ResultCombiner;
 import org.dotwebstack.orchestrate.model.combiners.ResultCombinerType;
@@ -32,7 +33,8 @@ public final class ComponentFactory {
 
   public ComponentFactory() {
     register(new AppendMapperType(), new CelMapperType(), new PrependMapperType());
-    register(new CoalesceCombinerType(), new JoinCombinerType(), new NoopCombinerType(), new SumCombinerType());
+    register(new CoalesceCombinerType(), new JoinCombinerType(), new MergeCombinerType(), new NoopCombinerType(),
+        new SumCombinerType());
     register(new CelMatcherType(), new EqualsMatcherType(), new IsNullMatcherType(), new NotEqualsMatcherType(),
         new NotNullMatcherType());
   }

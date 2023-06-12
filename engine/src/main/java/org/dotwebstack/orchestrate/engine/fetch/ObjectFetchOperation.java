@@ -3,6 +3,7 @@ package org.dotwebstack.orchestrate.engine.fetch;
 import java.util.List;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.dotwebstack.orchestrate.model.ObjectResult;
 import org.dotwebstack.orchestrate.source.BatchRequest;
 import org.dotwebstack.orchestrate.source.ObjectRequest;
 import reactor.core.publisher.Flux;

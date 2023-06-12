@@ -7,10 +7,10 @@ import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toSet;
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.extractKey;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.cast;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.isReservedField;
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.propertyExtractor;
+import static org.dotwebstack.orchestrate.model.ModelUtils.extractKey;
+import static org.dotwebstack.orchestrate.model.ModelUtils.keyExtractor;
 
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
@@ -161,7 +161,7 @@ public final class FetchPlanner {
             nextOperations.add(NextOperation.builder()
                 .property(relation)
                 .delegateOperation(fetchSourceObject(targetTypeRef, nestedSourcePaths, false, null))
-                .inputMapper(propertyExtractor(propertyName))
+                .inputMapper(objectResult -> cast(objectResult.getProperty(propertyName)))
                 .build());
 
             return;

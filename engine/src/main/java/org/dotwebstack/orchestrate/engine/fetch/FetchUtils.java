@@ -4,56 +4,14 @@ import static graphql.introspection.Introspection.INTROSPECTION_SYSTEM_FIELDS;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.HAS_LINEAGE_FIELD;
 
 import graphql.schema.SelectedField;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.BinaryOperator;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.dotwebstack.orchestrate.engine.OrchestrateException;
-import org.dotwebstack.orchestrate.model.ObjectType;
-import org.dotwebstack.orchestrate.model.ObjectTypeMapping;
-import org.dotwebstack.orchestrate.model.Property;
-import reactor.util.function.Tuples;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class FetchUtils {
-
-  public static UnaryOperator<Map<String, Object>> keyExtractor(ObjectType targetType,
-      ObjectTypeMapping targetMapping) {
-    // TODO: Refactor & support nested keys
-    var propertyMapping = targetType.getIdentityProperties()
-        .stream()
-        .map(property -> {
-          var sourcePath = targetMapping.getPropertyMapping(property.getName())
-              .getPathMappings()
-              .get(0)
-              .getPath()
-              .getFirstSegment();
-
-          return Tuples.of(sourcePath, property.getName());
-        })
-        .toList();
-
-    return input -> propertyMapping.stream()
-        .collect(HashMap::new, (acc, t) -> acc.put(t.getT1(), input.get(t.getT2())), HashMap::putAll);
-  }
-
-  public static Function<ObjectResult, Map<String, Object>> keyExtractor(ObjectType objectType) {
-    return objectResult -> extractKey(objectType, objectResult.getProperties());
-  }
-
-  public static Map<String, Object> extractKey(ObjectType objectType, Map<String, Object> data) {
-    return objectType.getIdentityProperties()
-        .stream()
-        .collect(Collectors.toMap(Property::getName, property -> data.get(property.getName())));
-  }
-
-  public static Function<ObjectResult, Map<String, Object>> propertyExtractor(String propertyName) {
-    return objectResult -> cast(objectResult.getProperty(propertyName));
-  }
 
   public static boolean isReservedField(SelectedField selectedField, UnaryOperator<String> lineageRenamer) {
     var fieldName = selectedField.getName();

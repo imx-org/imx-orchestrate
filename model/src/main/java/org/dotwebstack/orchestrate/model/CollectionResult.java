@@ -1,4 +1,4 @@
-package org.dotwebstack.orchestrate.engine.fetch;
+package org.dotwebstack.orchestrate.model;
 
 import java.util.List;
 import lombok.Builder;

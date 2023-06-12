@@ -1,12 +1,11 @@
-package org.dotwebstack.orchestrate.engine.fetch;
+package org.dotwebstack.orchestrate.model;
 
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.keyExtractor;
+import static org.dotwebstack.orchestrate.model.ModelUtils.keyExtractor;
 
 import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
-import org.dotwebstack.orchestrate.model.ObjectType;
 
 @Getter
 @Builder(toBuilder = true)

@@ -4,6 +4,11 @@
     "heeftAlsHoofdadres": {
       "identificatie": "0200200000075716"
     },
+    "heeftAlsNevenadres": [
+      {
+        "identificatie": "0200200000075717"
+      }
+    ],
     "maaktDeelUitVan": [
       {
         "identificatie": "0200100000085932"

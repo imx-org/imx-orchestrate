@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.function.Function;
 import lombok.Singular;
 import lombok.experimental.SuperBuilder;
+import org.dotwebstack.orchestrate.model.ObjectResult;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.source.SelectedProperty;
 import org.dotwebstack.orchestrate.source.Source;

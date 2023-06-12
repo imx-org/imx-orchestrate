@@ -2,7 +2,7 @@ package org.dotwebstack.orchestrate.engine.fetch;
 
 import static java.util.function.Function.identity;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.cast;
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.extractKey;
+import static org.dotwebstack.orchestrate.model.ModelUtils.extractKey;
 
 import java.util.List;
 import java.util.Map;
@@ -11,6 +11,8 @@ import lombok.Builder;
 import lombok.Getter;
 import org.dataloader.DataLoader;
 import org.dataloader.DataLoaderFactory;
+import org.dotwebstack.orchestrate.model.CollectionResult;
+import org.dotwebstack.orchestrate.model.ObjectResult;
 import org.dotwebstack.orchestrate.model.Property;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
