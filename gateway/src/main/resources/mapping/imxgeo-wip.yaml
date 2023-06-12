@@ -53,6 +53,28 @@ namedPaths:
 #      heeftGrondperceel:
 #        path: "isBelastMet/{2a}/rustOp"
 
+targetModel:
+  imxgeo:
+    location: "config/models/mimxml-imx-geo.xml"
+    profile: MIM
+
+sourceModels:
+  - bag:
+      location: "config/models/imbag.xml"
+      profile: MIM
+  - bgt:
+      location: "config/models/imgeo.xml"
+      profile: MIM
+  - bg:
+      location: "config/models/bg.xml"
+      profile: MIM
+  - imro:
+      location: "config/models/imro.xml"
+      profile: MIM
+  - brk:
+      location: "config/models/brk.xml"
+      profile: MIM`
+
 objectTypeMappings:
   Adres:
     sourceRoot: bag:Nummeraanduiding
@@ -60,6 +82,7 @@ objectTypeMappings:
       identificatie:
         pathMappings:
           path: identificatie
+      # domein: TODO
       huisnummer:
         pathMappings:
           path: huisnummer
@@ -199,6 +222,7 @@ objectTypeMappings:
       identificatie:
         pathMapping:
           path: identificatie
+      # domein: TODO
       geometrie:
         pathMapping:
           path: geometrie
@@ -212,6 +236,7 @@ objectTypeMappings:
       identificatie:
         pathMapping:
           path: identificatie
+      # domein: TODO
       naam:
         pathMapping:
           path: officieleNaamInclSoort
@@ -222,6 +247,7 @@ objectTypeMappings:
       identificatie:
         pathMapping:
           path: identificatie
+      # domein: TODO
       geometrie:
         pathMapping:
           path: geometrie
@@ -229,8 +255,34 @@ objectTypeMappings:
         pathMapping:
           path: . # Current path
 
-  GraafgebiedKLICmelding:
+  Bestemming:
     sourceRoot:
+      - type: imro:Enkelbestemming
+      - type: imro:Dubbelbestemming
+    propertyMappings:
+      identificatie:
+        pathMappings:
+          - path: identificate/namespace
+          - path: identificatie/lokaalID
+            map:
+              type: prepend
+              options:
+                prefix: '.'
+        combiner:
+          type: join
+      # domein: TODO
+      bestemming:
+        pathMapping:
+          path: naam
+      bestemmingsplan:
+        pathMapping:
+          path: plangebied.identificatie
+      verwijzingNaarArtikel:
+        pathMapping:
+          path: verwijzingNaarTekstInfo/verwijzingNaarTekst
+      geometrie:
+        pathMapping:
+          path: geometrie
 
   Perceel:
     sourceRoot: brk:Perceel
@@ -238,16 +290,31 @@ objectTypeMappings:
       identificatie:
         pathMapping:
           path: identificatie
+      # domein: TODO
       begrenzing:
         pathMapping:
           path: begrenzingPerceel
+      beperking: # TODO
+        pathMapping:
+          path: grondslag
       oppervlak:
         pathMapping:
           path: kadastraleGrootte/waarde
       laatsteKoopsom:
         pathMapping:
-          path: koopsom
-          target: Bedrag
+          path: koopsom/bedrag/som
+      koopjaar:
+        pathMapping:
+          path: koopsom/koopjaar
+      ligtInRegistratieveRuimte: # TODO sourceRelations
+        pathMapping:
+          path: ligtInRegistratieveRuimte
+      bevatBouwwerk: # TODO sourceRelations
+        pathMapping:
+          path: bevatBouwwerk
+      heeftBestemming: # TODO sourceRelations
+        pathMapping:
+          path: heeftBestemming
 
   Bedrag:
     propertyMappings:
@@ -258,13 +325,58 @@ objectTypeMappings:
         pathMapping:
           path: valuta
 
+  Woonplaats: # TODO is dit nodig? Woonplaats is 1 op 1
+    sourceRoot: bag:Woonplaats
+    identificatie:
+      pathMapping:
+        path: identificatie
+    # domein: TODO
+    geometrie:
+      pathMapping:
+        path: geometrie
+    naam:
+      pathMapping:
+        path: naam
+
+  Wijk:
+    sourceRoot: bgt:Wijk
+    identificatie:
+      pathMapping:
+        path: identificatie
+    # domein: TODO
+    geometrie:
+      pathMapping:
+        path: geometrie
+    naam:
+      pathMapping:
+        path: naam
+    wijkcode:
+      pathMapping:
+        path: wijkcode
+
+  Buurt:
+    sourceRoot: bgt:Buurt
+    identificatie:
+      pathMapping:
+        path: identificatie
+    # domein: TODO
+    geometrie:
+      pathMapping:
+        path: geometrie
+    naam:
+      pathMapping:
+        path: naam
+    buurtcode:
+      pathMapping:
+        path: buurtcode
+
   Bouwwerk:
     sourceRoot: # TODO
-      - bgt:Tunneldeel
-      - bgt:Kunstwerkdeel
-      - bgt:Scheiding
-      - bgt:Gebouwinstallatie
-      - bgt:Overbruggingsdeel
+      - type: bgt:Tunneldeel
+      - type: bgt:Kunstwerkdeel
+      - type: bgt:Scheiding
+      - type: bgt:Gebouwinstallatie
+      - type: bgt:Overbruggingsdeel
     propertyMappings:
       identificatie:
         pathMappings:
@@ -274,6 +386,12 @@ objectTypeMappings:
 #          path:
       type:
         pathMappings:
+#          - ifMatchType: bgt:Tunneldeel # TODO
+#            constant: "Tunneldeel"
+          - ifMatchType: bgt:Kunstwerkdeel
+            path:
+
+
           - path: plus-type
             andThen:
               ifMatch:
