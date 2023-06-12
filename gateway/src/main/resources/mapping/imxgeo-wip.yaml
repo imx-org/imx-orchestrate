@@ -1,0 +1,285 @@
+lineageNameMapping:
+  hasLineage: geregistreerdMet
+  ObjectLineage: Registratie
+  orchestratedProperties: bestaatUit
+  OrchestratedProperty: GeorkestreerdGegeven
+  SourceProperty: Brongegeven
+  ObjectReference: Object
+  subject: onderwerp
+  property: kenmerk
+  value: waarde
+  objectKey: identificatie
+  objectType: type
+
+namedPaths:
+  plaats:
+    path: ligtIn
+    andThen:
+      ifMatch:
+        type: isNull
+      path: ligtAan/ligtIn
+    default: null # is default
+
+#namedTransforms:
+#  isNotEmpty:
+#    expr: "value != null"
+#  prefix:
+#    if: "value != null"
+#    expr: "args.str + value"
+#    args:
+#      str:
+#        type: string
+
+#pathMappings:
+#  2a:
+#    path: isBelastendVoor
+#    repeat:
+#      untilMatch:
+#        type: notNull
+#    andThen:
+#      path: "{2b}"
+#
+#  2b:
+#    path: isOntstaanUit/betrokkene
+#    andThen:
+#      path: "{2a}"
+#      ifMatch:
+#        type: notNull
+#
+#objectTypeMappings:
+#  AppartementsrechtSplitsing:
+#    sourceRoot: brk:AppartementsrechtsSplitsing
+#    propertyMappings:
+#      heeftGrondperceel:
+#        path: "isBelastMet/{2a}/rustOp"
+
+objectTypeMappings:
+  Adres:
+    sourceRoot: bag:Nummeraanduiding
+    propertyMappings:
+      identificatie:
+        pathMappings:
+          path: identificatie
+      huisnummer:
+        pathMappings:
+          path: huisnummer
+      huisnummertoevoeging:
+        pathMappings:
+          path: huisnummertoevoeging
+      huisletter:
+        pathMappings:
+          path: huisletter
+      postcode:
+        pathMappings:
+          path: postcode
+      straatnaam:
+        pathMappings:
+          path: ligtAan/naam
+      plaatsnaam:
+        pathMappings:
+          path: ligtIn/naam
+          andThen:
+            path: ligtAan/ligtIn/naam
+            ifMatch:
+              type: isNull
+      isHoofdadres:
+        pathMappings:
+          path: isHoofdadresVan/identificatie
+          map:
+            type: cel
+            options:
+              expr: 'type(result) != null_type'
+      omschrijving:
+        pathMappings:
+          - path: ligtAan/naam
+          - path: huisnummer
+            map:
+              type: prepend
+              options:
+                prefix: ' '
+          - path: huisletter
+            map:
+              type: prepend
+              options:
+                prefix: ' '
+          - path: huisnummertoevoeging
+            map:
+              type: prepend
+              options:
+                prefix: '-'
+          - path: postcode
+            map:
+              type: prepend
+              options:
+                prefix: ', '
+          - path: ligtIn/naam
+            andThen: # Moet dit een or worden?
+              path: ligtAan/ligtIn/naam
+              ifMatch:
+                type: isNull
+            map:
+              type: prepend
+              options:
+                prefix: ' '
+        combiner:
+          type: join
+      # TODO: auto-generatie inverse mappings
+      isAdresVanGebouw:
+        pathMappings:
+          path: isHoofdadresVan/maaktDeelUitVan/isGerelateerdAan
+
+  Gebouw:
+    sourceRoot:
+      - type: bgt:Pand
+      - type: bgt:OverigBouwwerk
+    propertyMappings:
+      identificatie:
+        pathMapping:
+          path: identificatie
+#      domein: NL.,,, # TODO
+      bouwjaar:
+        pathMapping:
+          ifMatchType: bgt:Pand
+          path: isGerelateerdAan/oorspronkelijkBouwjaar
+      sloopjaar:
+        pathMapping:
+          ifMatchType: bgt:Pand
+          path: isGerelateerdAan/status
+          andThen:
+            ifMatch:
+              type: equals
+              options:
+                value: "Pand gesloopt"
+            path: isGerelateerdAan/geregistreerdMet/beginGeldigheid
+            map:
+              type: cel
+              options:
+                expr: 'getFullYear(result)'
+      bovenaanzichtgeometrie:
+        pathMapping:
+          ifMatchType: bgt:Pand
+          path: isGerelateerdAan/geometrie
+      maaiveldgeometrie:
+        pathMappings:
+          - ifMatchType: bgt:Pand
+            path: geometrie2dGrondvlak
+          - ifMatchType: bgt:OverigBouwwerk
+            path: geometrie2dOverigeConstructie
+      heeftAlsAdres:
+        pathMappings:
+          - ifMatchType: bgt:Pand
+            path: isGerelateerdAan/bevat/heeftAlsHoofdadres
+          - ifMatchType: bgt:Pand
+            path: isGerelateerdAan/bevat/heeftAlsNevenadres
+        combiner:
+          type: merge
+      totaalPerceelOppervlak:
+        pathMappings:
+          path: isGerelateerdAan/bevat/heeftAlsHoofdadres/betreftInverse/heeft/kadastraleGrootte
+        combiner:
+          type: sum
+      bevindtZichOpPerceel:
+        pathMappings:
+          path: isGerelateerdAan/bevat/heeftAlsHoofdadres/betreftInverse/heeft
+
+  Waterschap:
+    sourceRoot: bg:Waterschap
+    propertyMappings:
+      identificatie:
+        pathMapping:
+          path: identificatie
+#      domein:
+      naam:
+        pathMapping:
+          path: officieleNaamInclSoort
+
+  Waterschapsgebied:
+    sourceRoot: bg:Waterschap
+    propertyMappings:
+      identificatie:
+        pathMapping:
+          path: identificatie
+      geometrie:
+        pathMapping:
+          path: geometrie
+      wordtBestuurdDoorWaterschap:
+        pathMapping:
+          path: . # TODO
+
+  Gemeente:
+    sourceRoot: bg:Gemeente
+    propertyMappings:
+      identificatie:
+        pathMapping:
+          path: identificatie
+      naam:
+        pathMapping:
+          path: officieleNaamInclSoort
+
+  Gemeentegebied:
+    sourceRoot: bg:Gemeente
+    propertyMappings:
+      identificatie:
+        pathMapping:
+          path: identificatie
+      geometrie:
+        pathMapping:
+          path: geometrie
+      wordtBestuurdDoorGemeente:
+        pathMapping:
+          path: . # Current path
+
+  GraafgebiedKLICmelding:
+    sourceRoot:
+
+  Perceel:
+    sourceRoot: brk:Perceel
+    propertyMappings:
+      identificatie:
+        pathMapping:
+          path: identificatie
+      begrenzing:
+        pathMapping:
+          path: begrenzingPerceel
+      oppervlak:
+        pathMapping:
+          path: kadastraleGrootte/waarde
+      laatsteKoopsom:
+        pathMapping:
+          path: koopsom
+          target: Bedrag
+
+  Bedrag:
+    propertyMappings:
+      som:
+        pathMapping:
+          path: som
+      valuta:
+        pathMapping:
+          path: valuta
+
+  Bouwwerk:
+    sourceRoot: # TODO
+      - bgt:Tunneldeel
+      - bgt:Kunstwerkdeel
+      - bgt:Scheiding
+      - bgt:Gebouwinstallatie
+      - bgt:Overbruggingsdeel
+    propertyMappings:
+      identificatie:
+        pathMappings:
+          path: identificatie
+#      maaiveldgeometrie:
+#        pathMapping
+#          path:
+      type:
+        pathMappings:
+          - path: plus-type
+            andThen:
+              ifMatch:
+                type: isNull
+              path: bgt-type
+          - path: . # TODO
+            map:
+              type: objectType
+          - path: typeOverbruggingsdeel
