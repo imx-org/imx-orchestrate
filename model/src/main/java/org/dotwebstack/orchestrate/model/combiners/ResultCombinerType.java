@@ -7,6 +7,4 @@ public interface ResultCombinerType {
   String getName();
 
   ResultCombiner create(Map<String, Object> options);
-
-  default void validate(Map<String, Object> options) {}
 }

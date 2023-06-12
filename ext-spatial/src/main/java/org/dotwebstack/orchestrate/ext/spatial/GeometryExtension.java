@@ -9,6 +9,8 @@ import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import java.util.Map;
 import org.dotwebstack.orchestrate.engine.OrchestrateExtension;
+import org.dotwebstack.orchestrate.ext.spatial.filters.IntersectsOperatorType;
+import org.dotwebstack.orchestrate.model.ComponentFactory;
 
 public final class GeometryExtension implements OrchestrateExtension {
 
@@ -41,5 +43,10 @@ public final class GeometryExtension implements OrchestrateExtension {
 
     codeRegistryBuilder.dataFetchers("Geometry", Map.of(
         AS_GEOJSON, geometryFetcher, AS_WKB, geometryFetcher, AS_WKT, geometryFetcher));
+  }
+
+  @Override
+  public void registerComponents(ComponentFactory componentFactory) {
+    componentFactory.register(new IntersectsOperatorType());
   }
 }

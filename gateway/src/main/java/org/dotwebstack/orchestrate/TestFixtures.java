@@ -240,7 +240,8 @@ final class TestFixtures {
         .build();
   }
 
-  public static ModelMapping createModelMapping(TargetModelType targetModelType, InputStream mappingInputStream) {
+  public static ModelMapping createModelMapping(TargetModelType targetModelType, InputStream mappingInputStream,
+      YamlModelMappingParser yamlModelMappingParser) {
     Model targetModel = null;
 
     if (targetModelType == TargetModelType.IMXGEO) {
@@ -249,10 +250,8 @@ final class TestFixtures {
       targetModel = createCoreLocationModel();
     }
 
-    var yamlMapper = YamlModelMappingParser.getInstance();
-
     // TODO: Merge into one step
-    return yamlMapper.parse(mappingInputStream)
+    return yamlModelMappingParser.parse(mappingInputStream)
         .toBuilder()
         .targetModel(targetModel)
         .sourceModel(createBagModel())

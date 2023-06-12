@@ -11,6 +11,22 @@ lineageNameMapping:
   objectKey: identificatie
   objectType: type
 
+sourceRelations:
+  - sourceType: bgt:Pand
+    property:
+      name: gerelateerdBagPand
+      target: bag:Pand
+      cardinality: 0..1
+      inverseName: gerelateerdBgtPand
+      inverseCardinality: 0..1
+    key:
+      sourcePath: identificatieBAGPND
+    filters:
+      - property: geometrie
+        operator:
+          type: intersects
+        sourcePath: geometrie2dGrondvlak
+
 objectTypeMappings:
   Adres:
     sourceRoot: bag:Nummeraanduiding

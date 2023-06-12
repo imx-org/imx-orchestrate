@@ -20,6 +20,8 @@ public final class ModelMapping {
 
   private final Map<String, Model> sourceModelMap;
 
+  private final Set<SourceRelation> sourceRelations;
+
   private final Map<String, ObjectTypeMapping> objectTypeMappings;
 
   private final Map<String, String> lineageNameMapping;
@@ -27,7 +29,8 @@ public final class ModelMapping {
   @Jacksonized
   @Builder(toBuilder = true)
   public ModelMapping(Model targetModel, @Singular Set<Model> sourceModels,
-      @Singular Map<String, ObjectTypeMapping> objectTypeMappings, Map<String, String> lineageNameMapping) {
+      @Singular Set<SourceRelation> sourceRelations, @Singular Map<String, ObjectTypeMapping> objectTypeMappings,
+      Map<String, String> lineageNameMapping) {
     // TODO: Remove null-check once parser workaround has been resolved
     if (targetModel != null) {
       validateModel(targetModel);
@@ -43,6 +46,7 @@ public final class ModelMapping {
     this.sourceModelMap = this.sourceModels.stream()
         .collect(toMap(Model::getAlias, Function.identity()));
 
+    this.sourceRelations = sourceRelations;
     this.objectTypeMappings = objectTypeMappings;
     this.lineageNameMapping = Optional.ofNullable(lineageNameMapping)
         .orElse(Map.of());
