@@ -73,7 +73,10 @@ sourceModels:
       profile: MIM
   - brk:
       location: "config/models/brk.xml"
-      profile: MIM`
+      profile: MIM
+  - bro:
+      location: "config/models/bro.xml"
+      profile: MIM
 
 objectTypeMappings:
   Adres:
@@ -306,15 +309,15 @@ objectTypeMappings:
       koopjaar:
         pathMapping:
           path: koopsom/koopjaar
-      ligtInRegistratieveRuimte: # TODO sourceRelations
-        pathMapping:
-          path: ligtInRegistratieveRuimte
-      bevatBouwwerk: # TODO sourceRelations
-        pathMapping:
-          path: bevatBouwwerk
-      heeftBestemming: # TODO sourceRelations
-        pathMapping:
-          path: heeftBestemming
+#      ligtInRegistratieveRuimte: # TODO sourceRelations
+#        pathMapping:
+#          path: ligtInRegistratieveRuimte
+#      bevatBouwwerk: # TODO sourceRelations
+#        pathMapping:
+#          path: bevatBouwwerk
+#      heeftBestemming: # TODO sourceRelations
+#        pathMapping:
+#          path: heeftBestemming
 
   Bedrag:
     propertyMappings:
@@ -327,48 +330,51 @@ objectTypeMappings:
 
   Woonplaats: # TODO is dit nodig? Woonplaats is 1 op 1
     sourceRoot: bag:Woonplaats
-    identificatie:
-      pathMapping:
-        path: identificatie
-    # domein: TODO
-    geometrie:
-      pathMapping:
-        path: geometrie
-    naam:
-      pathMapping:
-        path: naam
+    propertyMappings:
+      identificatie:
+        pathMapping:
+          path: identificatie
+      # domein: TODO
+      geometrie:
+        pathMapping:
+          path: geometrie
+      naam:
+        pathMapping:
+          path: naam
 
   Wijk:
     sourceRoot: bgt:Wijk
-    identificatie:
-      pathMapping:
-        path: identificatie
-    # domein: TODO
-    geometrie:
-      pathMapping:
-        path: geometrie
-    naam:
-      pathMapping:
-        path: naam
-    wijkcode:
-      pathMapping:
-        path: wijkcode
+    propertyMappings:
+      identificatie:
+        pathMapping:
+          path: identificatie
+      # domein: TODO
+      geometrie:
+        pathMapping:
+          path: geometrie
+      naam:
+        pathMapping:
+          path: naam
+      wijkcode:
+        pathMapping:
+          path: wijkcode
 
   Buurt:
     sourceRoot: bgt:Buurt
-    identificatie:
-      pathMapping:
-        path: identificatie
-    # domein: TODO
-    geometrie:
-      pathMapping:
-        path: geometrie
-    naam:
-      pathMapping:
-        path: naam
-    buurtcode:
-      pathMapping:
-        path: buurtcode
+    propertyMappings:
+      identificatie:
+        pathMapping:
+          path: identificatie
+      # domein: TODO
+      geometrie:
+        pathMapping:
+          path: geometrie
+      naam:
+        pathMapping:
+          path: naam
+      buurtcode:
+        pathMapping:
+          path: buurtcode
 
   Bouwwerk:
     sourceRoot: # TODO
@@ -381,18 +387,54 @@ objectTypeMappings:
       identificatie:
         pathMappings:
           path: identificatie
-#      maaiveldgeometrie:
-#        pathMapping
-#          path:
+      # domein: TODO
+      maaiveldgeometrie:
+        pathMappings:
+          path: geometrie
       type:
         pathMappings:
 #          - ifMatchType: bgt:Tunneldeel # TODO
 #            constant: "Tunneldeel"
           - ifMatchType: bgt:Kunstwerkdeel
-            path:
-
-
-          - path: plus-type
+            path: plus-type
+            andThen:
+              ifMatch: isNull
+              path: bgt-type
+#          - ifMatchType: bgt:OverigeConstructie # TODO missing mapping
+          - ifMatchType: bgt:GebouwInstallatie
+            path: plus-type
+            andThen:
+              ifMatch:
+                type: isNull
+              path: bgt-type
+          - ifMatchType: bgt:Overbruggingsdeel
+            path: bgt:typeOverbruggingsdeel
+          - ifMatchType: bgt:Paal
+            path: plus-type
+            andThen:
+              ifMatch:
+                type: isNull
+              path: bgt-type
+          - ifMatchType: bgt:Mast
+            path: plus-type
+            andThen:
+              ifMatch:
+                type: isNull
+              path: bgt-type
+          - ifMatchType: bgt:Straatmeubilair
+            path: plus-type
+            andThen:
+              ifMatch:
+                type: isNull
+              path: bgt-type
+          - ifMatchType: bgt:Put
+            path: plus-type
+            andThen:
+              ifMatch:
+                type: isNull
+              path: bgt-type
+          - ifMatchType: bgt:Bak
+            path: plus-type
             andThen:
               ifMatch:
                 type: isNull
@@ -400,4 +442,93 @@ objectTypeMappings:
           - path: . # TODO
             map:
               type: objectType
-          - path: typeOverbruggingsdeel
+
+  Landschapselement:
+    sourceRoot: bgt:VegetatieObject
+    propertyMappings:
+      identificatie:
+        pathMapping:
+          path: identificatie
+      # domein: TODO
+      type:
+        pathMapping:
+          path: plus-type
+          andThen:
+            ifMatch:
+              type: isNull
+            path: bgt-type
+      geometrie:
+        pathMapping:
+          path: geometrie
+
+  Water:
+    sourceRoot: bgt:Waterdeel
+    propertyMappings:
+      identificatie:
+        pathMapping:
+          path: identificatie
+      # domein: TODO
+      type:
+        pathMapping:
+          path: plus-type
+          andThen:
+            ifMatch:
+              type: isNull
+            path: bgt-type
+      geometrie:
+        pathMapping:
+          path: geometrie
+#      functie: # TODO missing mapping
+#        pathMappping:
+#      realiseertInfiltratie: # TODO missing mapping
+#        pathMapping:
+
+  Weg:
+    sourceRoot: bgt:Wegdeel
+    propertyMappings:
+      identificatie:
+        pathMapping:
+          path: identificatie
+      # domein: TODO
+#      functie: # TODO missing mapping
+#        pathMapping:
+#          path:
+      fysiekVoorkomen:
+        pathMapping:
+          path: plus-fysiekvoorkomen
+          andThen:
+            ifMatch:
+              type: isNull
+            path: bgt-fysiekvoorkomen
+      geometrie:
+        pathMapping:
+          path: geometrie
+#      naam: # TODO sourceRelation to BAG OpenbareRuimte
+#        pathMapping:
+#          path: <<link-to-bag:OpenbareRuimte>>/naam
+
+#   Ondergrond: # TODO missing mapping
+
+  Grondwaterstand:
+    sourceRoot: bro:Grondwaterspiegeldieptemeting
+    propertyMappings:
+#      identificatie: # TODO missing mapping
+#        pathMapping:
+#          path: identificatie
+      # domein: TODO
+      geometrie:
+        pathMapping:
+          path: geometrie
+
+  Bodemsamenstelling:
+    sourceRoot: bro:Voxel
+    propertyMappings:
+      #      identificatie: # TODO missing mapping
+      #        pathMapping:
+      #          path: identificatie
+      # domein: TODO
+      geometrie:
+        pathMapping:
+          path: geometrie
+
+
