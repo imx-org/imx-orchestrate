@@ -17,6 +17,7 @@ import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.GraphQLObjectType;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -146,7 +147,16 @@ public final class FetchPlanner {
             var targetTypeRef = relation.getTarget(sourceTypeRef);
             var targetType = modelMapping.getSourceType(targetTypeRef);
 
-            selectedProperties.add(new SelectedProperty(property, selectIdentity(targetTypeRef)));
+            var dataProperty = Optional.ofNullable(property.getDataProperty())
+                .map(sourceType::getProperty)
+                .orElse(null);
+
+            if (dataProperty != null) {
+              // TODO: Distinct check; is data property already selected?
+              selectedProperties.add(new SelectedProperty(dataProperty));
+            } else {
+              selectedProperties.add(new SelectedProperty(property, selectIdentity(targetTypeRef)));
+            }
 
             var identityPaths = targetType.getIdentityProperties()
                 .stream()
@@ -158,10 +168,12 @@ public final class FetchPlanner {
               return;
             }
 
+            var inputPropertyName = dataProperty != null ? dataProperty.getName() : propertyName;
+
             nextOperations.add(NextOperation.builder()
                 .property(relation)
                 .delegateOperation(fetchSourceObject(targetTypeRef, nestedSourcePaths, false, null))
-                .inputMapper(objectResult -> cast(objectResult.getProperty(propertyName)))
+                .inputMapper(objectResult -> cast(objectResult.getProperty(inputPropertyName)))
                 .build());
 
             return;

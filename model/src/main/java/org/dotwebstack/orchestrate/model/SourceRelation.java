@@ -11,11 +11,9 @@ import org.dotwebstack.orchestrate.model.filters.Filter;
 @Builder(toBuilder = true)
 public final class SourceRelation {
 
-  private final String sourceType;
+  private final ObjectTypeRef sourceType;
 
   private final Relation property;
-
-  private final RelationKey key;
 
   private final Set<Filter> filters;
 }

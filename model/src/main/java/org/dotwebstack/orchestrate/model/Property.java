@@ -7,4 +7,6 @@ public interface Property {
   boolean isIdentifier();
 
   Cardinality getCardinality();
+
+  String getDataProperty();
 }

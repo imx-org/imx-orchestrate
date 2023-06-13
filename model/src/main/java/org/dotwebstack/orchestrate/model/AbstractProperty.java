@@ -16,4 +16,6 @@ public abstract class AbstractProperty implements Property {
 
   @Builder.Default
   protected final Cardinality cardinality = Cardinality.OPTIONAL;
+
+  protected final String dataProperty;
 }

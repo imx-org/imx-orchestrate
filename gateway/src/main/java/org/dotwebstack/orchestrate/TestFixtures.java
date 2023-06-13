@@ -180,13 +180,6 @@ final class TestFixtures {
                 .type(ScalarTypes.STRING)
                 .cardinality(Cardinality.REQUIRED)
                 .build())
-            .property(Relation.builder()
-                .name("isGerelateerdAan")
-                .target(ObjectTypeRef.fromString("bag:Pand"))
-                .cardinality(Cardinality.OPTIONAL)
-                .inverseName("isGerelateerdAan")
-                .inverseCardinality(Cardinality.OPTIONAL)
-                .build())
             .build())
         .build();
   }

@@ -42,14 +42,36 @@ public final class ModelMapping {
     }
 
     sourceModels.forEach(this::validateModel);
-    this.sourceModels = resolveInverseRelations(sourceModels);
+    this.sourceRelations = sourceRelations;
+    this.sourceModels = resolveInverseRelations(addSourceRelations(sourceModels));
     this.sourceModelMap = this.sourceModels.stream()
         .collect(toMap(Model::getAlias, Function.identity()));
 
-    this.sourceRelations = sourceRelations;
     this.objectTypeMappings = objectTypeMappings;
     this.lineageNameMapping = Optional.ofNullable(lineageNameMapping)
         .orElse(Map.of());
+  }
+
+  private Set<Model> addSourceRelations(Set<Model> models) {
+    // TODO: Remove null-check once parser workaround has been resolved
+    if (models.isEmpty()) {
+      return models;
+    }
+
+    var mutableSourceModelMap = models.stream()
+        .collect(toMap(Model::getAlias, Function.identity()));
+
+    sourceRelations.forEach(sourceRelation -> {
+      var sourceType = sourceRelation.getSourceType();
+      var sourceModelAlias = sourceType.getModelAlias();
+      var sourceModel = mutableSourceModelMap.get(sourceModelAlias);
+
+      mutableSourceModelMap.put(sourceModelAlias, sourceModel.replaceObjectType(
+          sourceModel.getObjectType(sourceType)
+              .appendProperty(sourceRelation.getProperty())));
+    });
+
+    return Set.copyOf(mutableSourceModelMap.values());
   }
 
   private Set<Model> resolveInverseRelations(Set<Model> models) {
