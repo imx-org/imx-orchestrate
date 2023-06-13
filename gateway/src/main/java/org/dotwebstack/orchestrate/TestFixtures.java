@@ -1,7 +1,6 @@
 package org.dotwebstack.orchestrate;
 
 import static org.dotwebstack.orchestrate.model.Cardinality.INFINITE;
-
 import java.io.InputStream;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -13,7 +12,6 @@ import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.Relation;
-import org.dotwebstack.orchestrate.model.loader.ModelLoaderRegistry;
 import org.dotwebstack.orchestrate.model.types.ScalarTypes;
 import org.dotwebstack.orchestrate.parser.yaml.YamlModelMappingParser;
 
@@ -241,15 +239,13 @@ final class TestFixtures {
         .build();
   }
 
-  public static ModelMapping createModelMapping(ModelLoaderRegistry modelLoaderRegistry,
-      TargetModelType targetModelType, InputStream mappingInputStream) {
+  public static ModelMapping createModelMapping(TargetModelType targetModelType, InputStream mappingInputStream,
+      YamlModelMappingParser yamlModelMappingParser, boolean useInternalModels) {
 
-    var yamlMapper = YamlModelMappingParser.getInstance(modelLoaderRegistry);
-
-    var modelMapping = yamlMapper.parse(mappingInputStream);
+    var modelMapping = yamlModelMappingParser.parse(mappingInputStream);
 
     // TODO: temporary situation, for testing purposes
-    if (modelLoaderRegistry == null) {
+    if (useInternalModels) {
       Model targetModel = null;
 
       if (targetModelType == TargetModelType.IMXGEO) {

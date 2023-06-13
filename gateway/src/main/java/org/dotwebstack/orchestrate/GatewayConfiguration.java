@@ -14,6 +14,7 @@ import org.dotwebstack.orchestrate.engine.schema.SchemaFactory;
 import org.dotwebstack.orchestrate.ext.spatial.GeometryExtension;
 import org.dotwebstack.orchestrate.model.loader.ModelLoader;
 import org.dotwebstack.orchestrate.model.loader.ModelLoaderRegistry;
+import org.dotwebstack.orchestrate.parser.yaml.YamlModelMappingParser;
 import org.dotwebstack.orchestrate.source.file.FileSource;
 import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -26,22 +27,29 @@ import org.springframework.graphql.execution.GraphQlSource;
 @EnableConfigurationProperties(GraphQlProperties.class)
 public class GatewayConfiguration {
 
+  private GatewayProperties gatewayProperties;
+
   private ModelLoaderRegistry modelLoaderRegistry;
 
-  private GatewayProperties gatewayProperties;
+  // TODO temporary to detect availability of modelloaders;
+  private Set<ModelLoader> modelLoaders;
 
   public GatewayConfiguration(GatewayProperties gatewayProperties, Set<ModelLoader> modelLoaders) {
     this.gatewayProperties = gatewayProperties;
     this.modelLoaderRegistry = ModelLoaderRegistry.getInstance();
     modelLoaders.forEach(modelLoaderRegistry::registerModelLoader);
+    this.modelLoaders = modelLoaders;
   }
 
   @Bean
   public GraphQlSource graphQlSource() {
 
+    var yamlModelMappingParser = YamlModelMappingParser.getInstance(modelLoaderRegistry);
+
     var orchestration = Orchestration.builder()
-        .modelMapping(createModelMapping(modelLoaderRegistry, gatewayProperties.getTargetModel(),
-            GatewayConfiguration.class.getResourceAsStream(gatewayProperties.getMapping())))
+        .modelMapping(createModelMapping(gatewayProperties.getTargetModel(),
+            GatewayConfiguration.class.getResourceAsStream(gatewayProperties.getMapping()), yamlModelMappingParser,
+            modelLoaders.isEmpty()))
         .source("bag", new FileSource(createBagModel(), Paths.get(gatewayProperties.getDataPath(), "bag")))
         .source("bgt", new FileSource(createBgtModel(), Paths.get(gatewayProperties.getDataPath(), "bgt")))
         .source("brk", new FileSource(createBrkModel(), Paths.get(gatewayProperties.getDataPath(), "brk")))
