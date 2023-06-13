@@ -1,3 +1,15 @@
+targetModel:
+  imxgeo:
+    profile: MIM
+    location: imx/location
+sourceModels:
+  - bag:
+      profile: MIM
+      location: bag/location
+  - bgt:
+      profile: MIM
+      location: bgt/location
+
 objectTypeMappings:
   Address:
     sourceRoot: bag:Nummeraanduiding

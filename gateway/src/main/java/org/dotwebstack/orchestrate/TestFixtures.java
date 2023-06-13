@@ -13,6 +13,7 @@ import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.model.ObjectTypeRef;
 import org.dotwebstack.orchestrate.model.Relation;
+import org.dotwebstack.orchestrate.model.loader.ModelLoaderRegistry;
 import org.dotwebstack.orchestrate.model.types.ScalarTypes;
 import org.dotwebstack.orchestrate.parser.yaml.YamlModelMappingParser;
 
@@ -240,25 +241,32 @@ final class TestFixtures {
         .build();
   }
 
-  public static ModelMapping createModelMapping(TargetModelType targetModelType, InputStream mappingInputStream) {
-    Model targetModel = null;
+  public static ModelMapping createModelMapping(ModelLoaderRegistry modelLoaderRegistry,
+      TargetModelType targetModelType, InputStream mappingInputStream) {
 
-    if (targetModelType == TargetModelType.IMXGEO) {
-      targetModel = createImxGeoModel();
-    } else if (targetModelType == TargetModelType.CORELOCATION) {
-      targetModel = createCoreLocationModel();
+    var yamlMapper = YamlModelMappingParser.getInstance(modelLoaderRegistry);
+
+    var modelMapping = yamlMapper.parse(mappingInputStream);
+
+    // TODO: temporary situation, for testing purposes
+    if (modelLoaderRegistry == null) {
+      Model targetModel = null;
+
+      if (targetModelType == TargetModelType.IMXGEO) {
+        targetModel = createImxGeoModel();
+      } else if (targetModelType == TargetModelType.CORELOCATION) {
+        targetModel = createCoreLocationModel();
+      }
+
+      return modelMapping.toBuilder()
+          .targetModel(targetModel)
+          .sourceModel(createBagModel())
+          .sourceModel(createBgtModel())
+          .sourceModel(createBrkModel())
+          .build();
     }
 
-    var yamlMapper = YamlModelMappingParser.getInstance();
-
-    // TODO: Merge into one step
-    return yamlMapper.parse(mappingInputStream)
-        .toBuilder()
-        .targetModel(targetModel)
-        .sourceModel(createBagModel())
-        .sourceModel(createBgtModel())
-        .sourceModel(createBrkModel())
-        .build();
+    return modelMapping;
   }
 
   private static Model createImxGeoModel() {
