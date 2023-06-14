@@ -15,6 +15,7 @@ import org.dotwebstack.orchestrate.model.Path;
 import org.dotwebstack.orchestrate.model.PathMapping;
 import org.dotwebstack.orchestrate.model.PropertyMapping;
 import org.dotwebstack.orchestrate.model.Relation;
+import org.dotwebstack.orchestrate.model.SourceRelation;
 import org.dotwebstack.orchestrate.model.types.ScalarTypes;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -166,13 +167,6 @@ public final class TestFixtures {
                 .name("identificatieBAGPND")
                 .type(ScalarTypes.STRING)
                 .cardinality(Cardinality.REQUIRED)
-                .build())
-            .property(Relation.builder()
-                .name("isGerelateerdAan")
-                .target(ObjectTypeRef.fromString("bag:Pand"))
-                .cardinality(Cardinality.OPTIONAL)
-                .inverseName("isGerelateerdAan")
-                .inverseCardinality(Cardinality.OPTIONAL)
                 .build())
             .build())
         .build();
@@ -346,15 +340,29 @@ public final class TestFixtures {
             .build())
         .propertyMapping("bouwjaar", PropertyMapping.builder()
             .pathMapping(PathMapping.builder()
-                .path(Path.fromString("isGerelateerdAan/oorspronkelijkBouwjaar"))
+                .path(Path.fromString("gerelateerdBagPand/oorspronkelijkBouwjaar"))
                 .build())
             .build())
         .propertyMapping("heeftAlsAdres", PropertyMapping.builder()
             .pathMapping(PathMapping.builder()
                 // TODO: how to deal with multiple relation paths?
                 // TODO: how to deal with multiple lists within a single path?
-                .path(Path.fromString("isGerelateerdAan/bevat/heeftAlsHoofdadres"))
+                .path(Path.fromString("gerelateerdBagPand/bevat/heeftAlsHoofdadres"))
                 .build())
+            .build())
+        .build();
+  }
+
+  public static SourceRelation createPandRelation() {
+    return SourceRelation.builder()
+        .sourceType(ObjectTypeRef.fromString("bgt:Pand"))
+        .property(Relation.builder()
+            .name("gerelateerdBagPand")
+            .target(ObjectTypeRef.fromString("bag:Pand"))
+            .cardinality(Cardinality.OPTIONAL)
+            .inverseName("gerelateerdBgtPand")
+            .inverseCardinality(Cardinality.OPTIONAL)
+            .keyMapping(Map.of("identificatie", Path.fromString("identificatieBAGPND")))
             .build())
         .build();
   }
@@ -364,6 +372,7 @@ public final class TestFixtures {
         .targetModel(createTargetModel())
         .sourceModel(createBagModel())
         .sourceModel(createBgtModel())
+        .sourceRelation(createPandRelation())
         .objectTypeMapping("Adres", createAdresMapping())
         .objectTypeMapping("Gebouw", createGebouwMapping())
         .build();
