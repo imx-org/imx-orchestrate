@@ -126,11 +126,7 @@ public final class FetchPlanner {
           var property = sourceType.getProperty(propertyName);
 
           if (property instanceof InverseRelation inverseRelation) {
-            var filterDefinition = FilterDefinition.builder()
-                .path(Path.fromProperties(inverseRelation.getOriginRelation()))
-                .valueExtractor(input -> extractKey(sourceType, input))
-                .build();
-
+            var filterDefinition = createFilterDefinition(sourceType, inverseRelation);
             var originTypeRef = inverseRelation.getTarget(sourceTypeRef);
 
             nextOperations.add(NextOperation.builder()
@@ -231,6 +227,27 @@ public final class FetchPlanner {
         .selectedProperties(unmodifiableSet(selectedProperties))
         .nextOperations(unmodifiableSet(nextOperations))
         .build();
+  }
+
+  private FilterDefinition createFilterDefinition(ObjectType sourceType, InverseRelation inverseRelation) {
+    var filterDefinition = FilterDefinition.builder();
+    var keyMapping = inverseRelation.getOriginRelation()
+        .getKeyMapping();
+
+    if (keyMapping != null) {
+      // TODO: Composite keys
+      var keyMappingEntry = keyMapping.entrySet()
+          .iterator()
+          .next();
+
+      filterDefinition.path(keyMappingEntry.getValue())
+          .valueExtractor(input -> input.get(keyMappingEntry.getKey()));
+    } else {
+      filterDefinition.path(Path.fromProperties(inverseRelation.getOriginRelation()))
+          .valueExtractor(input -> extractKey(sourceType, input));
+    }
+
+    return filterDefinition.build();
   }
 
   private Set<SelectedProperty> selectIdentity(ObjectTypeRef typeRef) {
