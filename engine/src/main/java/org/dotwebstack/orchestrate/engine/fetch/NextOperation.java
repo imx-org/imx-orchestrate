@@ -73,13 +73,7 @@ public class NextOperation {
   }
 
   private Publisher<ObjectResult> fetchCollection(ObjectResult objectResult) {
-    var inputValue = getInputValue(objectResult);
-
-    if (inputValue == null) {
-      return Mono.just(objectResult);
-    }
-
-    var input = FetchInput.newInput((Map<String, Object>) inputValue);
+    var input = FetchInput.newInput(objectResult.getProperties());
 
     if (!property.getCardinality().isSingular()) {
       return delegateOperation.execute(input)
