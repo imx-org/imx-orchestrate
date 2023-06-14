@@ -6,7 +6,6 @@ import static org.dotwebstack.orchestrate.model.ModelUtils.extractKey;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import lombok.Builder;
 import lombok.Getter;
 import org.dataloader.DataLoader;
@@ -14,6 +13,7 @@ import org.dataloader.DataLoaderFactory;
 import org.dotwebstack.orchestrate.model.CollectionResult;
 import org.dotwebstack.orchestrate.model.ObjectResult;
 import org.dotwebstack.orchestrate.model.Property;
+import org.dotwebstack.orchestrate.model.Relation;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -26,8 +26,6 @@ public class NextOperation {
 
   private final FetchOperation delegateOperation;
 
-  private final Function<ObjectResult, Map<String, Object>> inputMapper;
-
   public Publisher<ObjectResult> apply(Flux<ObjectResult> resultFlux) {
     // TODO: handle only distinct inputs
     if (delegateOperation instanceof CollectionFetchOperation) {
@@ -38,14 +36,14 @@ public class NextOperation {
 
     return resultFlux.doOnComplete(dataLoader::dispatch)
         .flatMapSequential(objectResult -> {
-          var input = inputMapper.apply(objectResult);
+          var inputValue = getInputValue(objectResult);
 
-          if (input == null) {
+          if (inputValue == null) {
             return Mono.just(objectResult);
           }
 
-          if (input instanceof List<?>) {
-            return Mono.fromCompletionStage(dataLoader.loadMany(cast(input)))
+          if (inputValue instanceof List<?>) {
+            return Mono.fromCompletionStage(dataLoader.loadMany(cast(inputValue)))
                 .map(nestedList -> objectResult.toBuilder()
                     .property(property.getName(), CollectionResult.builder()
                         .objectResults(nestedList)
@@ -53,7 +51,7 @@ public class NextOperation {
                     .build());
           }
 
-          return Mono.fromCompletionStage(dataLoader.load(cast(input)))
+          return Mono.fromCompletionStage(dataLoader.load(cast(inputValue)))
               .map(nestedObject -> objectResult.toBuilder()
                   .property(property.getName(), nestedObject)
                   .build())
@@ -75,13 +73,13 @@ public class NextOperation {
   }
 
   private Publisher<ObjectResult> fetchCollection(ObjectResult objectResult) {
-    var inputData = inputMapper.apply(objectResult);
+    var inputValue = getInputValue(objectResult);
 
-    if (inputData == null) {
+    if (inputValue == null) {
       return Mono.just(objectResult);
     }
 
-    var input = FetchInput.newInput(inputData);
+    var input = FetchInput.newInput((Map<String, Object>) inputValue);
 
     if (!property.getCardinality().isSingular()) {
       return delegateOperation.execute(input)
@@ -98,5 +96,17 @@ public class NextOperation {
             .property(property.getName(), nextResult)
             .build())
         .defaultIfEmpty(objectResult);
+  }
+
+  private Object getInputValue(ObjectResult objectResult) {
+    if (property instanceof Relation relation) {
+      var keyMapping = relation.getKeyMapping();
+
+      if (keyMapping != null) {
+        return extractKey(objectResult, keyMapping);
+      }
+    }
+
+    return objectResult.getProperty(property.getName());
   }
 }

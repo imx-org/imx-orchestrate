@@ -7,7 +7,6 @@ import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toSet;
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.cast;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.isReservedField;
 import static org.dotwebstack.orchestrate.model.ModelUtils.extractKey;
 import static org.dotwebstack.orchestrate.model.ModelUtils.keyExtractor;
@@ -136,7 +135,6 @@ public final class FetchPlanner {
             nextOperations.add(NextOperation.builder()
                 .property(inverseRelation)
                 .delegateOperation(fetchSourceObject(originTypeRef, nestedSourcePaths, true, filterDefinition))
-                .inputMapper(keyExtractor(sourceType))
                 .build());
 
             return;
@@ -174,8 +172,6 @@ public final class FetchPlanner {
             nextOperations.add(NextOperation.builder()
                 .property(relation)
                 .delegateOperation(fetchSourceObject(targetTypeRef, nestedSourcePaths, false, null))
-                .inputMapper(objectResult -> keyMapping != null ? extractKey(objectResult, keyMapping) :
-                    cast(objectResult.getProperty(propertyName)))
                 .build());
 
             return;
