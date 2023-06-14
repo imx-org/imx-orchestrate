@@ -13,6 +13,8 @@ public class IntersectsOperatorType implements FilterOperatorType {
 
   @Override
   public FilterOperator create(Map<String, Object> options) {
-    return new FilterOperator() {};
+    return IntersectsOperator.builder()
+        .type(getName())
+        .build();
   }
 }

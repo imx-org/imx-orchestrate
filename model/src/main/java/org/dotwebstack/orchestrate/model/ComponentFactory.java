@@ -10,6 +10,7 @@ import org.dotwebstack.orchestrate.model.combiners.NoopCombinerType;
 import org.dotwebstack.orchestrate.model.combiners.ResultCombiner;
 import org.dotwebstack.orchestrate.model.combiners.ResultCombinerType;
 import org.dotwebstack.orchestrate.model.combiners.SumCombinerType;
+import org.dotwebstack.orchestrate.model.filters.EqualsOperatorType;
 import org.dotwebstack.orchestrate.model.filters.FilterOperator;
 import org.dotwebstack.orchestrate.model.filters.FilterOperatorType;
 import org.dotwebstack.orchestrate.model.mappers.AppendMapperType;
@@ -41,6 +42,7 @@ public final class ComponentFactory {
         new SumCombinerType());
     register(new CelMatcherType(), new EqualsMatcherType(), new IsNullMatcherType(), new NotEqualsMatcherType(),
         new NotNullMatcherType());
+    register(new EqualsOperatorType());
   }
 
   public ComponentFactory register(ResultMapperType... resultMapperTypes) {

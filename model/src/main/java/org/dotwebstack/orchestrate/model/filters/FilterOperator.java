@@ -1,3 +1,6 @@
 package org.dotwebstack.orchestrate.model.filters;
 
-public interface FilterOperator {}
+public interface FilterOperator {
+
+  String getType();
+}

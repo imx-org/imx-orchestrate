@@ -21,11 +21,18 @@ sourceRelations:
       inverseCardinality: 0..1
       keyMapping:
         identificatie: identificatieBAGPND
-#    filters:
-#      - property: geometrie
-#        operator:
-#          type: intersects
-#        sourcePath: geometrie2dGrondvlak
+#  - sourceType: bgt:Pand
+#    property:
+#      name: gerelateerdBagPandGeo
+#      target: bag:Pand
+#      cardinality: 0..1
+#      inverseName: gerelateerdBgtPandGeo
+#      inverseCardinality: 0..1
+#      filterMappings:
+#        - property: geometrie
+#          operator:
+#            type: intersects
+#          sourcePath: geometrie2dGrondvlak
 
 objectTypeMappings:
   Adres:
