@@ -19,7 +19,8 @@ sourceRelations:
       cardinality: 0..1
       inverseName: gerelateerdBgtPand
       inverseCardinality: 0..1
-      dataProperty: identificatieBAGPND
+      keyMapping:
+        identificatie: identificatieBAGPND
 #    filters:
 #      - property: geometrie
 #        operator:

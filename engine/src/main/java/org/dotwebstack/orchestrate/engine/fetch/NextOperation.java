@@ -38,7 +38,7 @@ public class NextOperation {
 
     return resultFlux.doOnComplete(dataLoader::dispatch)
         .flatMapSequential(objectResult -> {
-          var input = objectResult.getProperty(property.getName());
+          var input = inputMapper.apply(objectResult);
 
           if (input == null) {
             return Mono.just(objectResult);

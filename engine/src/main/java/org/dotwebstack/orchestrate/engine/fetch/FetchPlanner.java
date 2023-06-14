@@ -17,7 +17,6 @@ import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.GraphQLObjectType;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -146,14 +145,18 @@ public final class FetchPlanner {
           if (property instanceof Relation relation) {
             var targetTypeRef = relation.getTarget(sourceTypeRef);
             var targetType = modelMapping.getSourceType(targetTypeRef);
+            var keyMapping = relation.getKeyMapping();
 
-            var dataProperty = Optional.ofNullable(property.getDataProperty())
-                .map(sourceType::getProperty)
-                .orElse(null);
+            if (keyMapping != null) {
+              keyMapping.values()
+                  .forEach(keyPath -> {
+                    if (!keyPath.isLeaf()) {
+                      throw new OrchestrateException("Only leaf paths are (currently) supported: " + keyPath);
+                    }
 
-            if (dataProperty != null) {
-              // TODO: Distinct check; is data property already selected?
-              selectedProperties.add(new SelectedProperty(dataProperty));
+                    var keyProperty = sourceType.getProperty(keyPath.getFirstSegment());
+                    selectedProperties.add(new SelectedProperty(keyProperty));
+                  });
             } else {
               selectedProperties.add(new SelectedProperty(property, selectIdentity(targetTypeRef)));
             }
@@ -168,12 +171,11 @@ public final class FetchPlanner {
               return;
             }
 
-            var inputPropertyName = dataProperty != null ? dataProperty.getName() : propertyName;
-
             nextOperations.add(NextOperation.builder()
                 .property(relation)
                 .delegateOperation(fetchSourceObject(targetTypeRef, nestedSourcePaths, false, null))
-                .inputMapper(objectResult -> cast(objectResult.getProperty(inputPropertyName)))
+                .inputMapper(objectResult -> keyMapping != null ? extractKey(objectResult, keyMapping) :
+                    cast(objectResult.getProperty(propertyName)))
                 .build());
 
             return;

@@ -1,5 +1,6 @@
 package org.dotwebstack.orchestrate.model;
 
+import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
@@ -16,4 +17,6 @@ public final class Relation extends AbstractRelation {
 
   @Builder.Default
   private final Cardinality inverseCardinality = Cardinality.MULTI;
+
+  private final Map<String, Path> keyMapping;
 }
