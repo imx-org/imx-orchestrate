@@ -4,6 +4,7 @@ import static graphql.introspection.Introspection.INTROSPECTION_SYSTEM_FIELDS;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.HAS_LINEAGE_FIELD;
 
 import graphql.schema.SelectedField;
+import java.util.Map;
 import java.util.function.BinaryOperator;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
@@ -29,6 +30,10 @@ final class FetchUtils {
     }
 
     return clazz.cast(value);
+  }
+
+  public static Map<String, Object> castToMap(Object value) {
+    return cast(value);
   }
 
   public static <T> BinaryOperator<T> noopCombiner() {

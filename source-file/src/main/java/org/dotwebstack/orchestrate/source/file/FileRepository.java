@@ -15,7 +15,7 @@ import org.dotwebstack.orchestrate.source.BatchRequest;
 import org.dotwebstack.orchestrate.source.CollectionRequest;
 import org.dotwebstack.orchestrate.source.DataRepository;
 import org.dotwebstack.orchestrate.source.DataRequest;
-import org.dotwebstack.orchestrate.source.FilterExpression;
+import org.dotwebstack.orchestrate.model.filters.FilterExpression;
 import org.dotwebstack.orchestrate.source.ObjectRequest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

@@ -7,7 +7,9 @@ import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toSet;
+import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.castToMap;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.isReservedField;
+import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_FILTER_ARGUMENTS;
 import static org.dotwebstack.orchestrate.model.ModelUtils.extractKey;
 import static org.dotwebstack.orchestrate.model.ModelUtils.keyExtractor;
 
@@ -32,7 +34,7 @@ import org.dotwebstack.orchestrate.model.Path;
 import org.dotwebstack.orchestrate.model.PathMapping;
 import org.dotwebstack.orchestrate.model.Property;
 import org.dotwebstack.orchestrate.model.Relation;
-import org.dotwebstack.orchestrate.source.FilterDefinition;
+import org.dotwebstack.orchestrate.model.filters.FilterDefinition;
 import org.dotwebstack.orchestrate.source.SelectedProperty;
 import org.dotwebstack.orchestrate.source.Source;
 import org.reactivestreams.Publisher;
@@ -62,7 +64,10 @@ public final class FetchPlanner {
     var input = FetchInput.newInput(keyExtractor(targetType, targetMapping)
         .apply(environment.getArguments()));
 
-    var fetchResult = fetchSourceObject(targetMapping.getSourceRoot(), sourcePaths, isCollection, null)
+    var filter = createFilterDefinition(targetType, castToMap(environment.getArguments()
+        .get(QUERY_FILTER_ARGUMENTS)));
+
+    var fetchResult = fetchSourceObject(targetMapping.getSourceRoot(), sourcePaths, isCollection, filter)
         .execute(input)
         .map(result -> resultMapper.map(result, targetType, environment.getSelectionSet()));
 
@@ -227,6 +232,39 @@ public final class FetchPlanner {
         .selectedProperties(unmodifiableSet(selectedProperties))
         .nextOperations(unmodifiableSet(nextOperations))
         .build();
+  }
+
+  private FilterDefinition createFilterDefinition(ObjectType targetType, Map<String, Object> arguments) {
+    if (arguments == null) {
+      return null;
+    }
+
+    if (arguments.entrySet().size() > 1) {
+      throw new OrchestrateException("Currently only a single filter property is supported.");
+    }
+
+    var firstEntry = arguments.entrySet()
+        .iterator()
+        .next();
+
+    var pathMappings = modelMapping.getObjectTypeMapping(targetType)
+        .getPropertyMapping(firstEntry.getKey())
+        .getPathMappings();
+
+    if (pathMappings.size() > 1) {
+      throw new OrchestrateException("Currently only a single path mapping is supported when filtering.");
+    }
+
+    var firstPath = pathMappings.get(0)
+        .getPath();
+
+    if (!firstPath.isLeaf()) {
+      throw new OrchestrateException("Currently only direct source root properties can be filtered.");
+    }
+
+    return ((Attribute) targetType.getProperty(firstEntry.getKey()))
+        .getType()
+        .createFilterDefinition(firstPath, firstEntry.getValue());
   }
 
   private FilterDefinition createFilterDefinition(ObjectType sourceType, InverseRelation inverseRelation) {

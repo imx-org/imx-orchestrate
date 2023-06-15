@@ -8,11 +8,14 @@ import static graphql.schema.SchemaTransformer.transformSchema;
 import static graphql.schema.idl.RuntimeWiring.newRuntimeWiring;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_COLLECTION_SUFFIX;
+import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_FILTER_ARGUMENTS;
+import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_FILTER_SUFFIX;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_TYPE;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaUtils.applyCardinality;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaUtils.requiredListType;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaUtils.requiredType;
 
+import graphql.language.InputObjectTypeDefinition;
 import graphql.language.InputValueDefinition;
 import graphql.language.ObjectTypeDefinition;
 import graphql.language.Type;
@@ -42,10 +45,10 @@ import org.dotwebstack.orchestrate.model.Property;
 import org.dotwebstack.orchestrate.model.lineage.ObjectLineage;
 import org.dotwebstack.orchestrate.model.lineage.ObjectReference;
 import org.dotwebstack.orchestrate.model.lineage.OrchestratedProperty;
-import org.dotwebstack.orchestrate.model.lineage.PropertyMapping;
-import org.dotwebstack.orchestrate.model.lineage.PropertyMappingExecution;
 import org.dotwebstack.orchestrate.model.lineage.Path;
 import org.dotwebstack.orchestrate.model.lineage.PathMapping;
+import org.dotwebstack.orchestrate.model.lineage.PropertyMapping;
+import org.dotwebstack.orchestrate.model.lineage.PropertyMappingExecution;
 import org.dotwebstack.orchestrate.model.lineage.SourceProperty;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -108,18 +111,68 @@ public final class SchemaFactory {
     var baseName = uncapitalize(objectTypeDefinition.getName());
     var collectionName = baseName.concat(QUERY_COLLECTION_SUFFIX);
 
-    queryTypeBuilder.fieldDefinition(newFieldDefinition()
-            .name(baseName)
-            .type(new TypeName(objectTypeDefinition.getName()))
-            .inputValueDefinitions(createIdentityArguments(objectType))
-            .build())
-        .fieldDefinition(newFieldDefinition()
-            .name(collectionName)
-            .type(requiredListType(objectTypeDefinition.getName()))
-            .build());
+    var objectField = newFieldDefinition()
+        .name(baseName)
+        .type(new TypeName(objectTypeDefinition.getName()))
+        .inputValueDefinitions(createIdentityArguments(objectType))
+        .build();
+
+    var collectionField = newFieldDefinition()
+        .name(collectionName)
+        .type(requiredListType(objectTypeDefinition.getName()))
+        .build();
+
+    var filterFields = objectType.getProperties(Attribute.class)
+        .stream()
+        .filter(attribute -> isFilterable(objectType, attribute))
+        .map(attribute -> {
+          var typeName = attribute.getType()
+              .getName();
+
+          // TODO: Decouple Geometry type handling
+          return InputValueDefinition.newInputValueDefinition()
+              .name(attribute.getName())
+              .type(typeName.equals("Geometry") ? new TypeName("GeometryFilter") : mapFieldType(attribute, false))
+              .build();
+        })
+        .toList();
+
+    if (!filterFields.isEmpty()) {
+      typeDefinitionRegistry.add(InputObjectTypeDefinition.newInputObjectDefinition()
+          .name(objectType.getName()
+              .concat(QUERY_FILTER_SUFFIX))
+          .inputValueDefinitions(filterFields)
+          .build());
+
+      var filterArgument = InputValueDefinition.newInputValueDefinition()
+          .name(QUERY_FILTER_ARGUMENTS)
+          .type(new TypeName(objectType.getName()
+              .concat(QUERY_FILTER_SUFFIX)))
+          .build();
+
+      collectionField = collectionField.transform(builder -> builder.inputValueDefinition(filterArgument));
+    }
+
+    queryTypeBuilder.fieldDefinition(objectField)
+        .fieldDefinition(collectionField);
 
     codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE, baseName), genericDataFetcher)
         .dataFetcher(coordinates(QUERY_TYPE, collectionName), genericDataFetcher);
+  }
+
+  private boolean isFilterable(ObjectType objectType, Attribute attribute) {
+    if (attribute.isIdentifier()) {
+      return false;
+    }
+
+    var pathMappings = modelMapping.getObjectTypeMapping(objectType)
+        .getPropertyMapping(attribute)
+        .getPathMappings();
+
+    var firstPath = pathMappings.get(0)
+        .getPath();
+
+    return pathMappings.size() == 1 && firstPath.isLeaf();
   }
 
   private void registerLineageTypes() {
@@ -284,7 +337,7 @@ public final class SchemaFactory {
 
   private Type<?> mapFieldType(ObjectType objectType, Property property) {
     if (property instanceof Attribute attribute) {
-      return mapFieldType(attribute);
+      return mapFieldType(attribute, true);
     }
 
     if (property instanceof AbstractRelation relation) {
@@ -295,7 +348,7 @@ public final class SchemaFactory {
     throw new OrchestrateException("Could not map field type");
   }
 
-  private Type<?> mapFieldType(Attribute attribute) {
+  private Type<?> mapFieldType(Attribute attribute, boolean applyCardinality) {
     var typeName = attribute.getType()
         .getName();
 
@@ -305,7 +358,7 @@ public final class SchemaFactory {
       default -> new TypeName(typeName);
     };
 
-    return applyCardinality(type, attribute.getCardinality());
+    return applyCardinality ? applyCardinality(type, attribute.getCardinality()) : type;
   }
 
   private List<InputValueDefinition> createIdentityArguments(ObjectType objectType) {
@@ -313,7 +366,7 @@ public final class SchemaFactory {
         .stream()
         .map(attribute -> InputValueDefinition.newInputValueDefinition()
             .name(attribute.getName())
-            .type(mapFieldType(attribute))
+            .type(mapFieldType(attribute, true))
             .build())
         .toList();
   }
