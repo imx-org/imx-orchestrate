@@ -5,6 +5,9 @@ import static graphql.language.ObjectTypeDefinition.newObjectTypeDefinition;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaUtils.requiredType;
 import static org.dotwebstack.orchestrate.model.types.ScalarTypes.STRING;
 
+import graphql.language.InputObjectTypeDefinition;
+import graphql.language.InputValueDefinition;
+import graphql.language.TypeName;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import java.util.Map;
@@ -36,6 +39,22 @@ public final class GeometryExtension implements OrchestrateExtension {
         .fieldDefinition(newFieldDefinition()
             .name(AS_WKT)
             .type(requiredType(STRING.getName()))
+            .build())
+        .build());
+
+    typeDefinitionRegistry.add(InputObjectTypeDefinition.newInputObjectDefinition()
+        .name("GeometryFilter")
+        .inputValueDefinition(InputValueDefinition.newInputValueDefinition()
+            .name("intersects")
+            .type(new TypeName("GeometryInput"))
+            .build())
+        .build());
+
+    typeDefinitionRegistry.add(InputObjectTypeDefinition.newInputObjectDefinition()
+        .name("GeometryInput")
+        .inputValueDefinition(InputValueDefinition.newInputValueDefinition()
+            .name("fromWKT")
+            .type(new TypeName("String"))
             .build())
         .build());
 

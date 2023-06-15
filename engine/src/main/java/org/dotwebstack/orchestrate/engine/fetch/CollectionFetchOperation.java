@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.model.ObjectResult;
 import org.dotwebstack.orchestrate.source.CollectionRequest;
-import org.dotwebstack.orchestrate.source.FilterDefinition;
+import org.dotwebstack.orchestrate.model.filters.FilterDefinition;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
