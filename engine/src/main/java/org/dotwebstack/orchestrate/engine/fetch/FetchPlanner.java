@@ -256,10 +256,15 @@ public final class FetchPlanner {
     }
 
     var pathmapping = pathMappings.get(0);
-    var attributeType = ((Attribute) targetType.getProperty(firstEntry.getKey()))
-        .getType();
+    var path = pathmapping.getPath();
 
-    return attributeType.createFilterDefinition(pathmapping.getPath(), firstEntry.getValue());
+    if (!path.isLeaf()) {
+      throw new OrchestrateException("Currently only direct source root properties can be filtered.");
+    }
+
+    return ((Attribute) targetType.getProperty(firstEntry.getKey()))
+        .getType()
+        .createFilterDefinition(pathmapping.getPath(), firstEntry.getValue());
   }
 
   private FilterDefinition createFilterDefinition(ObjectType sourceType, InverseRelation inverseRelation) {

@@ -6,7 +6,6 @@ import static graphql.schema.FieldCoordinates.coordinates;
 import static graphql.schema.GraphQLCodeRegistry.newCodeRegistry;
 import static graphql.schema.SchemaTransformer.transformSchema;
 import static graphql.schema.idl.RuntimeWiring.newRuntimeWiring;
-import static java.util.function.Predicate.not;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_COLLECTION_SUFFIX;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.QUERY_FILTER_ARGUMENTS;
@@ -108,54 +107,72 @@ public final class SchemaFactory {
   private void registerObjectType(ObjectType objectType) {
     var objectTypeDefinition = createObjectTypeDefinition(objectType);
     typeDefinitionRegistry.add(objectTypeDefinition);
-    typeDefinitionRegistry.add(createFilterInputObject(objectType));
 
     var baseName = uncapitalize(objectTypeDefinition.getName());
     var collectionName = baseName.concat(QUERY_COLLECTION_SUFFIX);
 
-    queryTypeBuilder.fieldDefinition(newFieldDefinition()
-            .name(baseName)
-            .type(new TypeName(objectTypeDefinition.getName()))
-            .inputValueDefinitions(createIdentityArguments(objectType))
-            .build())
-        .fieldDefinition(newFieldDefinition()
-            .name(collectionName)
-            .type(requiredListType(objectTypeDefinition.getName()))
-            .inputValueDefinition(createFilterArgument(objectType))
-            .build());
+    var objectField = newFieldDefinition()
+        .name(baseName)
+        .type(new TypeName(objectTypeDefinition.getName()))
+        .inputValueDefinitions(createIdentityArguments(objectType))
+        .build();
+
+    var collectionField = newFieldDefinition()
+        .name(collectionName)
+        .type(requiredListType(objectTypeDefinition.getName()))
+        .build();
+
+    var filterFields = objectType.getProperties(Attribute.class)
+        .stream()
+        .filter(attribute -> isFilterable(objectType, attribute))
+        .map(attribute -> {
+          var typeName = attribute.getType()
+              .getName();
+
+          // TODO: Decouple Geometry type handling
+          return InputValueDefinition.newInputValueDefinition()
+              .name(attribute.getName())
+              .type(typeName.equals("Geometry") ? new TypeName("GeometryFilter") : mapFieldType(attribute, false))
+              .build();
+        })
+        .toList();
+
+    if (!filterFields.isEmpty()) {
+      typeDefinitionRegistry.add(InputObjectTypeDefinition.newInputObjectDefinition()
+          .name(objectType.getName()
+              .concat(QUERY_FILTER_SUFFIX))
+          .inputValueDefinitions(filterFields)
+          .build());
+
+      var filterArgument = InputValueDefinition.newInputValueDefinition()
+          .name(QUERY_FILTER_ARGUMENTS)
+          .type(new TypeName(objectType.getName()
+              .concat(QUERY_FILTER_SUFFIX)))
+          .build();
+
+      collectionField = collectionField.transform(builder -> builder.inputValueDefinition(filterArgument));
+    }
+
+    queryTypeBuilder.fieldDefinition(objectField)
+        .fieldDefinition(collectionField);
 
     codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE, baseName), genericDataFetcher)
         .dataFetcher(coordinates(QUERY_TYPE, collectionName), genericDataFetcher);
   }
 
-  private InputObjectTypeDefinition createFilterInputObject(ObjectType objectType) {
-    var inputObjectBuilder = InputObjectTypeDefinition.newInputObjectDefinition()
-        .name(objectType.getName()
-            .concat(QUERY_FILTER_SUFFIX));
+  private boolean isFilterable(ObjectType objectType, Attribute attribute) {
+    if (attribute.isIdentifier()) {
+      return false;
+    }
 
-    objectType.getProperties(Attribute.class)
-        .stream()
-        .filter(not(Property::isIdentifier))
-        .forEach(attribute -> {
-          var typeName = attribute.getType()
-              .getName();
+    var pathMappings = modelMapping.getObjectTypeMapping(objectType)
+        .getPropertyMapping(attribute)
+        .getPathMappings();
 
-          // TODO: Decouple Geometry type handling
-          inputObjectBuilder.inputValueDefinition(InputValueDefinition.newInputValueDefinition()
-              .name(attribute.getName())
-              .type(typeName.equals("Geometry") ? new TypeName("GeometryFilter") : mapFieldType(attribute, false))
-              .build());
-        });
+    var firstPath = pathMappings.get(0)
+        .getPath();
 
-    return inputObjectBuilder.build();
-  }
-
-  private InputValueDefinition createFilterArgument(ObjectType objectType) {
-    return InputValueDefinition.newInputValueDefinition()
-        .name(QUERY_FILTER_ARGUMENTS)
-        .type(new TypeName(objectType.getName()
-            .concat(QUERY_FILTER_SUFFIX)))
-        .build();
+    return pathMappings.size() == 1 && firstPath.isLeaf();
   }
 
   private void registerLineageTypes() {
