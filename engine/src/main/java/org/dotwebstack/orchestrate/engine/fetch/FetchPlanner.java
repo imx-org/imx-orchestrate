@@ -255,16 +255,16 @@ public final class FetchPlanner {
       throw new OrchestrateException("Currently only a single path mapping is supported when filtering.");
     }
 
-    var pathmapping = pathMappings.get(0);
-    var path = pathmapping.getPath();
+    var firstPath = pathMappings.get(0)
+        .getPath();
 
-    if (!path.isLeaf()) {
+    if (!firstPath.isLeaf()) {
       throw new OrchestrateException("Currently only direct source root properties can be filtered.");
     }
 
     return ((Attribute) targetType.getProperty(firstEntry.getKey()))
         .getType()
-        .createFilterDefinition(pathmapping.getPath(), firstEntry.getValue());
+        .createFilterDefinition(firstPath, firstEntry.getValue());
   }
 
   private FilterDefinition createFilterDefinition(ObjectType sourceType, InverseRelation inverseRelation) {
