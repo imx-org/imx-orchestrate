@@ -28,7 +28,12 @@ public class GeometryType implements AttributeType {
     if (sourceValue instanceof Map<?, ?>) {
       try {
         var jsonStr = objectMapper.writeValueAsString(sourceValue);
-        return geoJsonReader.read(jsonStr);
+        var geometry = geoJsonReader.read(jsonStr);
+
+        // TODO: Dynamic SRID
+        geometry.setSRID(28992);
+
+        return geometry;
       } catch (JsonProcessingException | ParseException e) {
         throw new OrchestrateException("Failed mapping geometry value.", e);
       }

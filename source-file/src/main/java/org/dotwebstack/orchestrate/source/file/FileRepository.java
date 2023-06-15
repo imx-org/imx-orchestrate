@@ -67,6 +67,15 @@ class FileRepository implements DataRepository {
       return objectNode -> true;
     }
 
+    var valueClassName = filterExpression.getValue()
+        .getClass()
+        .getName();
+
+    // TODO: Handle special type-mapping
+    if (valueClassName.startsWith("org.locationtech.jts.geom")) {
+      return objectNode -> false;
+    }
+
     var jsonValue = new ObjectMapper()
         .valueToTree(filterExpression.getValue());
 

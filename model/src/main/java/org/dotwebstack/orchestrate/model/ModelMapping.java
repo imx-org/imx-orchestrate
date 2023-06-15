@@ -20,6 +20,8 @@ public final class ModelMapping {
 
   private final Map<String, Model> sourceModelMap;
 
+  private final Set<SourceRelation> sourceRelations;
+
   private final Map<String, ObjectTypeMapping> objectTypeMappings;
 
   private final Map<String, String> lineageNameMapping;
@@ -27,7 +29,8 @@ public final class ModelMapping {
   @Jacksonized
   @Builder(toBuilder = true)
   public ModelMapping(Model targetModel, @Singular Set<Model> sourceModels,
-      @Singular Map<String, ObjectTypeMapping> objectTypeMappings, Map<String, String> lineageNameMapping) {
+      @Singular Set<SourceRelation> sourceRelations, @Singular Map<String, ObjectTypeMapping> objectTypeMappings,
+      Map<String, String> lineageNameMapping) {
     // TODO: Remove null-check once parser workaround has been resolved
     if (targetModel != null) {
       validateModel(targetModel);
@@ -39,13 +42,36 @@ public final class ModelMapping {
     }
 
     sourceModels.forEach(this::validateModel);
-    this.sourceModels = resolveInverseRelations(sourceModels);
+    this.sourceRelations = sourceRelations;
+    this.sourceModels = resolveInverseRelations(addSourceRelations(sourceModels));
     this.sourceModelMap = this.sourceModels.stream()
         .collect(toMap(Model::getAlias, Function.identity()));
 
     this.objectTypeMappings = objectTypeMappings;
     this.lineageNameMapping = Optional.ofNullable(lineageNameMapping)
         .orElse(Map.of());
+  }
+
+  private Set<Model> addSourceRelations(Set<Model> models) {
+    // TODO: Remove null-check once parser workaround has been resolved
+    if (models.isEmpty()) {
+      return models;
+    }
+
+    var mutableSourceModelMap = models.stream()
+        .collect(toMap(Model::getAlias, Function.identity()));
+
+    sourceRelations.forEach(sourceRelation -> {
+      var sourceType = sourceRelation.getSourceType();
+      var sourceModelAlias = sourceType.getModelAlias();
+      var sourceModel = mutableSourceModelMap.get(sourceModelAlias);
+
+      mutableSourceModelMap.put(sourceModelAlias, sourceModel.replaceObjectType(
+          sourceModel.getObjectType(sourceType)
+              .appendProperty(sourceRelation.getProperty())));
+    });
+
+    return Set.copyOf(mutableSourceModelMap.values());
   }
 
   private Set<Model> resolveInverseRelations(Set<Model> models) {

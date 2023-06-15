@@ -2,6 +2,7 @@ package org.dotwebstack.orchestrate.model;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -35,5 +36,27 @@ public final class ModelUtils {
     return objectType.getIdentityProperties()
         .stream()
         .collect(Collectors.toMap(Property::getName, property -> data.get(property.getName())));
+  }
+
+  public static Map<String, Object> extractKey(ObjectResult objectResult, Map<String, Path> keyMapping) {
+    return keyMapping.entrySet()
+        .stream()
+        .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
+          var keyPath = entry.getValue();
+
+          if (!keyPath.isLeaf()) {
+            throw new ModelException("Only leaf paths are (currently) supported: " + keyPath);
+          }
+
+          var objectType = objectResult.getType();
+          var propertyName = keyPath.getFirstSegment();
+
+          if (!(objectType.getProperty(propertyName) instanceof Attribute)) {
+            throw new ModelException("Only attribute keys are (currently) supported: " + propertyName);
+          }
+
+          return Optional.ofNullable(objectResult.getProperty(propertyName))
+              .orElseThrow(() -> new ModelException("Key properties may never be null."));
+        }));
   }
 }
