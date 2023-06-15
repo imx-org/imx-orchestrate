@@ -1,3 +1,15 @@
 orchestrate:
   gateway:
-    dataPath: ../data
+    sources:
+      bag:
+        type: file
+        options:
+          dataPath: ../data/bag
+      bgt:
+        type: file
+        options:
+          dataPath: ../data/bgt
+      brk:
+        type: file
+        options:
+          dataPath: ../data/brk
