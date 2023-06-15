@@ -6,6 +6,8 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 @Getter
 @Setter
 @Component
@@ -16,5 +18,5 @@ public class GatewayProperties {
 
   private String mapping;
 
-  private String dataPath;
+  private Map<String, GatewaySource> sources;
 }
