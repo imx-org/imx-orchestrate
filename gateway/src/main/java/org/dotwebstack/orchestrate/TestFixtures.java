@@ -1,7 +1,6 @@
 package org.dotwebstack.orchestrate;
 
 import static org.dotwebstack.orchestrate.model.Cardinality.INFINITE;
-
 import java.io.InputStream;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -180,13 +179,6 @@ final class TestFixtures {
                 .type(ScalarTypes.STRING)
                 .cardinality(Cardinality.REQUIRED)
                 .build())
-            .property(Relation.builder()
-                .name("isGerelateerdAan")
-                .target(ObjectTypeRef.fromString("bag:Pand"))
-                .cardinality(Cardinality.OPTIONAL)
-                .inverseName("isGerelateerdAan")
-                .inverseCardinality(Cardinality.OPTIONAL)
-                .build())
             .build())
         .build();
   }
@@ -240,25 +232,30 @@ final class TestFixtures {
         .build();
   }
 
-  public static ModelMapping createModelMapping(TargetModelType targetModelType, InputStream mappingInputStream) {
-    Model targetModel = null;
+  public static ModelMapping createModelMapping(TargetModelType targetModelType, InputStream mappingInputStream,
+      YamlModelMappingParser yamlModelMappingParser, boolean useInternalModels) {
 
-    if (targetModelType == TargetModelType.IMXGEO) {
-      targetModel = createImxGeoModel();
-    } else if (targetModelType == TargetModelType.CORELOCATION) {
-      targetModel = createCoreLocationModel();
+    var modelMapping = yamlModelMappingParser.parse(mappingInputStream);
+
+    // TODO: temporary situation, for testing purposes
+    if (useInternalModels) {
+      Model targetModel = null;
+
+      if (targetModelType == TargetModelType.IMXGEO) {
+        targetModel = createImxGeoModel();
+      } else if (targetModelType == TargetModelType.CORELOCATION) {
+        targetModel = createCoreLocationModel();
+      }
+
+      return modelMapping.toBuilder()
+          .targetModel(targetModel)
+          .sourceModel(createBagModel())
+          .sourceModel(createBgtModel())
+          .sourceModel(createBrkModel())
+          .build();
     }
 
-    var yamlMapper = YamlModelMappingParser.getInstance();
-
-    // TODO: Merge into one step
-    return yamlMapper.parse(mappingInputStream)
-        .toBuilder()
-        .targetModel(targetModel)
-        .sourceModel(createBagModel())
-        .sourceModel(createBgtModel())
-        .sourceModel(createBrkModel())
-        .build();
+    return modelMapping;
   }
 
   private static Model createImxGeoModel() {

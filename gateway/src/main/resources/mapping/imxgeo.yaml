@@ -11,6 +11,29 @@ lineageNameMapping:
   objectKey: identificatie
   objectType: type
 
+sourceRelations:
+  - sourceType: bgt:Pand
+    property:
+      name: gerelateerdBagPand
+      target: bag:Pand
+      cardinality: 0..1
+      inverseName: gerelateerdBgtPand
+      inverseCardinality: 0..1
+      keyMapping:
+        identificatie: identificatieBAGPND
+#  - sourceType: bgt:Pand
+#    property:
+#      name: gerelateerdBagPandGeo
+#      target: bag:Pand
+#      cardinality: 0..1
+#      inverseName: gerelateerdBgtPandGeo
+#      inverseCardinality: 0..1
+#      filterMappings:
+#        - property: geometrie
+#          operator:
+#            type: intersects
+#          sourcePath: geometrie2dGrondvlak
+
 objectTypeMappings:
   Adres:
     sourceRoot: bag:Nummeraanduiding
@@ -84,7 +107,7 @@ objectTypeMappings:
       # TODO: auto-generatie inverse mappings
       isAdresVanGebouw:
         pathMappings:
-          path: isHoofdadresVan/maaktDeelUitVan/isGerelateerdAan
+          path: isHoofdadresVan/maaktDeelUitVan/gerelateerdBgtPand
 
   Gebouw:
     sourceRoot: bgt:Pand
@@ -94,27 +117,27 @@ objectTypeMappings:
           path: identificatie
       bouwjaar:
         pathMappings:
-          path: isGerelateerdAan/oorspronkelijkBouwjaar
+          path: gerelateerdBagPand/oorspronkelijkBouwjaar
       bovenaanzichtgeometrie:
         pathMappings:
-          path: isGerelateerdAan/geometrie
+          path: gerelateerdBagPand/geometrie
       maaiveldgeometrie:
         pathMappings:
           path: geometrie2dGrondvlak
       heeftAlsAdres:
         pathMappings:
-          - path: isGerelateerdAan/bevat/heeftAlsHoofdadres
-          - path: isGerelateerdAan/bevat/heeftAlsNevenadres
+          - path: gerelateerdBagPand/bevat/heeftAlsHoofdadres
+          - path: gerelateerdBagPand/bevat/heeftAlsNevenadres
         combiner:
           type: merge
       totaalPerceelOppervlak:
         pathMappings:
-          path: isGerelateerdAan/bevat/heeftAlsHoofdadres/betreftInverse/heeft/kadastraleGrootte
+          path: gerelateerdBagPand/bevat/heeftAlsHoofdadres/betreftInverse/heeft/kadastraleGrootte
         combiner:
           type: sum
       bevindtZichOpPerceel:
         pathMappings:
-          path: isGerelateerdAan/bevat/heeftAlsHoofdadres/betreftInverse/heeft
+          path: gerelateerdBagPand/bevat/heeftAlsHoofdadres/betreftInverse/heeft
 
   Perceel:
     sourceRoot: brk:Perceel

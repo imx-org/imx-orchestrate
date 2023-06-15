@@ -301,6 +301,7 @@ public final class SchemaFactory {
 
     var type = switch (typeName) {
       case "Integer" -> new TypeName("Int");
+      case "Double" -> new TypeName("Float");
       default -> new TypeName(typeName);
     };
 

@@ -10,6 +10,9 @@ import org.dotwebstack.orchestrate.model.combiners.NoopCombinerType;
 import org.dotwebstack.orchestrate.model.combiners.ResultCombiner;
 import org.dotwebstack.orchestrate.model.combiners.ResultCombinerType;
 import org.dotwebstack.orchestrate.model.combiners.SumCombinerType;
+import org.dotwebstack.orchestrate.model.filters.EqualsOperatorType;
+import org.dotwebstack.orchestrate.model.filters.FilterOperator;
+import org.dotwebstack.orchestrate.model.filters.FilterOperatorType;
 import org.dotwebstack.orchestrate.model.mappers.AppendMapperType;
 import org.dotwebstack.orchestrate.model.mappers.CelMapperType;
 import org.dotwebstack.orchestrate.model.mappers.PrependMapperType;
@@ -31,12 +34,15 @@ public final class ComponentFactory {
 
   private final Map<String, MatcherType> matcherTypes = new HashMap<>();
 
+  private final Map<String, FilterOperatorType> filterOperatorTypes = new HashMap<>();
+
   public ComponentFactory() {
     register(new AppendMapperType(), new CelMapperType(), new PrependMapperType());
     register(new CoalesceCombinerType(), new JoinCombinerType(), new MergeCombinerType(), new NoopCombinerType(),
         new SumCombinerType());
     register(new CelMatcherType(), new EqualsMatcherType(), new IsNullMatcherType(), new NotEqualsMatcherType(),
         new NotNullMatcherType());
+    register(new EqualsOperatorType());
   }
 
   public ComponentFactory register(ResultMapperType... resultMapperTypes) {
@@ -54,6 +60,12 @@ public final class ComponentFactory {
   public ComponentFactory register(MatcherType... matcherTypes) {
     Arrays.stream(matcherTypes).forEach(matcherType ->
         this.matcherTypes.put(matcherType.getName(), matcherType));
+    return this;
+  }
+
+  public ComponentFactory register(FilterOperatorType... filterOperatorTypes) {
+    Arrays.stream(filterOperatorTypes).forEach(filterOperatorType ->
+        this.filterOperatorTypes.put(filterOperatorType.getName(), filterOperatorType));
     return this;
   }
 
@@ -81,6 +93,15 @@ public final class ComponentFactory {
 
   public Matcher createMatcher(String type, Map<String, Object> options) {
     return matcherTypes.get(type)
+        .create(options);
+  }
+
+  public FilterOperator createFilterOperator(String type) {
+    return createFilterOperator(type, Map.of());
+  }
+
+  public FilterOperator createFilterOperator(String type, Map<String, Object> options) {
+    return filterOperatorTypes.get(type)
         .create(options);
   }
 }

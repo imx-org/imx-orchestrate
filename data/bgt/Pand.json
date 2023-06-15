@@ -3,9 +3,6 @@
     "identificatie": "G0200.42b3d39246840268e0530a0a28492340",
     "bgt-status": "bestaand",
     "identificatieBAGPND": "0200100000085932",
-    "isGerelateerdAan": {
-      "identificatie": "0200100000085932"
-    },
     "geometrie2dGrondvlak": {
       "type": "MultiPolygon",
       "coordinates": [
@@ -840,9 +837,6 @@
     "identificatie": "G0050.19cb5132f8b23142e053440a0c0a9802",
     "bgt-status": "bestaand",
     "identificatieBAGPND": "0050100000356176",
-    "isGerelateerdAan": {
-      "identificatie": "0050100000356176"
-    },
     "geometrie2dGrondvlak": {
       "type": "Polygon",
       "coordinates": [
@@ -1195,9 +1189,6 @@
     "identificatie": "G0050.5044e42a2f0f233fe053440a0c0a31e0",
     "bgt-status": "bestaand",
     "identificatieBAGPND": "0000000000000000",
-    "isGerelateerdAan": {
-      "identificatie": "0000000000000000"
-    },
     "geometrie2dGrondvlak": {
       "type": "Polygon",
       "coordinates": [

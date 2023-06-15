@@ -174,8 +174,10 @@ public final class ObjectResultMapper {
   }
 
   private Stream<PathResult> pathResult(ObjectResult objectResult, Path path, Path fullPath) {
+    var currentSegment = path.getFirstSegment();
+
     if (path.isLeaf()) {
-      var propertyValue = objectResult.getProperty(path.getFirstSegment());
+      var propertyValue = objectResult.getProperty(currentSegment);
 
       var pathResult = PathResult.builder()
           .value(propertyValue)
@@ -184,7 +186,7 @@ public final class ObjectResultMapper {
                   .objectType(objectResult.getType().getName())
                   .objectKey(objectResult.getKey())
                   .build())
-              .property(path.getFirstSegment())
+              .property(currentSegment)
               .value(propertyValue)
               .path(fullPath.getSegments())
               .build())
@@ -193,7 +195,7 @@ public final class ObjectResultMapper {
       return Stream.of(pathResult);
     }
 
-    var nestedResult = objectResult.getProperty(path.getFirstSegment());
+    var nestedResult = objectResult.getProperty(currentSegment);
 
     if (nestedResult == null) {
       return Stream.of(PathResult.empty());
