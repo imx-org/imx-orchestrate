@@ -1,18 +1,15 @@
 package org.dotwebstack.orchestrate;
 
-import static org.dotwebstack.orchestrate.TestFixtures.createBagModel;
-import static org.dotwebstack.orchestrate.TestFixtures.createBgtModel;
-import static org.dotwebstack.orchestrate.TestFixtures.createBrkModel;
+import static java.util.stream.Collectors.toUnmodifiableMap;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 import static org.dotwebstack.orchestrate.TestFixtures.createModelMapping;
-
 import graphql.GraphQL;
 import graphql.schema.GraphQLSchema;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import org.dotwebstack.orchestrate.engine.Orchestration;
 import org.dotwebstack.orchestrate.engine.schema.SchemaFactory;
 import org.dotwebstack.orchestrate.ext.spatial.GeometryExtension;
@@ -36,16 +33,8 @@ public class GatewayConfiguration {
 
   private GatewayProperties gatewayProperties;
 
-  private ModelLoaderRegistry modelLoaderRegistry;
-
-  // TODO temporary to detect availability of modelloaders;
-  private Set<ModelLoader> modelLoaders;
-
-  public GatewayConfiguration(GatewayProperties gatewayProperties, Set<ModelLoader> modelLoaders) {
+  public GatewayConfiguration(GatewayProperties gatewayProperties) {
     this.gatewayProperties = gatewayProperties;
-    this.modelLoaderRegistry = ModelLoaderRegistry.getInstance();
-    modelLoaders.forEach(modelLoaderRegistry::registerModelLoader);
-    this.modelLoaders = modelLoaders;
   }
 
   @Bean
@@ -55,17 +44,26 @@ public class GatewayConfiguration {
     var componentFactory = new ComponentFactory();
     extensions.forEach(extension -> extension.registerComponents(componentFactory));
 
+    var modelLoaderRegistry = ModelLoaderRegistry.getInstance();
+    var modelLoaders = resolveModelLoaders();
+    modelLoaders.forEach(modelLoaderRegistry::registerModelLoader);
+
     var yamlModelMappingParser = YamlModelMappingParser.getInstance(componentFactory, modelLoaderRegistry);
 
+    var modelMapping = createModelMapping(gatewayProperties.getTargetModel(),
+        GatewayConfiguration.class.getResourceAsStream(gatewayProperties.getMapping()), yamlModelMappingParser,
+        modelLoaders.isEmpty());
+
+    var sourceModels = modelMapping.getSourceModels().stream()
+        .collect(toUnmodifiableMap(Model::getAlias, Function.identity()));
+
     var sources = gatewayProperties.getSources()
-            .entrySet()
-            .stream()
-            .collect(Collectors.toMap(Map.Entry::getKey, e -> resolveSource(e.getKey(), e.getValue())));
+        .entrySet()
+        .stream()
+        .collect(Collectors.toMap(Map.Entry::getKey, e -> resolveSource(e.getKey(), e.getValue(), sourceModels)));
 
     var orchestration = Orchestration.builder()
-        .modelMapping(createModelMapping(gatewayProperties.getTargetModel(),
-            GatewayConfiguration.class.getResourceAsStream(gatewayProperties.getMapping()), yamlModelMappingParser,
-            modelLoaders.isEmpty()))
+        .modelMapping(modelMapping)
         .sources(sources)
         .extensions(extensions)
         .build();
@@ -85,24 +83,26 @@ public class GatewayConfiguration {
     };
   }
 
-  private Source resolveSource(String dataset, GatewaySource source) {
+  private Set<ModelLoader> resolveModelLoaders() {
+    return ServiceLoader.load(ModelLoader.class)
+        .stream()
+        .map(ServiceLoader.Provider::get)
+        .collect(toUnmodifiableSet());
+  }
+
+  private Source resolveSource(String dataset, GatewaySource source, Map<String, Model> sourceModels) {
+    if (!sourceModels.containsKey(dataset)) {
+      throw new GatewayException(String.format("No model with alias `%s` configured in model mapping.", dataset));
+    }
+
     ServiceLoader<SourceType> loader = ServiceLoader.load(SourceType.class);
 
     return loader.stream()
         .map(ServiceLoader.Provider::get)
         .filter(e -> e.getName().equals(source.getType()))
         .findFirst()
-        .map(s -> s.create(getModel(dataset), source.getOptions()))
+        .map(s -> s.create(sourceModels.get(dataset), source.getOptions()))
         .orElseThrow(() -> new GatewayException(String.format("Source type '%s' not found.", source.getType())));
-  }
-
-  private Model getModel(String dataset) {
-    return switch(dataset) {
-      case "bag" -> createBagModel();
-      case "brk" -> createBrkModel();
-      case "bgt" -> createBgtModel();
-      default -> null;
-    };
   }
 
   @Bean

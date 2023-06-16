@@ -2,6 +2,7 @@ package org.dotwebstack.orchestrate.source;
 
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
+import org.dotwebstack.orchestrate.model.filters.FilterExpression;
 
 @Getter
 @SuperBuilder(toBuilder = true)
