@@ -62,8 +62,11 @@ public final class ObjectResultMapper {
 
           if (property instanceof Attribute attribute) {
             propertyValue = mapAttribute(attribute, propertyResult.getValue());
-            lineageValue = attribute.getType()
-                .mapLineageValue(propertyValue);
+
+            if (propertyValue != null) {
+              lineageValue = attribute.getType()
+                  .mapLineageValue(propertyValue);
+            }
           }
 
           if (property instanceof AbstractRelation relation) {
@@ -96,6 +99,10 @@ public final class ObjectResultMapper {
   }
 
   private Object mapAttribute(Attribute attribute, Object value) {
+    if (value == null) {
+      return null;
+    }
+
     return attribute.getType()
         .mapSourceValue(value);
   }

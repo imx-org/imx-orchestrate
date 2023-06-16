@@ -105,6 +105,11 @@ public final class SchemaFactory {
   }
 
   private void registerObjectType(ObjectType objectType) {
+    if (!modelMapping.getObjectTypeMappings()
+        .containsKey(objectType.getName())) {
+      return;
+    }
+
     var objectTypeDefinition = createObjectTypeDefinition(objectType);
     typeDefinitionRegistry.add(objectTypeDefinition);
 
