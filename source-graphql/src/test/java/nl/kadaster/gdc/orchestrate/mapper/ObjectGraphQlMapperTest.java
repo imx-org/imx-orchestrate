@@ -1,5 +1,6 @@
 package nl.kadaster.gdc.orchestrate.mapper;
 
+import graphql.ExecutionInput;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -10,6 +11,8 @@ import org.dotwebstack.orchestrate.source.ObjectRequest;
 import org.dotwebstack.orchestrate.source.SelectedProperty;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ObjectGraphQlMapperTest {
 
@@ -34,6 +37,7 @@ public class ObjectGraphQlMapperTest {
     var huisnummer = new SelectedProperty(Attribute.builder()
         .name("huisnummer")
         .build());
+
     var adres = new SelectedProperty(Attribute.builder()
         .name("adres")
         .build(), Set.of(straat, huisnummer));
@@ -46,6 +50,21 @@ public class ObjectGraphQlMapperTest {
         .selectedProperties(List.of(naam, adres))
         .build();
 
-    System.out.println(objectGraphQlMapper.convert(request));
+    ExecutionInput result = objectGraphQlMapper.convert(request);
+
+    var expected = """
+      query Query {
+        nummeraanduiding(identificatie: "12345", id: "456") {
+          naam
+          adres {
+            straat
+            huisnummer
+          }
+        }
+      }""";
+
+    assertThat(MapperTestUtils.graphQlEquals(result.getQuery(), expected)).isTrue();
+
+
   }
 }
