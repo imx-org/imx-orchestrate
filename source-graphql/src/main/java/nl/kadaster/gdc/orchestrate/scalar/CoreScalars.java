@@ -1,7 +1,10 @@
 package nl.kadaster.gdc.orchestrate.scalar;
 
 import graphql.schema.GraphQLScalarType;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class CoreScalars {
 
   public static final GraphQLScalarType DATE = GraphQLScalarType.newScalar()
@@ -15,6 +18,4 @@ public final class CoreScalars {
       .description("DateTime type")
       .coercing(new DateTimeCoercing())
       .build();
-
-  private CoreScalars() {}
 }
