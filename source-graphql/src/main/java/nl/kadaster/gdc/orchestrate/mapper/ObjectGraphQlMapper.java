@@ -57,35 +57,6 @@ public class ObjectGraphQlMapper extends AbstractGraphQlMapper<ObjectRequest> {
         .map(entry -> getArgument(entry.getKey(), entry.getValue()))
         .toList();
   }
-
-  private List<Argument> getArguments(BatchRequest request) {
-    var argumentMap = new ConcurrentHashMap<String, List<String>>();
-
-    for (var objectKey : request.getObjectKeys()) {
-      var entry = objectKey.entrySet()
-          .stream()
-          .findFirst()
-          .orElseThrow();
-
-      if (!argumentMap.containsKey(entry.getKey())) {
-        argumentMap.put(entry.getKey(), new ArrayList<>());
-      }
-
-      argumentMap.get(entry.getKey())
-          .add((String) entry.getValue());
-    }
-
-    if (argumentMap.size() > 1) {
-      throw new SourceException("Batch requests can only contain values for 1 key property.");
-    }
-
-    var argument = argumentMap.entrySet()
-        .stream()
-        .findFirst()
-        .orElseThrow();
-    return List.of(getArgument(argument.getKey(), argument.getValue()));
-  }
-
   private Argument getArgument(String name, Object value) {
     return new Argument(name, mapToValue(value));
   }
