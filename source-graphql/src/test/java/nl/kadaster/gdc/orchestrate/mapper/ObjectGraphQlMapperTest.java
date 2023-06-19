@@ -12,7 +12,7 @@ import org.dotwebstack.orchestrate.source.SelectedProperty;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static nl.kadaster.gdc.orchestrate.mapper.GraphQlAssert.assertThat;
 
 public class ObjectGraphQlMapperTest {
 
@@ -63,8 +63,7 @@ public class ObjectGraphQlMapperTest {
         }
       }""";
 
-    assertThat(MapperTestUtils.graphQlEquals(result.getQuery(), expected)).isTrue();
-
+    assertThat(result.getQuery()).graphQlEquals(expected);
 
   }
 }
