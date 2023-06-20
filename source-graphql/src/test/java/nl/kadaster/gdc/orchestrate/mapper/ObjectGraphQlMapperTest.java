@@ -9,10 +9,12 @@ import org.dotwebstack.orchestrate.model.Attribute;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.source.ObjectRequest;
 import org.dotwebstack.orchestrate.source.SelectedProperty;
+import org.dotwebstack.orchestrate.source.SourceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static nl.kadaster.gdc.orchestrate.mapper.GraphQlAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ObjectGraphQlMapperTest {
 
@@ -26,7 +28,7 @@ public class ObjectGraphQlMapperTest {
   }
 
   @Test
-  void convert_returnsExpectedResult() {
+  void convert_returnsExpectedResult_forRequest() {
     var naam = new SelectedProperty(Attribute.builder()
         .name("naam")
         .build());
@@ -64,6 +66,17 @@ public class ObjectGraphQlMapperTest {
       }""";
 
     assertThat(result.getQuery()).graphQlEquals(expected);
+  }
 
+  @Test
+  void convert_throwsException_forRequest_withoutSelectionSet() {
+    var request = ObjectRequest.builder()
+      .objectKey(Map.of("identificatie", "12345"))
+      .objectType(ObjectType.builder()
+        .name("Nummeraanduiding")
+        .build())
+      .build();
+
+    assertThrows(SourceException.class, () -> objectGraphQlMapper.convert(request));
   }
 }

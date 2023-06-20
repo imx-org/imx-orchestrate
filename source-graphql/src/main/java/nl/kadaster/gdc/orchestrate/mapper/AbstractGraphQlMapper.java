@@ -7,12 +7,17 @@ import java.util.ArrayList;
 import java.util.List;
 import org.dotwebstack.orchestrate.source.DataRequest;
 import org.dotwebstack.orchestrate.source.SelectedProperty;
+import org.dotwebstack.orchestrate.source.SourceException;
 
 public abstract class AbstractGraphQlMapper<T extends DataRequest> {
 
   abstract ExecutionInput convert(T request);
 
   protected SelectionSet createSelectionSet(List<SelectedProperty> selectedProperties) {
+    if (selectedProperties.isEmpty()) {
+      throw new SourceException("SelectionSet cannot be empty.");
+    }
+
     var fields = selectedProperties.stream()
       .map(this::getField)
       .toList();
