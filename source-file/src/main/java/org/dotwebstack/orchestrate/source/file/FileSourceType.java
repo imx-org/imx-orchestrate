@@ -2,11 +2,14 @@ package org.dotwebstack.orchestrate.source.file;
 
 import java.nio.file.Path;
 import java.util.Map;
+
+import com.google.auto.service.AutoService;
 import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.source.Source;
 import org.dotwebstack.orchestrate.source.SourceException;
 import org.dotwebstack.orchestrate.source.SourceType;
 
+@AutoService(SourceType.class)
 public class FileSourceType implements SourceType {
 
   private static final String SOURCE_TYPE = "file";
