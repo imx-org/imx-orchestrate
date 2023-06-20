@@ -1,12 +1,13 @@
 package nl.kadaster.gdc.orchestrate.mapper;
 
 import graphql.language.Argument;
+import graphql.language.Document;
 import graphql.language.Field;
 import graphql.language.OperationDefinition;
+import graphql.parser.InvalidSyntaxException;
 import graphql.parser.Parser;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -44,8 +45,8 @@ public class GraphQlAssert extends AbstractAssert<GraphQlAssert, String> {
       failWithMessage("Expected %s to have %d fields, but actually found %d.", field, expectedNodes.size(), actualNodes.size());
     }
 
-    Iterator<GraphQlAssert.QueryNode> iteratorActual = actualNodes.iterator();
-    Iterator<GraphQlAssert.QueryNode> iteratorExpected = expectedNodes.iterator();
+    var iteratorActual = actualNodes.iterator();
+    var iteratorExpected = expectedNodes.iterator();
 
     while (iteratorActual.hasNext() && iteratorExpected.hasNext()) {
       var queryNodeActual = iteratorActual.next();
@@ -66,8 +67,8 @@ public class GraphQlAssert extends AbstractAssert<GraphQlAssert, String> {
       failWithMessage("Expected field %s to have %d arguments, but actually found %d.", queryNodeExpected.getName(), queryNodeExpected.getArguments().size(), queryNodeActual.getArguments().size());
     }
 
-    Iterator<Argument> iteratorActual = queryNodeActual.getArguments().iterator();
-    Iterator<Argument> iteratorExpected = queryNodeExpected.getArguments().iterator();
+    var iteratorExpected = queryNodeExpected.getArguments().iterator();
+    var iteratorActual = queryNodeActual.getArguments().iterator();
 
     while (iteratorActual.hasNext() && iteratorExpected.hasNext()) {
       var argumentActual = iteratorActual.next();
@@ -90,10 +91,15 @@ public class GraphQlAssert extends AbstractAssert<GraphQlAssert, String> {
 
   }
 
-  private static List<GraphQlAssert.QueryNode> getQueryNodes(String query) {
-    var parser = Parser.parse(query);
+  private List<GraphQlAssert.QueryNode> getQueryNodes(String query) {
+    Document document = null;
+    try {
+      document = Parser.parse(query);
+    } catch (InvalidSyntaxException e) {
+      failWithMessage("Invalid graphQL syntax.");
+    }
 
-    var selectionSet = parser.getDefinitionsOfType(OperationDefinition.class).get(0).getSelectionSet();
+    var selectionSet = document.getDefinitionsOfType(OperationDefinition.class).get(0).getSelectionSet();
     var selections = selectionSet.getSelections();
 
     var nodeList = new ArrayList<GraphQlAssert.QueryNode>();
@@ -116,7 +122,7 @@ public class GraphQlAssert extends AbstractAssert<GraphQlAssert, String> {
     return nodeList;
   }
 
-  private static List<GraphQlAssert.QueryNode> getChildren(Field field) {
+  private List<GraphQlAssert.QueryNode> getChildren(Field field) {
     var children = new ArrayList<GraphQlAssert.QueryNode>();
 
     if (field.getSelectionSet() != null) {
