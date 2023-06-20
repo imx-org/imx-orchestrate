@@ -11,14 +11,11 @@ import graphql.language.SelectionSet;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import nl.kadaster.gdc.orchestrate.config.GraphQlOrchestrateConfig;
 import org.dotwebstack.orchestrate.model.filters.FilterExpression;
 import org.dotwebstack.orchestrate.model.filters.FilterOperator;
-import org.dotwebstack.orchestrate.source.BatchRequest;
 import org.dotwebstack.orchestrate.source.CollectionRequest;
-import org.dotwebstack.orchestrate.source.ObjectRequest;
 import org.dotwebstack.orchestrate.source.SourceException;
 
 import static nl.kadaster.gdc.orchestrate.mapper.MapperConstants.NODES;
