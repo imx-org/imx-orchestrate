@@ -51,7 +51,8 @@ class ValueMapperTest {
 
     @Test
     void mapToValue_throwsException_forUnsupportedType() {
-        assertThatThrownBy(() -> ValueMapper.mapToValue(BigInteger.valueOf(123))).isInstanceOf(SourceException.class)
+        var value = BigInteger.valueOf(123);
+        assertThatThrownBy(() -> ValueMapper.mapToValue(value)).isInstanceOf(SourceException.class)
                 .hasMessageContaining("Value type 'class java.math.BigInteger' is unsupported.");
     }
 }
