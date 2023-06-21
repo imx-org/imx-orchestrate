@@ -42,10 +42,18 @@ public class GraphQlSourceType implements SourceType {
 
   private static GraphQlOrchestrateConfig createConfig(Map<String, Object> options) {
     return GraphQlOrchestrateConfig.builder()
-        .authToken(((String) options.get(BEARER_TOKEN)).toCharArray())
-        .baseUrl((String) options.get(URL_KEY))
-        .collectionSuffix((String) options.get(COLLECTION_SUFFIX))
-        .batchSuffix((String) options.get(BATCH_SUFFIX))
+        .authToken(toCharArray(getStringValue(options, BEARER_TOKEN)))
+        .baseUrl(getStringValue(options, URL_KEY))
+        .collectionSuffix(getStringValue(options, COLLECTION_SUFFIX))
+        .batchSuffix(getStringValue(options, BATCH_SUFFIX))
         .build();
+  }
+
+  private static String getStringValue(Map<String, Object> options, String key) {
+    return (String) options.get(key);
+  }
+
+  private static char[] toCharArray(String value) {
+    return value == null ? null : value.toCharArray();
   }
 }
