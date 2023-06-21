@@ -52,6 +52,11 @@
             <artifactId>orchestrate-source-file</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.dotwebstack.orchestrate</groupId>
+            <artifactId>orchestrate-source-graphql</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <profiles>
