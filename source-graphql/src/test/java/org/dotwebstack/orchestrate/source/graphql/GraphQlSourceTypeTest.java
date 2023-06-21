@@ -18,8 +18,21 @@ class GraphQlSourceTypeTest {
     }
 
     @Test
-    void create_returnsNewSource() {
+    void create_returnsNewSource_withRequiredConfig() {
         Map<String, Object> config = Map.of("url",  "http://localhost:8080");
+
+        var result = new GraphQlSourceType().create(null, config);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getDataRepository()).isNotNull();
+    }
+
+    @Test
+    void create_returnsNewSource_withAllConfig() {
+        Map<String, Object> config = Map.of("url",  "http://localhost:8080",
+                "bearerToken", "1234567890",
+                "collectionSuffix", "Collection",
+                "batchSuffix", "Batch");
 
         var result = new GraphQlSourceType().create(null, config);
 
