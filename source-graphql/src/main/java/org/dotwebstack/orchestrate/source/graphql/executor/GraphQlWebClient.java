@@ -3,7 +3,9 @@ package org.dotwebstack.orchestrate.source.graphql.executor;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Consumer;
-import lombok.RequiredArgsConstructor;
+
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.dotwebstack.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -12,14 +14,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 
-@RequiredArgsConstructor
-public class GraphQlWebClient {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+final class GraphQlWebClient {
 
-  public static WebClient create(GraphQlOrchestrateConfig config) {
-    Consumer<HttpHeaders> headerBuilder = headers -> {
-      Optional.ofNullable(config.getAuthToken())
-          .ifPresent(bearerAuth -> headers.add("Authorization", "Bearer ".concat(String.valueOf(bearerAuth))));
-    };
+  static WebClient create(GraphQlOrchestrateConfig config) {
+    Consumer<HttpHeaders> headerBuilder = headers -> Optional.ofNullable(config.getAuthToken())
+        .ifPresent(bearerAuth -> headers.add("Authorization", "Bearer ".concat(String.valueOf(bearerAuth))));
 
     ConnectionProvider provider = ConnectionProvider.builder("orchestrate")
         .maxIdleTime(Duration.ofSeconds(10))

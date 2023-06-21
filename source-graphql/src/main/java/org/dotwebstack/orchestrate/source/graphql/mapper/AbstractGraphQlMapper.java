@@ -9,7 +9,7 @@ import org.dotwebstack.orchestrate.source.DataRequest;
 import org.dotwebstack.orchestrate.source.SelectedProperty;
 import org.dotwebstack.orchestrate.source.SourceException;
 
-public abstract class AbstractGraphQlMapper<T extends DataRequest> {
+abstract class AbstractGraphQlMapper<T extends DataRequest> {
 
   abstract ExecutionInput convert(T request);
 
