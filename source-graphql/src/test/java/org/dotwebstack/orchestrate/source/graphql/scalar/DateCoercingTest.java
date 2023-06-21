@@ -2,8 +2,10 @@ package org.dotwebstack.orchestrate.source.graphql.scalar;
 
 import graphql.GraphQLContext;
 import graphql.execution.CoercedVariables;
+import graphql.language.IntValue;
 import graphql.language.StringValue;
 import graphql.schema.CoercingSerializeException;
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
@@ -136,5 +138,10 @@ class DateCoercingTest {
         .getMonth()));
     assertThat(localDate.getDayOfMonth(), equalTo(LocalDate.now()
         .getDayOfMonth()));
+  }
+
+  @Test
+  void parseLiteral_ThrowsException_ForUnsupportedType() {
+    assertThrows(UnsupportedOperationException.class, () -> coercing.parseLiteral(new IntValue(BigInteger.ONE)));
   }
 }
