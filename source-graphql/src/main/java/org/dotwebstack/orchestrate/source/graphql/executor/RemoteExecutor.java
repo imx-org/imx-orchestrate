@@ -4,6 +4,9 @@ import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.ExecutionResultImpl;
 import java.util.Map;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.dotwebstack.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
 import org.springframework.core.ParameterizedTypeReference;
@@ -13,15 +16,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @Slf4j
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class RemoteExecutor implements Executor {
 
   private static final String DATA = "data";
 
   private final WebClient webClient;
-
-  private RemoteExecutor(WebClient webClient) {
-    this.webClient = webClient;
-  }
 
   public static RemoteExecutor create(GraphQlOrchestrateConfig config) {
     return new RemoteExecutor(GraphQlWebClient.create(config));
