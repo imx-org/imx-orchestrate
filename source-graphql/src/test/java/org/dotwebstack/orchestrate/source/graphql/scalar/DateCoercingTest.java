@@ -142,6 +142,7 @@ class DateCoercingTest {
 
   @Test
   void parseLiteral_ThrowsException_ForUnsupportedType() {
-    assertThrows(UnsupportedOperationException.class, () -> coercing.parseLiteral(new IntValue(BigInteger.ONE)));
+    var intValue = new IntValue(BigInteger.ONE);
+    assertThrows(UnsupportedOperationException.class, () -> coercing.parseLiteral(intValue));
   }
 }
