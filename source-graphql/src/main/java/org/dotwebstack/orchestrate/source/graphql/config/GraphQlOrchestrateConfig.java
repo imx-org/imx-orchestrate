@@ -18,16 +18,10 @@ public class GraphQlOrchestrateConfig {
 
   private String batchSuffix;
 
-  public static class GraphQlOrchestrateConfigBuilder {
-
-    public GraphQlOrchestrateConfigBuilder collectionSuffix(String collectionSuffix) {
-      this.collectionSuffix = (collectionSuffix == null ? "" : collectionSuffix);
-      return this;
-    }
-
-    public GraphQlOrchestrateConfigBuilder batchSuffix(String batchSuffix) {
-      this.batchSuffix = (batchSuffix == null ? "" : batchSuffix);
-      return this;
-    }
+  private GraphQlOrchestrateConfig(char[] authToken, String baseUrl, String collectionSuffix, String batchSuffix) {
+    this.authToken = authToken;
+    this.baseUrl = baseUrl;
+    this.collectionSuffix = collectionSuffix == null ? "" : collectionSuffix;
+    this.batchSuffix = batchSuffix == null ? "" : batchSuffix;
   }
 }
