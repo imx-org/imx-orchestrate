@@ -1,13 +1,7 @@
 package org.dotwebstack.orchestrate.source.graphql.repository;
 
 import java.util.Map;
-import org.dotwebstack.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
-import org.dotwebstack.orchestrate.source.graphql.executor.Executor;
-import org.dotwebstack.orchestrate.source.graphql.executor.RemoteExecutor;
-import org.dotwebstack.orchestrate.source.graphql.mapper.BatchGraphQlMapper;
-import org.dotwebstack.orchestrate.source.graphql.mapper.CollectionGraphQlMapper;
-import org.dotwebstack.orchestrate.source.graphql.mapper.ObjectGraphQlMapper;
-import org.dotwebstack.orchestrate.source.graphql.mapper.ResponseMapper;
+import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.source.BatchRequest;
 import org.dotwebstack.orchestrate.source.CollectionRequest;
@@ -15,9 +9,15 @@ import org.dotwebstack.orchestrate.source.DataRepository;
 import org.dotwebstack.orchestrate.source.DataRequest;
 import org.dotwebstack.orchestrate.source.ObjectRequest;
 import org.dotwebstack.orchestrate.source.SourceException;
+import org.dotwebstack.orchestrate.source.graphql.executor.Executor;
+import org.dotwebstack.orchestrate.source.graphql.mapper.BatchGraphQlMapper;
+import org.dotwebstack.orchestrate.source.graphql.mapper.CollectionGraphQlMapper;
+import org.dotwebstack.orchestrate.source.graphql.mapper.ObjectGraphQlMapper;
+import org.dotwebstack.orchestrate.source.graphql.mapper.ResponseMapper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@RequiredArgsConstructor
 public class GraphQlRepository implements DataRepository {
 
   private final Executor executor;
@@ -29,14 +29,6 @@ public class GraphQlRepository implements DataRepository {
   private final BatchGraphQlMapper batchGraphQlMapper;
 
   private final ResponseMapper responseMapper;
-
-  public GraphQlRepository(GraphQlOrchestrateConfig config) {
-    this.executor = RemoteExecutor.create(config);
-    this.objectGraphQlMapper = new ObjectGraphQlMapper(config);
-    this.collectionGraphQlMapper = new CollectionGraphQlMapper(config);
-    this.batchGraphQlMapper = new BatchGraphQlMapper(config);
-    this.responseMapper = new ResponseMapper(config);
-  }
 
   @Override
   public Mono<Map<String, Object>> findOne(ObjectRequest objectRequest) {
