@@ -8,6 +8,7 @@ import java.util.List;
 import org.dotwebstack.orchestrate.source.DataRequest;
 import org.dotwebstack.orchestrate.source.SelectedProperty;
 import org.dotwebstack.orchestrate.source.SourceException;
+import org.springframework.util.ObjectUtils;
 
 abstract class AbstractGraphQlMapper<T extends DataRequest> {
 
@@ -27,8 +28,7 @@ abstract class AbstractGraphQlMapper<T extends DataRequest> {
 
   private Field getField(SelectedProperty property) {
     SelectionSet selectionSet = null;
-    if (property.getSelectedProperties() != null && !property.getSelectedProperties()
-      .isEmpty()) {
+    if (!ObjectUtils.isEmpty(property.getSelectedProperties())) {
       selectionSet = createSelectionSet(new ArrayList<>(property.getSelectedProperties()));
     }
 
