@@ -53,9 +53,9 @@ class GraphQlWebClientTest {
         createWebClientAndFireRequest(config);
         var request = verifyAndGetRequest();
 
-        assertThat(request.url().toString()).isEqualTo("http://localhost:8080/path");
-        assertThat(request.headers().containsKey("Authorization")).isTrue();
-        assertThat(request.headers().get("Authorization")).isEqualTo(List.of("Bearer 123456790"));
+        assertThat(request.url().toString()).hasToString("http://localhost:8080/path");
+        assertThat(request.headers()).containsKey("Authorization");
+        assertThat(request.headers()).containsEntry("Authorization", List.of("Bearer 123456790"));
     }
 
     @Test
@@ -67,7 +67,7 @@ class GraphQlWebClientTest {
         createWebClientAndFireRequest(config);
         var request = verifyAndGetRequest();
 
-        assertThat(request.url().toString()).isEqualTo("/path");
+        assertThat(request.url().toString()).hasToString("/path");
         assertThat(request.headers()).isEqualTo(new HttpHeaders());
     }
 
