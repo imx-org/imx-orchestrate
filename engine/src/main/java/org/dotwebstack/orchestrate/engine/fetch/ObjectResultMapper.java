@@ -1,5 +1,6 @@
 package org.dotwebstack.orchestrate.engine.fetch;
 
+import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableMap;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.cast;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.noopCombiner;
@@ -9,7 +10,9 @@ import graphql.schema.DataFetchingFieldSelectionSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Builder;
 import org.dotwebstack.orchestrate.engine.OrchestrateException;
@@ -86,9 +89,7 @@ public final class ObjectResultMapper {
                 .value(lineageValue)
                 .isDerivedFrom(propertyResult.getSourceProperties())
                 .wasGeneratedBy(PropertyMappingExecution.builder()
-                    .used(org.dotwebstack.orchestrate.model.lineage.PropertyMapping.builder()
-                        .pathMapping(Set.of())
-                        .build())
+                    .used(propertyResult.getPropertyMapping())
                     .build())
                 .build());
           }
@@ -136,7 +137,17 @@ public final class ObjectResultMapper {
   private PropertyResult mapProperty(ObjectResult objectResult, Property property, PropertyMapping propertyMapping) {
     var pathResults = propertyMapping.getPathMappings()
         .stream()
-        .flatMap(pathMapping -> pathResult(objectResult, property, pathMapping))
+        .flatMap(pathMapping -> pathResult(objectResult, property, pathMapping)
+            .map(pathResult -> pathResult.withPathMapping(org.dotwebstack.orchestrate.model.lineage.PathMapping.builder()
+                .addPath(org.dotwebstack.orchestrate.model.lineage.Path.builder()
+                    .startNode(ObjectReference.fromResult(objectResult))
+                    .segments(pathMapping.getPath()
+                        .getSegments())
+                    .references(Optional.ofNullable(pathResult.getSourceProperty())
+                        .map(Set::of)
+                        .orElse(emptySet()))
+                    .build())
+                .build())))
         .toList();
 
     var combiner = propertyMapping.getCombiner();
@@ -150,7 +161,14 @@ public final class ObjectResultMapper {
           : new CoalesceCombinerType().create(Map.of());
     }
 
-    return combiner.apply(pathResults);
+    var propertyMappingExecution = org.dotwebstack.orchestrate.model.lineage.PropertyMapping.builder()
+        .pathMapping(pathResults.stream()
+            .map(PathResult::getPathMapping)
+            .collect(Collectors.toSet()))
+        .build();
+
+    return combiner.apply(pathResults)
+        .withPropertyMapping(propertyMappingExecution);
   }
 
   private Stream<PathResult> pathResult(ObjectResult objectResult, Property property, PathMapping pathMapping) {
@@ -189,10 +207,7 @@ public final class ObjectResultMapper {
       var pathResult = PathResult.builder()
           .value(propertyValue)
           .sourceProperty(SourceProperty.builder()
-              .subject(ObjectReference.builder()
-                  .objectType(objectResult.getType().getName())
-                  .objectKey(objectResult.getKey())
-                  .build())
+              .subject(ObjectReference.fromResult(objectResult))
               .property(currentSegment)
               .value(propertyValue)
               .path(fullPath.getSegments())

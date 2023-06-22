@@ -201,7 +201,7 @@ public final class SchemaFactory {
             .build())
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("value"))
-            .type(requiredType("PropertyResult"))
+            .type(new TypeName("PropertyResult"))
             .build())
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("wasGeneratedBy"))
@@ -269,7 +269,7 @@ public final class SchemaFactory {
             .build())
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("value"))
-            .type(requiredType(lineageRenamer.apply("PropertyResult")))
+            .type(new TypeName(lineageRenamer.apply("PropertyResult")))
             .build())
         .build());
 

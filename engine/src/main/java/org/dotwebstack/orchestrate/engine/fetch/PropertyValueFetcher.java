@@ -18,6 +18,10 @@ public final class PropertyValueFetcher implements DataFetcher<Map<String, Objec
     var sourceMap = (Map<String, Object>) environment.getSource();
     var value = sourceMap.get(fieldRenamer.apply("value"));
 
+    if (value == null) {
+      return null;
+    }
+
     if (value instanceof Integer) {
       return Map.of(fieldRenamer.apply("integerValue"), value);
     }
