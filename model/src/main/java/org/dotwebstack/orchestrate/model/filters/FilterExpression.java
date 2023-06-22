@@ -3,7 +3,6 @@ package org.dotwebstack.orchestrate.model.filters;
 import lombok.Builder;
 import lombok.Getter;
 import org.dotwebstack.orchestrate.model.Path;
-import org.dotwebstack.orchestrate.model.filters.FilterOperator;
 
 @Getter
 @Builder(toBuilder = true)
