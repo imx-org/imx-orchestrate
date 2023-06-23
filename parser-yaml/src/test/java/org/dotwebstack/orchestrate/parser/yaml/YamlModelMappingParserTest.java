@@ -29,7 +29,6 @@ class YamlModelMappingParserTest {
 
     var modelMappingParser = YamlModelMappingParser.getInstance(new ComponentFactory(), modelLoaderRegistry);
     var inputStream = YamlModelMappingParser.class.getResourceAsStream("/mapping.yaml");
-
     var mapping = modelMappingParser.parse(inputStream);
 
     assertThat(mapping).isNotNull();
