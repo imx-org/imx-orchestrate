@@ -19,7 +19,7 @@ class GatewayIT {
 
   private static final String QUERY = """
         {
-          building(id: "B12345") {
+          building(id: "B0001") {
             id
             surface
           }
@@ -54,6 +54,6 @@ class GatewayIT {
         .get();
 
     assertThat(adres).isNotNull()
-        .containsEntry("id", "B12345");
+        .containsEntry("id", "B0001");
   }
 }

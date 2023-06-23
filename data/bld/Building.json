@@ -1,7 +1,17 @@
 [
   {
-    "id": "B12345",
+    "id": "B0001",
     "surface": 382,
+    "hasAddress": []
+  },
+  {
+    "id": "B0002",
+    "surface": 195,
+    "hasAddress": []
+  },
+  {
+    "id": "B0003",
+    "surface": 254,
     "hasAddress": []
   }
 ]

@@ -1,7 +1,33 @@
 [
   {
-    "id": "A12345",
+    "id": "A0001",
     "houseNumber": 23,
     "postalCode": "1234AB"
+  },
+  {
+    "id": "A0002",
+    "houseNumber": 24,
+    "postalCode": "1234AB"
+  },
+  {
+    "id": "A0003",
+    "houseNumber": 25,
+    "postalCode": "1234AB"
+  },
+  {
+    "id": "A0004",
+    "houseNumber": 25,
+    "houseNumberAddition": "A",
+    "postalCode": "1234AB"
+  },
+  {
+    "id": "A0005",
+    "houseNumber": 25,
+    "houseNumberAddition": "B",
+    "postalCode": "1234AB"
+  },
+  {
+    "id": "A0006",
+    "houseNumber": 26
   }
 ]
