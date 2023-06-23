@@ -32,18 +32,18 @@ public class ObjectTypeDeserializer extends StdDeserializer<ObjectType> {
     var node = parser.getCodec()
         .readTree(parser);
 
-    if (node instanceof ObjectNode objectNode) {
-      return createObjectType(objectNode, context);
+    if (node instanceof ObjectNode objectTypeNode) {
+      return createObjectType(objectTypeNode, context);
     }
 
     throw new YamlModelParserException(String.format(INVALID_OBJECT_NODE, OBJECT_TYPES_KEY));
   }
 
-  private ObjectType createObjectType(ObjectNode objectNode, DeserializationContext context) {
+  private ObjectType createObjectType(ObjectNode objectTypeNode, DeserializationContext context) {
     var objectTypeBuilder = ObjectType.builder();
 
-    if (objectNode.has(ATTRIBUTES_KEY)) {
-      if (objectNode.get(ATTRIBUTES_KEY) instanceof ObjectNode attributesNode) {
+    if (objectTypeNode.has(ATTRIBUTES_KEY)) {
+      if (objectTypeNode.get(ATTRIBUTES_KEY) instanceof ObjectNode attributesNode) {
         attributesNode.fields()
             .forEachRemaining(entry -> objectTypeBuilder.property(createAttribute(entry, context)));
       } else {
@@ -51,8 +51,8 @@ public class ObjectTypeDeserializer extends StdDeserializer<ObjectType> {
       }
     }
 
-    if (objectNode.has(RELATIONS_KEY)) {
-      if (objectNode.get(RELATIONS_KEY) instanceof ObjectNode relationsNode) {
+    if (objectTypeNode.has(RELATIONS_KEY)) {
+      if (objectTypeNode.get(RELATIONS_KEY) instanceof ObjectNode relationsNode) {
         relationsNode.fields()
             .forEachRemaining(entry -> objectTypeBuilder.property(createRelation(entry, context)));
       } else {

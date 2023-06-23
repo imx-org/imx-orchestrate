@@ -23,14 +23,14 @@ public final class CardinalityDeserializer extends StdDeserializer<Cardinality> 
 
   @Override
   public Cardinality deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-    var node = parser.getCodec()
+    var cardinalityNode = parser.getCodec()
         .readTree(parser);
 
-    if (node instanceof TextNode textNode) {
+    if (cardinalityNode instanceof TextNode textNode) {
       return Cardinality.fromString(textNode.textValue());
     }
 
-    if (node instanceof IntNode intNode) {
+    if (cardinalityNode instanceof IntNode intNode) {
       return Cardinality.fromString(intNode.asText());
     }
 

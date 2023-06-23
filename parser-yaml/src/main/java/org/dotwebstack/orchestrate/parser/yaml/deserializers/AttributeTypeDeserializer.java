@@ -23,11 +23,11 @@ public class AttributeTypeDeserializer extends StdDeserializer<AttributeType> {
 
   @Override
   public AttributeType deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-    var node = parser.getCodec()
+    var typeNode = parser.getCodec()
         .readTree(parser);
 
     // @TODO: Dynamic types, inclusing extension types
-    if (node instanceof TextNode) {
+    if (typeNode instanceof TextNode) {
       return ScalarTypes.STRING;
     }
 
