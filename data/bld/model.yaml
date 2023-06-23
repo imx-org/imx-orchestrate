@@ -9,10 +9,15 @@ objectTypes:
         type: Integer
         cardinality: 0..1
     relations:
-      hasAddress:
+      hasMainAddress:
+        target: Address
+        cardinality: 1
+        inverseName: isMainAddressOf
+        inverseCardinality: 1
+      hasSubAddress:
         target: Address
         cardinality: 0..*
-        inverseName: isAddressOf
+        inverseName: isSubAddressOf
         inverseCardinality: 1
 
   Address:

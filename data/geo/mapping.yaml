@@ -18,3 +18,25 @@ objectTypeMappings:
       surface:
         pathMappings:
           path: surface
+      hasAddress:
+        pathMappings:
+          - path: hasMainAddress
+          - path: hasSubAddress
+        combiner:
+          type: merge
+
+  Address:
+    sourceRoot: bld:Address
+    propertyMappings:
+      id:
+        pathMappings:
+          path: id
+      houseNumber:
+        pathMappings:
+          path: houseNumber
+      houseNumberAddition:
+        pathMappings:
+          path: houseNumberAddition
+      postalCode:
+        pathMappings:
+          path: postalCode
