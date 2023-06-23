@@ -1,6 +1,5 @@
 package org.dotwebstack.orchestrate.parser.yaml;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -21,15 +20,15 @@ import org.dotwebstack.orchestrate.model.matchers.Matcher;
 import org.dotwebstack.orchestrate.parser.yaml.deserializers.CardinalityDeserializer;
 import org.dotwebstack.orchestrate.parser.yaml.deserializers.FilterOperatorDeserializer;
 import org.dotwebstack.orchestrate.parser.yaml.deserializers.MatcherDeserializer;
-import org.dotwebstack.orchestrate.parser.yaml.deserializers.ModelDeserializer;
+import org.dotwebstack.orchestrate.parser.yaml.deserializers.ModelLoaderDeserializer;
 import org.dotwebstack.orchestrate.parser.yaml.deserializers.ResultCombinerDeserializer;
 import org.dotwebstack.orchestrate.parser.yaml.deserializers.ResultMapperDeserializer;
 import org.dotwebstack.orchestrate.parser.yaml.mixins.PathMappingMixin;
 import org.dotwebstack.orchestrate.parser.yaml.mixins.PropertyMappingMixin;
 
-public class YamlModelMappingParser {
+public final class YamlModelMappingParser {
 
-  private final YAMLMapper yamlObjectMapper;
+  private final YAMLMapper yamlMapper;
 
   public static YamlModelMappingParser getInstance(ComponentFactory componentFactory,
       ModelLoaderRegistry modelLoaderRegistry) {
@@ -42,20 +41,19 @@ public class YamlModelMappingParser {
         .addDeserializer(Matcher.class, new MatcherDeserializer(componentFactory))
         .addDeserializer(FilterOperator.class, new FilterOperatorDeserializer(componentFactory))
         .addDeserializer(Cardinality.class, new CardinalityDeserializer())
-        .addDeserializer(Model.class, new ModelDeserializer(modelLoaderRegistry));
+        .addDeserializer(Model.class, new ModelLoaderDeserializer(modelLoaderRegistry));
 
     return new YamlModelMappingParser(Set.of(module));
   }
 
   private YamlModelMappingParser(Set<Module> modules) {
-    yamlObjectMapper = new YAMLMapper();
-    modules.forEach(yamlObjectMapper::registerModule);
+    yamlMapper = new YAMLMapper();
+    modules.forEach(yamlMapper::registerModule);
   }
 
   public ModelMapping parse(InputStream inputStream) {
     try {
-      return yamlObjectMapper.readValue(inputStream, new TypeReference<>() {
-      });
+      return yamlMapper.readValue(inputStream, ModelMapping.class);
     } catch (IOException e) {
       throw new YamlModelMappingParserException(String.format("An error occurred while processing model mapping:%n%s",
           e.getMessage()), e);

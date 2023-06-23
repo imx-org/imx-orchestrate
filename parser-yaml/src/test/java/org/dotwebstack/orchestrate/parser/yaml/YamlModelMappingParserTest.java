@@ -2,8 +2,8 @@ package org.dotwebstack.orchestrate.parser.yaml;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.dotwebstack.orchestrate.model.ComponentFactory;
 import java.util.Optional;
+import org.dotwebstack.orchestrate.model.ComponentFactory;
 import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.model.loader.ModelLoader;
 import org.dotwebstack.orchestrate.model.loader.ModelLoaderRegistry;
@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 class YamlModelMappingParserTest {
 
   @Test
-  void mapWorks() {
+  void parse_returnsModel_forValidFile() {
     var modelLoaderRegistry = ModelLoaderRegistry.getInstance();
     modelLoaderRegistry.registerModelLoader(new ModelLoader() {
       @Override
@@ -26,10 +26,10 @@ class YamlModelMappingParserTest {
       }
     });
 
-    var yamlMapper = YamlModelMappingParser.getInstance(new ComponentFactory(), modelLoaderRegistry);
+    var modelMappingParser = YamlModelMappingParser.getInstance(new ComponentFactory(), modelLoaderRegistry);
     var inputStream = YamlModelMappingParser.class.getResourceAsStream("/adresmapping.yaml");
 
-    var mapping = yamlMapper.parse(inputStream);
+    var mapping = modelMappingParser.parse(inputStream);
 
     assertThat(mapping).isNotNull();
   }

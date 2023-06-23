@@ -1,8 +1,11 @@
 package org.dotwebstack.orchestrate.parser.yaml.deserializers;
 
+import static org.dotwebstack.orchestrate.parser.yaml.YamlModelParser.INVALID_TEXT_OR_INT_NODE;
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import java.io.IOException;
 import java.io.Serial;
@@ -27,6 +30,10 @@ public final class CardinalityDeserializer extends StdDeserializer<Cardinality> 
       return Cardinality.fromString(textNode.textValue());
     }
 
-    throw new YamlModelMappingParserException("Cardinality is not a text node.");
+    if (node instanceof IntNode intNode) {
+      return Cardinality.fromString(intNode.asText());
+    }
+
+    throw new YamlModelMappingParserException(String.format(INVALID_TEXT_OR_INT_NODE, "cardinality"));
   }
 }

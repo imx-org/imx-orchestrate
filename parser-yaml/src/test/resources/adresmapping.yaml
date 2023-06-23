@@ -2,6 +2,7 @@ targetModel:
   imxgeo:
     profile: MIM
     location: imx/location
+
 sourceModels:
   - bag:
       profile: MIM
