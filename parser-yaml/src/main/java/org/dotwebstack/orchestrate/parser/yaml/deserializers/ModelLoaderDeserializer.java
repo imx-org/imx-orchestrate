@@ -41,26 +41,26 @@ public class ModelLoaderDeserializer extends StdDeserializer<Model> {
           .map(modelEntry -> resolveModel(modelEntry.getKey(), modelEntry.getValue()))
           .findFirst()
           .orElse(null);
-
     } else {
       throw new YamlModelMappingParserException("Node describing model should be a mapping node");
     }
   }
 
   private Model resolveModel(String alias, Map<String, String> modelSpec) {
-    if (!modelSpec.containsKey("profile")) {
+    if (!modelSpec.containsKey("loader")) {
       throw new YamlModelMappingParserException(
-          String.format("Expected property `profile` is missing in model node: %s", modelSpec));
+          String.format("Expected property `loader` is missing in model node: %s", modelSpec));
     }
+
     if (!modelSpec.containsKey("location")) {
       throw new YamlModelMappingParserException(
           String.format("Expected property `location` is missing in model node: %s", modelSpec));
     }
 
-    var profile = modelSpec.get("profile");
+    var loader = modelSpec.get("loader");
     var location = modelSpec.get("location");
 
-    return modelLoaderRegistry.getModelLoader(profile)
+    return modelLoaderRegistry.getModelLoader(loader)
         .loadModel(alias, location)
         .orElseThrow(() -> new YamlModelMappingParserException(
             String.format("Could not resolve model from `%s` for model: %s", location, modelSpec)));

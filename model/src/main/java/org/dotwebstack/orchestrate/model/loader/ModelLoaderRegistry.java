@@ -10,10 +10,10 @@ public class ModelLoaderRegistry {
   private final Map<String, ModelLoader> modelLoaders = new HashMap<>();
 
   public void registerModelLoader(ModelLoader modelLoader) {
-    modelLoaders.put(modelLoader.getProfile(), modelLoader);
+    modelLoaders.put(modelLoader.getName(), modelLoader);
   }
 
-  public ModelLoader getModelLoader(String modelProfile) {
-    return modelLoaders.get(modelProfile);
+  public ModelLoader getModelLoader(String name) {
+    return modelLoaders.get(name);
   }
 }

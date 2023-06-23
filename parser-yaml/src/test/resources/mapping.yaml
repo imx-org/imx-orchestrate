@@ -1,14 +1,14 @@
 targetModel:
   imxgeo:
-    profile: MIM
+    loader: mim
     location: imx/location
 
 sourceModels:
   - bag:
-      profile: MIM
+      loader: mim
       location: bag/location
   - bgt:
-      profile: MIM
+      loader: mim
       location: bgt/location
 
 objectTypeMappings:

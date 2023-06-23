@@ -14,10 +14,11 @@ class YamlModelMappingParserTest {
   @Test
   void parse_returnsModel_forValidFile() {
     var modelLoaderRegistry = ModelLoaderRegistry.getInstance();
+
     modelLoaderRegistry.registerModelLoader(new ModelLoader() {
       @Override
-      public String getProfile() {
-        return "MIM";
+      public String getName() {
+        return "mim";
       }
 
       @Override

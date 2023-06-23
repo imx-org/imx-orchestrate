@@ -56,27 +56,27 @@ namedPaths:
 targetModel:
   imxgeo:
     location: "config/models/mimxml-imx-geo.xml"
-    profile: MIM
+    loader: mim
 
 sourceModels:
   - bag:
       location: "config/models/imbag.xml"
-      profile: MIM
+      loader: mim
   - bgt:
       location: "config/models/imgeo.xml"
-      profile: MIM
+      loader: mim
   - bg:
       location: "config/models/bg.xml"
-      profile: MIM
+      loader: mim
   - imro:
       location: "config/models/imro.xml"
-      profile: MIM
+      loader: mim
   - brk:
       location: "config/models/brk.xml"
-      profile: MIM
+      loader: mim
   - bro:
       location: "config/models/bro.xml"
-      profile: MIM
+      loader: mim
 
 objectTypeMappings:
   Adres:
@@ -530,5 +530,3 @@ objectTypeMappings:
       geometrie:
         pathMapping:
           path: geometrie
-
-

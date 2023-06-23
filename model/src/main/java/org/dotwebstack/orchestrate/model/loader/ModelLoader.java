@@ -5,6 +5,7 @@ import org.dotwebstack.orchestrate.model.Model;
 
 public interface ModelLoader {
 
-  String getProfile();
+  String getName();
+
   Optional<Model> loadModel(String alias, String location);
 }
