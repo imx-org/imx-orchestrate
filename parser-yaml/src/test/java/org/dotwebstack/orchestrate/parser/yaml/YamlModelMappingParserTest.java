@@ -27,7 +27,7 @@ class YamlModelMappingParserTest {
     });
 
     var modelMappingParser = YamlModelMappingParser.getInstance(new ComponentFactory(), modelLoaderRegistry);
-    var inputStream = YamlModelMappingParser.class.getResourceAsStream("/adresmapping.yaml");
+    var inputStream = YamlModelMappingParser.class.getResourceAsStream("/mapping.yaml");
 
     var mapping = modelMappingParser.parse(inputStream);
 
