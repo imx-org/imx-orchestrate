@@ -1,10 +1,12 @@
-package org.dotwebstack.orchestrate;
+package org.dotwebstack.gateway;
 
 import static java.util.stream.Collectors.toUnmodifiableMap;
 import static java.util.stream.Collectors.toUnmodifiableSet;
-import static org.dotwebstack.orchestrate.TestFixtures.createModelMapping;
+
 import graphql.GraphQL;
 import graphql.schema.GraphQLSchema;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -31,14 +33,14 @@ import org.springframework.graphql.execution.GraphQlSource;
 @EnableConfigurationProperties(GraphQlProperties.class)
 public class GatewayConfiguration {
 
-  private GatewayProperties gatewayProperties;
+  private final GatewayProperties gatewayProperties;
 
   public GatewayConfiguration(GatewayProperties gatewayProperties) {
     this.gatewayProperties = gatewayProperties;
   }
 
   @Bean
-  public GraphQlSource graphQlSource() {
+  public GraphQlSource graphQlSource() throws IOException {
     var extensions = Set.of(new GeometryExtension());
 
     var componentFactory = new ComponentFactory();
@@ -48,19 +50,16 @@ public class GatewayConfiguration {
     var modelLoaders = resolveModelLoaders();
     modelLoaders.forEach(modelLoaderRegistry::registerModelLoader);
 
-    var yamlModelMappingParser = YamlModelMappingParser.getInstance(componentFactory, modelLoaderRegistry);
+    var modelMapping = YamlModelMappingParser.getInstance(componentFactory, modelLoaderRegistry)
+        .parse(new FileInputStream(gatewayProperties.getMapping()));
 
-    var modelMapping = createModelMapping(gatewayProperties.getTargetModel(),
-        GatewayConfiguration.class.getResourceAsStream(gatewayProperties.getMapping()), yamlModelMappingParser,
-        modelLoaders.isEmpty());
-
-    var sourceModels = modelMapping.getSourceModels().stream()
+    var sourceModelMap = modelMapping.getSourceModels().stream()
         .collect(toUnmodifiableMap(Model::getAlias, Function.identity()));
 
     var sources = gatewayProperties.getSources()
         .entrySet()
         .stream()
-        .collect(Collectors.toMap(Map.Entry::getKey, e -> resolveSource(e.getKey(), e.getValue(), sourceModels)));
+        .collect(Collectors.toMap(Map.Entry::getKey, e -> resolveSource(e.getKey(), e.getValue(), sourceModelMap)));
 
     var orchestration = Orchestration.builder()
         .modelMapping(modelMapping)

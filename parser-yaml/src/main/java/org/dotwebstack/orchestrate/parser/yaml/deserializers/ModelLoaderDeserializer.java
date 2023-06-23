@@ -47,17 +47,12 @@ public class ModelLoaderDeserializer extends StdDeserializer<Model> {
   }
 
   private Model resolveModel(String alias, Map<String, String> modelSpec) {
-    if (!modelSpec.containsKey("loader")) {
-      throw new YamlModelMappingParserException(
-          String.format("Expected property `loader` is missing in model node: %s", modelSpec));
-    }
-
     if (!modelSpec.containsKey("location")) {
       throw new YamlModelMappingParserException(
           String.format("Expected property `location` is missing in model node: %s", modelSpec));
     }
 
-    var loader = modelSpec.get("loader");
+    var loader = modelSpec.getOrDefault("loader", "yaml");
     var location = modelSpec.get("location");
 
     return modelLoaderRegistry.getModelLoader(loader)

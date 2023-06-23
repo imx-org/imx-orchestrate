@@ -1,4 +1,4 @@
-package org.dotwebstack.orchestrate;
+package org.dotwebstack.gateway;
 
 public class GatewayException extends RuntimeException {
 

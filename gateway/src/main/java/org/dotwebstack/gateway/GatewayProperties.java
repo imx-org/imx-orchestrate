@@ -1,20 +1,17 @@
-package org.dotwebstack.orchestrate;
+package org.dotwebstack.gateway;
 
 
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
-
 @Getter
 @Setter
 @Component
-@ConfigurationProperties("orchestrate.gateway")
+@ConfigurationProperties("orchestrate")
 public class GatewayProperties {
-
-  private TestFixtures.TargetModelType targetModel;
 
   private String mapping;
 

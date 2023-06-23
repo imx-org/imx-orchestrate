@@ -1,9 +1,8 @@
-package org.dotwebstack.orchestrate;
-
-import lombok.Getter;
-import lombok.Setter;
+package org.dotwebstack.gateway;
 
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter

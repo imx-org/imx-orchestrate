@@ -1,0 +1,20 @@
+targetModel:
+  geo:
+    location: ../data/geo/model.yaml
+
+sourceModels:
+  - bld:
+      location: ../data/bld/model.yaml
+  - prc:
+      location: ../data/prc/model.yaml
+
+objectTypeMappings:
+  Building:
+    sourceRoot: bld:Building
+    propertyMappings:
+      id:
+        pathMappings:
+          path: id
+      surface:
+        pathMappings:
+          path: surface

@@ -1,4 +1,0 @@
-orchestrate:
-  gateway:
-    targetModel: corelocation
-    mapping: /mapping/corelocation.yaml

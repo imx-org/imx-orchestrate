@@ -16,26 +16,3 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
-
-orchestrate:
-  gateway:
-    targetModel: ${TARGET_MODEL:imxgeo}
-    mapping: ${MODEL_MAPPING:/mapping/imxgeo.yaml}
-    sources:
-#      bag:
-#        type: graphql
-#        options:
-#          url:
-#          jwtToken:
-      bag:
-        type: file
-        options:
-          dataPath: ${BAG_DATA_PATH:./data/bag}
-      bgt:
-        type: file
-        options:
-          dataPath: ${BGT_DATA_PATH:./data/bgt}
-      brk:
-        type: file
-        options:
-          dataPath: ${BRK_DATA_PATH:./data/brk}

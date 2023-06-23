@@ -2,3 +2,15 @@ logging:
   level:
     root: INFO
     org.dotwebstack.orchestrate: DEBUG
+
+orchestrate:
+  mapping: ../data/geo/mapping.yaml
+  sources:
+    bld:
+      type: file
+      options:
+        dataPath: ../data/bld
+    prc:
+      type: file
+      options:
+        dataPath: ../data/prc
