@@ -74,8 +74,12 @@ public final class ComponentRegistry {
   }
 
   public ResultMapper createResultMapper(String type, Map<String, Object> options) {
-    return resultMapperTypes.get(type)
-        .create(options);
+    try {
+      return resultMapperTypes.get(type)
+          .create(options);
+    } catch (NullPointerException e) {
+      throw new ModelException("Unknown result mapper: " + type, e);
+    }
   }
 
   public ResultCombiner createResultCombiner(String type) {
@@ -83,8 +87,12 @@ public final class ComponentRegistry {
   }
 
   public ResultCombiner createResultCombiner(String type, Map<String, Object> options) {
-    return resultCombinerTypes.get(type)
-        .create(options);
+    try {
+      return resultCombinerTypes.get(type)
+          .create(options);
+    } catch (NullPointerException e) {
+      throw new ModelException("Unknown result combiner: " + type, e);
+    }
   }
 
   public Matcher createMatcher(String type) {
@@ -92,8 +100,12 @@ public final class ComponentRegistry {
   }
 
   public Matcher createMatcher(String type, Map<String, Object> options) {
-    return matcherTypes.get(type)
-        .create(options);
+    try {
+      return matcherTypes.get(type)
+          .create(options);
+    } catch (NullPointerException e) {
+      throw new ModelException("Unknown matcher: " + type, e);
+    }
   }
 
   public FilterOperator createFilterOperator(String type) {
@@ -101,7 +113,11 @@ public final class ComponentRegistry {
   }
 
   public FilterOperator createFilterOperator(String type, Map<String, Object> options) {
-    return filterOperatorTypes.get(type)
-        .create(options);
+    try {
+      return filterOperatorTypes.get(type)
+          .create(options);
+    } catch (NullPointerException e) {
+      throw new ModelException("Unknown filter operator: " + type, e);
+    }
   }
 }

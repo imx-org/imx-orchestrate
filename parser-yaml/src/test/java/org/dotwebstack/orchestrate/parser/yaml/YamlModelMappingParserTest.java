@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Optional;
 import org.dotwebstack.orchestrate.model.ComponentRegistry;
 import org.dotwebstack.orchestrate.model.Model;
+import org.dotwebstack.orchestrate.model.types.ValueTypeRegistry;
 import org.dotwebstack.orchestrate.model.loader.ModelLoader;
 import org.dotwebstack.orchestrate.model.loader.ModelLoaderRegistry;
 import org.junit.jupiter.api.Test;
@@ -13,21 +14,22 @@ class YamlModelMappingParserTest {
 
   @Test
   void parse_returnsModel_forValidFile() {
-    var modelLoaderRegistry = ModelLoaderRegistry.getInstance();
+    var modelLoaderRegistry = new ModelLoaderRegistry();
 
-    modelLoaderRegistry.registerModelLoader(new ModelLoader() {
+    modelLoaderRegistry.register(new ModelLoader() {
       @Override
       public String getName() {
         return "mim";
       }
 
       @Override
-      public Optional<Model> loadModel(String alias, String location) {
+      public Optional<Model> load(String alias, String location, ValueTypeRegistry valueTypeRegistry) {
         return Optional.of(Model.builder().alias(alias).build());
       }
     });
 
-    var modelMappingParser = YamlModelMappingParser.getInstance(new ComponentRegistry(), modelLoaderRegistry);
+    var modelMappingParser = new YamlModelMappingParser(new ComponentRegistry(), modelLoaderRegistry,
+        new ValueTypeRegistry());
     var inputStream = YamlModelMappingParser.class.getResourceAsStream("/mapping.yaml");
     var mapping = modelMappingParser.parse(inputStream);
 

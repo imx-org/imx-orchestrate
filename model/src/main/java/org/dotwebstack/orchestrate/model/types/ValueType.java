@@ -1,10 +1,11 @@
-package org.dotwebstack.orchestrate.model;
+package org.dotwebstack.orchestrate.model.types;
 
 import java.util.Map;
+import org.dotwebstack.orchestrate.model.Path;
 import org.dotwebstack.orchestrate.model.filters.EqualsOperatorType;
 import org.dotwebstack.orchestrate.model.filters.FilterDefinition;
 
-public interface AttributeType {
+public interface ValueType {
 
   String getName();
 

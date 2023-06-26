@@ -18,6 +18,7 @@ import java.util.Map;
 import org.dotwebstack.orchestrate.engine.schema.SchemaFactory;
 import org.dotwebstack.orchestrate.model.ComponentRegistry;
 import org.dotwebstack.orchestrate.model.loader.ModelLoaderRegistry;
+import org.dotwebstack.orchestrate.model.types.ValueTypeRegistry;
 import org.dotwebstack.orchestrate.parser.yaml.YamlModelLoader;
 import org.dotwebstack.orchestrate.parser.yaml.YamlModelMappingParser;
 import org.dotwebstack.orchestrate.source.BatchRequest;
@@ -42,9 +43,10 @@ class EngineIT {
 
   @BeforeEach
   void setUp() throws FileNotFoundException {
-    var modelLoaderRegistry = ModelLoaderRegistry.getInstance()
-        .registerModelLoader(new YamlModelLoader());
-    var mappingParser = YamlModelMappingParser.getInstance(new ComponentRegistry(), modelLoaderRegistry);
+    var modelLoaderRegistry = new ModelLoaderRegistry()
+        .register(new YamlModelLoader());
+    var mappingParser = new YamlModelMappingParser(new ComponentRegistry(), modelLoaderRegistry,
+        new ValueTypeRegistry());
     var mapping = mappingParser.parse(new FileInputStream("../data/geo/mapping.yaml"));
 
     bldRepository = new FileSource(mapping.getSourceModel("bld"), Paths.get("../data/bld")).getDataRepository();

@@ -5,12 +5,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.Optional;
 import org.dotwebstack.orchestrate.model.Model;
+import org.dotwebstack.orchestrate.model.types.ValueTypeRegistry;
 import org.dotwebstack.orchestrate.model.loader.ModelLoader;
 
 @AutoService(ModelLoader.class)
 public final class YamlModelLoader implements ModelLoader {
-
-  private final YamlModelParser modelParser = YamlModelParser.getInstance();
 
   @Override
   public String getName() {
@@ -18,7 +17,9 @@ public final class YamlModelLoader implements ModelLoader {
   }
 
   @Override
-  public Optional<Model> loadModel(String alias, String location) {
+  public Optional<Model> load(String alias, String location, ValueTypeRegistry valueTypeRegistry) {
+    var modelParser = new YamlModelParser(valueTypeRegistry);
+
     try {
       var model = modelParser.parse(new FileInputStream(location))
           .toBuilder()

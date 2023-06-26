@@ -20,6 +20,7 @@ import org.dotwebstack.orchestrate.model.ComponentRegistry;
 import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.model.loader.ModelLoader;
 import org.dotwebstack.orchestrate.model.loader.ModelLoaderRegistry;
+import org.dotwebstack.orchestrate.model.types.ValueTypeRegistry;
 import org.dotwebstack.orchestrate.parser.yaml.YamlModelMappingParser;
 import org.dotwebstack.orchestrate.source.Source;
 import org.dotwebstack.orchestrate.source.SourceType;
@@ -44,11 +45,13 @@ public class GatewayConfiguration {
     var componentRegistry = new ComponentRegistry();
     extensions.forEach(extension -> extension.registerComponents(componentRegistry));
 
-    var modelLoaderRegistry = ModelLoaderRegistry.getInstance();
-    var modelLoaders = resolveModelLoaders();
-    modelLoaders.forEach(modelLoaderRegistry::registerModelLoader);
+    var modelLoaderRegistry = new ModelLoaderRegistry();
+    resolveModelLoaders().forEach(modelLoaderRegistry::register);
 
-    var modelMapping = YamlModelMappingParser.getInstance(componentRegistry, modelLoaderRegistry)
+    var valueTypeRegistry = new ValueTypeRegistry();
+    extensions.forEach(extension -> extension.registerValueTypes(valueTypeRegistry));
+
+    var modelMapping = new YamlModelMappingParser(componentRegistry, modelLoaderRegistry, valueTypeRegistry)
         .parse(new FileInputStream(gatewayProperties.getMapping()));
 
     var sourceModelMap = modelMapping.getSourceModels().stream()

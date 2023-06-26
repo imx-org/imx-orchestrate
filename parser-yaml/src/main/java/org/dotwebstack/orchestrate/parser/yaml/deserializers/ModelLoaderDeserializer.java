@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.Serial;
 import java.util.Map;
 import org.dotwebstack.orchestrate.model.Model;
+import org.dotwebstack.orchestrate.model.types.ValueTypeRegistry;
 import org.dotwebstack.orchestrate.model.loader.ModelLoaderRegistry;
 import org.dotwebstack.orchestrate.parser.yaml.YamlModelMappingParserException;
 
@@ -22,9 +23,12 @@ public class ModelLoaderDeserializer extends StdDeserializer<Model> {
 
   private final transient ModelLoaderRegistry modelLoaderRegistry;
 
-  public ModelLoaderDeserializer(ModelLoaderRegistry modelLoaderRegistry) {
+  private final transient ValueTypeRegistry valueTypeRegistry;
+
+  public ModelLoaderDeserializer(ModelLoaderRegistry modelLoaderRegistry, ValueTypeRegistry valueTypeRegistry) {
     super(Model.class);
     this.modelLoaderRegistry = modelLoaderRegistry;
+    this.valueTypeRegistry = valueTypeRegistry;
   }
 
   @Override
@@ -56,7 +60,7 @@ public class ModelLoaderDeserializer extends StdDeserializer<Model> {
     var location = modelSpec.get("location");
 
     return modelLoaderRegistry.getModelLoader(loader)
-        .loadModel(alias, location)
+        .load(alias, location, valueTypeRegistry)
         .orElseThrow(() -> new YamlModelMappingParserException(
             String.format("Could not resolve model from `%s` for model: %s", location, modelSpec)));
   }

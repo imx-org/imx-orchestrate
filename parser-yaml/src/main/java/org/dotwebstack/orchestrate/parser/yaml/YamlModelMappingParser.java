@@ -1,11 +1,9 @@
 package org.dotwebstack.orchestrate.parser.yaml;
 
-import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Set;
 import org.dotwebstack.orchestrate.model.Cardinality;
 import org.dotwebstack.orchestrate.model.ComponentRegistry;
 import org.dotwebstack.orchestrate.model.Model;
@@ -17,6 +15,7 @@ import org.dotwebstack.orchestrate.model.filters.FilterOperator;
 import org.dotwebstack.orchestrate.model.loader.ModelLoaderRegistry;
 import org.dotwebstack.orchestrate.model.mappers.ResultMapper;
 import org.dotwebstack.orchestrate.model.matchers.Matcher;
+import org.dotwebstack.orchestrate.model.types.ValueTypeRegistry;
 import org.dotwebstack.orchestrate.parser.yaml.deserializers.CardinalityDeserializer;
 import org.dotwebstack.orchestrate.parser.yaml.deserializers.FilterOperatorDeserializer;
 import org.dotwebstack.orchestrate.parser.yaml.deserializers.MatcherDeserializer;
@@ -28,11 +27,9 @@ import org.dotwebstack.orchestrate.parser.yaml.mixins.PropertyMappingMixin;
 
 public final class YamlModelMappingParser {
 
-  private final YAMLMapper yamlMapper;
+  private final YAMLMapper yamlMapper = new YAMLMapper();
 
-  public static YamlModelMappingParser getInstance(ComponentRegistry componentRegistry,
-      ModelLoaderRegistry modelLoaderRegistry) {
-
+  public YamlModelMappingParser(ComponentRegistry componentRegistry, ModelLoaderRegistry modelLoaderRegistry, ValueTypeRegistry valueTypeRegistry) {
     var module = new SimpleModule()
         .setMixInAnnotation(PropertyMapping.PropertyMappingBuilder.class, PropertyMappingMixin.class)
         .setMixInAnnotation(PathMapping.PathMappingBuilder.class, PathMappingMixin.class)
@@ -41,14 +38,9 @@ public final class YamlModelMappingParser {
         .addDeserializer(Matcher.class, new MatcherDeserializer(componentRegistry))
         .addDeserializer(FilterOperator.class, new FilterOperatorDeserializer(componentRegistry))
         .addDeserializer(Cardinality.class, new CardinalityDeserializer())
-        .addDeserializer(Model.class, new ModelLoaderDeserializer(modelLoaderRegistry));
+        .addDeserializer(Model.class, new ModelLoaderDeserializer(modelLoaderRegistry, valueTypeRegistry));
 
-    return new YamlModelMappingParser(Set.of(module));
-  }
-
-  private YamlModelMappingParser(Set<Module> modules) {
-    yamlMapper = new YAMLMapper();
-    modules.forEach(yamlMapper::registerModule);
+    yamlMapper.registerModule(module);
   }
 
   public ModelMapping parse(InputStream inputStream) {

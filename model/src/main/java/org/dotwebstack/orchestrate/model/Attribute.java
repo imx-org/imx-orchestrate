@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.jackson.Jacksonized;
+import org.dotwebstack.orchestrate.model.types.ValueType;
 
 @Getter
 @Jacksonized
@@ -11,5 +12,5 @@ import lombok.extern.jackson.Jacksonized;
 @SuperBuilder(toBuilder = true)
 public final class Attribute extends AbstractProperty {
 
-  private final AttributeType type;
+  private final ValueType type;
 }

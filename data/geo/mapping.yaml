@@ -5,8 +5,6 @@ targetModel:
 sourceModels:
   - bld:
       location: ../data/bld/model.yaml
-  - prc:
-      location: ../data/prc/model.yaml
 
 objectTypeMappings:
   Building:

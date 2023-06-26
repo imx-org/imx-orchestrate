@@ -4,12 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import java.util.Map;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import org.dotwebstack.orchestrate.engine.OrchestrateException;
 import org.dotwebstack.orchestrate.ext.spatial.filters.IntersectsOperatorType;
-import org.dotwebstack.orchestrate.model.AttributeType;
 import org.dotwebstack.orchestrate.model.Path;
 import org.dotwebstack.orchestrate.model.filters.FilterDefinition;
+import org.dotwebstack.orchestrate.model.types.ValueType;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
@@ -18,15 +20,23 @@ import org.locationtech.jts.io.WKTReader;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
 
 @ToString
-public class GeometryType implements AttributeType {
+@RequiredArgsConstructor
+public class GeometryType implements ValueType {
+
+  public static final String TYPE_NAME = "Geometry";
+
+  public static final int DEFAULT_SRID = 4326;
 
   private final ObjectMapper objectMapper = new JsonMapper();
 
   private final GeoJsonReader geoJsonReader = new GeoJsonReader();
 
+  @Getter
+  private final int srid;
+
   @Override
   public String getName() {
-    return "Geometry";
+    return TYPE_NAME;
   }
 
   @Override
@@ -35,9 +45,7 @@ public class GeometryType implements AttributeType {
       try {
         var jsonStr = objectMapper.writeValueAsString(sourceValue);
         var geometry = geoJsonReader.read(jsonStr);
-
-        // TODO: Dynamic SRID
-        geometry.setSRID(28992);
+        geometry.setSRID(srid);
 
         return geometry;
       } catch (JsonProcessingException | ParseException e) {
@@ -64,7 +72,7 @@ public class GeometryType implements AttributeType {
         .next();
 
     var wkt = (String) ((Map<String, Object>) firstEntry.getValue()).get("fromWKT");
-    var wktReader = new WKTReader(new GeometryFactory(new PrecisionModel(), 28992));
+    var wktReader = new WKTReader(new GeometryFactory(new PrecisionModel(), srid));
 
     Geometry geometry;
 

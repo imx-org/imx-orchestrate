@@ -14,6 +14,7 @@ import java.util.Map;
 import org.dotwebstack.orchestrate.engine.OrchestrateExtension;
 import org.dotwebstack.orchestrate.ext.spatial.filters.IntersectsOperatorType;
 import org.dotwebstack.orchestrate.model.ComponentRegistry;
+import org.dotwebstack.orchestrate.model.types.ValueTypeRegistry;
 
 public final class GeometryExtension implements OrchestrateExtension {
 
@@ -67,5 +68,10 @@ public final class GeometryExtension implements OrchestrateExtension {
   @Override
   public void registerComponents(ComponentRegistry componentRegistry) {
     componentRegistry.register(new IntersectsOperatorType());
+  }
+
+  @Override
+  public void registerValueTypes(ValueTypeRegistry valueTypeRegistry) {
+    valueTypeRegistry.register(new GeometryTypeFactory());
   }
 }

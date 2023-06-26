@@ -5,7 +5,3 @@ orchestrate:
       type: file
       options:
         dataPath: ../data/bld
-    prc:
-      type: file
-      options:
-        dataPath: ../data/prc
