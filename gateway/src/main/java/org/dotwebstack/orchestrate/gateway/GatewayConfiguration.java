@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.Orchestration;
 import org.dotwebstack.orchestrate.engine.schema.SchemaFactory;
 import org.dotwebstack.orchestrate.ext.spatial.GeometryExtension;
-import org.dotwebstack.orchestrate.model.ComponentFactory;
+import org.dotwebstack.orchestrate.model.ComponentRegistry;
 import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.model.loader.ModelLoader;
 import org.dotwebstack.orchestrate.model.loader.ModelLoaderRegistry;
@@ -41,14 +41,14 @@ public class GatewayConfiguration {
   public GraphQlSource graphQlSource() throws IOException {
     var extensions = Set.of(new GeometryExtension());
 
-    var componentFactory = new ComponentFactory();
-    extensions.forEach(extension -> extension.registerComponents(componentFactory));
+    var componentRegistry = new ComponentRegistry();
+    extensions.forEach(extension -> extension.registerComponents(componentRegistry));
 
     var modelLoaderRegistry = ModelLoaderRegistry.getInstance();
     var modelLoaders = resolveModelLoaders();
     modelLoaders.forEach(modelLoaderRegistry::registerModelLoader);
 
-    var modelMapping = YamlModelMappingParser.getInstance(componentFactory, modelLoaderRegistry)
+    var modelMapping = YamlModelMappingParser.getInstance(componentRegistry, modelLoaderRegistry)
         .parse(new FileInputStream(gatewayProperties.getMapping()));
 
     var sourceModelMap = modelMapping.getSourceModels().stream()

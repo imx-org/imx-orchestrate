@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
 import java.io.Serial;
-import org.dotwebstack.orchestrate.model.ComponentFactory;
+import org.dotwebstack.orchestrate.model.ComponentRegistry;
 import org.dotwebstack.orchestrate.model.matchers.Matcher;
 
 public final class MatcherDeserializer extends StdDeserializer<Matcher> {
@@ -16,11 +16,11 @@ public final class MatcherDeserializer extends StdDeserializer<Matcher> {
   @Serial
   private static final long serialVersionUID = 7898902256110027311L;
 
-  private final transient ComponentFactory componentFactory;
+  private final transient ComponentRegistry componentRegistry;
 
-  public MatcherDeserializer(ComponentFactory componentFactory) {
+  public MatcherDeserializer(ComponentRegistry componentRegistry) {
     super(Matcher.class);
-    this.componentFactory = componentFactory;
+    this.componentRegistry = componentRegistry;
   }
 
   @Override
@@ -28,6 +28,6 @@ public final class MatcherDeserializer extends StdDeserializer<Matcher> {
     var node = parser.getCodec()
         .readTree(parser);
 
-    return componentFactory.createMatcher(parseType(node), parseOptions(node));
+    return componentRegistry.createMatcher(parseType(node), parseOptions(node));
   }
 }

@@ -3,7 +3,7 @@ package org.dotwebstack.orchestrate.parser.yaml;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
-import org.dotwebstack.orchestrate.model.ComponentFactory;
+import org.dotwebstack.orchestrate.model.ComponentRegistry;
 import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.model.loader.ModelLoader;
 import org.dotwebstack.orchestrate.model.loader.ModelLoaderRegistry;
@@ -27,7 +27,7 @@ class YamlModelMappingParserTest {
       }
     });
 
-    var modelMappingParser = YamlModelMappingParser.getInstance(new ComponentFactory(), modelLoaderRegistry);
+    var modelMappingParser = YamlModelMappingParser.getInstance(new ComponentRegistry(), modelLoaderRegistry);
     var inputStream = YamlModelMappingParser.class.getResourceAsStream("/mapping.yaml");
     var mapping = modelMappingParser.parse(inputStream);
 

@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
 import org.dotwebstack.orchestrate.model.Cardinality;
-import org.dotwebstack.orchestrate.model.ComponentFactory;
+import org.dotwebstack.orchestrate.model.ComponentRegistry;
 import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.model.ModelMapping;
 import org.dotwebstack.orchestrate.model.PathMapping;
@@ -30,16 +30,16 @@ public final class YamlModelMappingParser {
 
   private final YAMLMapper yamlMapper;
 
-  public static YamlModelMappingParser getInstance(ComponentFactory componentFactory,
+  public static YamlModelMappingParser getInstance(ComponentRegistry componentRegistry,
       ModelLoaderRegistry modelLoaderRegistry) {
 
     var module = new SimpleModule()
         .setMixInAnnotation(PropertyMapping.PropertyMappingBuilder.class, PropertyMappingMixin.class)
         .setMixInAnnotation(PathMapping.PathMappingBuilder.class, PathMappingMixin.class)
-        .addDeserializer(ResultCombiner.class, new ResultCombinerDeserializer(componentFactory))
-        .addDeserializer(ResultMapper.class, new ResultMapperDeserializer(componentFactory))
-        .addDeserializer(Matcher.class, new MatcherDeserializer(componentFactory))
-        .addDeserializer(FilterOperator.class, new FilterOperatorDeserializer(componentFactory))
+        .addDeserializer(ResultCombiner.class, new ResultCombinerDeserializer(componentRegistry))
+        .addDeserializer(ResultMapper.class, new ResultMapperDeserializer(componentRegistry))
+        .addDeserializer(Matcher.class, new MatcherDeserializer(componentRegistry))
+        .addDeserializer(FilterOperator.class, new FilterOperatorDeserializer(componentRegistry))
         .addDeserializer(Cardinality.class, new CardinalityDeserializer())
         .addDeserializer(Model.class, new ModelLoaderDeserializer(modelLoaderRegistry));
 

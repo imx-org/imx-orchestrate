@@ -26,7 +26,7 @@ import org.dotwebstack.orchestrate.model.matchers.MatcherType;
 import org.dotwebstack.orchestrate.model.matchers.NotEqualsMatcherType;
 import org.dotwebstack.orchestrate.model.matchers.NotNullMatcherType;
 
-public final class ComponentFactory {
+public final class ComponentRegistry {
 
   private final Map<String, ResultMapperType> resultMapperTypes = new HashMap<>();
 
@@ -36,7 +36,7 @@ public final class ComponentFactory {
 
   private final Map<String, FilterOperatorType> filterOperatorTypes = new HashMap<>();
 
-  public ComponentFactory() {
+  public ComponentRegistry() {
     register(new AppendMapperType(), new CelMapperType(), new PrependMapperType());
     register(new CoalesceCombinerType(), new JoinCombinerType(), new MergeCombinerType(), new NoopCombinerType(),
         new SumCombinerType());
@@ -45,25 +45,25 @@ public final class ComponentFactory {
     register(new EqualsOperatorType());
   }
 
-  public ComponentFactory register(ResultMapperType... resultMapperTypes) {
+  public ComponentRegistry register(ResultMapperType... resultMapperTypes) {
     Arrays.stream(resultMapperTypes).forEach(resultMapperType ->
         this.resultMapperTypes.put(resultMapperType.getName(), resultMapperType));
     return this;
   }
 
-  public ComponentFactory register(ResultCombinerType... resultCombinerTypes) {
+  public ComponentRegistry register(ResultCombinerType... resultCombinerTypes) {
     Arrays.stream(resultCombinerTypes).forEach(resultCombinerType ->
         this.resultCombinerTypes.put(resultCombinerType.getName(), resultCombinerType));
     return this;
   }
 
-  public ComponentFactory register(MatcherType... matcherTypes) {
+  public ComponentRegistry register(MatcherType... matcherTypes) {
     Arrays.stream(matcherTypes).forEach(matcherType ->
         this.matcherTypes.put(matcherType.getName(), matcherType));
     return this;
   }
 
-  public ComponentFactory register(FilterOperatorType... filterOperatorTypes) {
+  public ComponentRegistry register(FilterOperatorType... filterOperatorTypes) {
     Arrays.stream(filterOperatorTypes).forEach(filterOperatorType ->
         this.filterOperatorTypes.put(filterOperatorType.getName(), filterOperatorType));
     return this;

@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
 import java.io.Serial;
-import org.dotwebstack.orchestrate.model.ComponentFactory;
+import org.dotwebstack.orchestrate.model.ComponentRegistry;
 import org.dotwebstack.orchestrate.model.combiners.ResultCombiner;
 
 public final class ResultCombinerDeserializer extends StdDeserializer<ResultCombiner> {
@@ -16,11 +16,11 @@ public final class ResultCombinerDeserializer extends StdDeserializer<ResultComb
   @Serial
   private static final long serialVersionUID = 9062543896587214910L;
 
-  private final transient ComponentFactory componentFactory;
+  private final transient ComponentRegistry componentRegistry;
 
-  public ResultCombinerDeserializer(ComponentFactory componentFactory) {
+  public ResultCombinerDeserializer(ComponentRegistry componentRegistry) {
     super(ResultCombiner.class);
-    this.componentFactory = componentFactory;
+    this.componentRegistry = componentRegistry;
   }
 
   @Override
@@ -28,6 +28,6 @@ public final class ResultCombinerDeserializer extends StdDeserializer<ResultComb
     var node = parser.getCodec()
         .readTree(parser);
 
-    return componentFactory.createResultCombiner(parseType(node), parseOptions(node));
+    return componentRegistry.createResultCombiner(parseType(node), parseOptions(node));
   }
 }
