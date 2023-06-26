@@ -1,4 +1,4 @@
-package org.dotwebstack.gateway;
+package org.dotwebstack.orchestrate.gateway;
 
 import static java.util.stream.Collectors.toUnmodifiableMap;
 import static java.util.stream.Collectors.toUnmodifiableSet;

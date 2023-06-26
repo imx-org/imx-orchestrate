@@ -1,4 +1,4 @@
-package org.dotwebstack.gateway;
+package org.dotwebstack.orchestrate.gateway;
 
 
 import java.util.Map;

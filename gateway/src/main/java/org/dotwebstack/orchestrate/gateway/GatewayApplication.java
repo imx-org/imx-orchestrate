@@ -1,4 +1,4 @@
-package org.dotwebstack.gateway;
+package org.dotwebstack.orchestrate.gateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

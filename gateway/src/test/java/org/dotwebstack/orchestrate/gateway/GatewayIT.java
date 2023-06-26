@@ -1,4 +1,4 @@
-package org.dotwebstack.gateway;
+package org.dotwebstack.orchestrate.gateway;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
