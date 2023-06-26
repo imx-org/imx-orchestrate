@@ -26,9 +26,17 @@ public class AttributeTypeDeserializer extends StdDeserializer<AttributeType> {
     var typeNode = parser.getCodec()
         .readTree(parser);
 
-    // @TODO: Dynamic types, inclusing extension types
-    if (typeNode instanceof TextNode) {
-      return ScalarTypes.STRING;
+    // @TODO: Make more dynamic + include extension types
+    if (typeNode instanceof TextNode textNode) {
+      return switch (textNode.textValue()) {
+        case "Boolean" -> ScalarTypes.STRING;
+        case "Double" -> ScalarTypes.DOUBLE;
+        case "Float" -> ScalarTypes.FLOAT;
+        case "Integer" -> ScalarTypes.INTEGER;
+        case "Long" -> ScalarTypes.LONG;
+        case "String" -> ScalarTypes.STRING;
+        default -> throw new YamlModelParserException("Unknown attribute type: " + textNode.textValue());
+      };
     }
 
     throw new YamlModelParserException(String.format(INVALID_TEXT_NODE, "type"));

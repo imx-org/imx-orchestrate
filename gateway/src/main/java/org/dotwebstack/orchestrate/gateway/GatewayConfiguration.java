@@ -12,6 +12,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.engine.Orchestration;
 import org.dotwebstack.orchestrate.engine.schema.SchemaFactory;
 import org.dotwebstack.orchestrate.ext.spatial.GeometryExtension;
@@ -30,14 +31,11 @@ import org.springframework.graphql.execution.DefaultExecutionGraphQlService;
 import org.springframework.graphql.execution.GraphQlSource;
 
 @Configuration
+@RequiredArgsConstructor
 @EnableConfigurationProperties(GraphQlProperties.class)
 public class GatewayConfiguration {
 
   private final GatewayProperties gatewayProperties;
-
-  public GatewayConfiguration(GatewayProperties gatewayProperties) {
-    this.gatewayProperties = gatewayProperties;
-  }
 
   @Bean
   public GraphQlSource graphQlSource() throws IOException {

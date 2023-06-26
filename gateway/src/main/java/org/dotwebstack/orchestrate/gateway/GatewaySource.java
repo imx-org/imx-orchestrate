@@ -1,11 +1,9 @@
 package org.dotwebstack.orchestrate.gateway;
 
 import java.util.Map;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class GatewaySource {
 
     private String type;

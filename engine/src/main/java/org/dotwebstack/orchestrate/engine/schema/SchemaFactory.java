@@ -324,7 +324,7 @@ public final class SchemaFactory {
         .stream()
         .map(property -> newFieldDefinition()
             .name(property.getName())
-            .type(mapFieldType(objectType, property))
+            .type(mapFieldType(property))
             .build())
         .forEach(objectTypeDefinitionBuilder::fieldDefinition);
 
@@ -340,7 +340,7 @@ public final class SchemaFactory {
     return objectTypeDefinitionBuilder.build();
   }
 
-  private Type<?> mapFieldType(ObjectType objectType, Property property) {
+  private Type<?> mapFieldType(Property property) {
     if (property instanceof Attribute attribute) {
       return mapFieldType(attribute, true);
     }

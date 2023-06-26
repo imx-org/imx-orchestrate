@@ -9,8 +9,9 @@ public class ModelLoaderRegistry {
 
   private final Map<String, ModelLoader> modelLoaders = new HashMap<>();
 
-  public void registerModelLoader(ModelLoader modelLoader) {
+  public ModelLoaderRegistry registerModelLoader(ModelLoader modelLoader) {
     modelLoaders.put(modelLoader.getName(), modelLoader);
+    return this;
   }
 
   public ModelLoader getModelLoader(String name) {

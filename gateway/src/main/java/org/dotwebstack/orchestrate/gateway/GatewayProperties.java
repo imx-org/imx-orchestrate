@@ -2,13 +2,11 @@ package org.dotwebstack.orchestrate.gateway;
 
 
 import java.util.Map;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-@Getter
-@Setter
+@Data
 @Component
 @ConfigurationProperties("orchestrate")
 public class GatewayProperties {

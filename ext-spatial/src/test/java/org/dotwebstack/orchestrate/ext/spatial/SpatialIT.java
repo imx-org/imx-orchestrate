@@ -1,16 +1,20 @@
 package org.dotwebstack.orchestrate.ext.spatial;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.dotwebstack.orchestrate.ext.spatial.TestFixtures.createBgtModel;
-import static org.dotwebstack.orchestrate.ext.spatial.TestFixtures.createModelMapping;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import graphql.GraphQL;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.nio.file.Paths;
 import java.util.Map;
 import org.dotwebstack.orchestrate.engine.Orchestration;
 import org.dotwebstack.orchestrate.engine.schema.SchemaFactory;
+import org.dotwebstack.orchestrate.model.ComponentFactory;
+import org.dotwebstack.orchestrate.model.loader.ModelLoaderRegistry;
+import org.dotwebstack.orchestrate.parser.yaml.YamlModelLoader;
+import org.dotwebstack.orchestrate.parser.yaml.YamlModelMappingParser;
 import org.dotwebstack.orchestrate.source.DataRepository;
 import org.dotwebstack.orchestrate.source.ObjectRequest;
 import org.dotwebstack.orchestrate.source.file.FileSource;
@@ -23,20 +27,25 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class SpatialIT {
 
-  protected DataRepository bgtRepository;
+  protected DataRepository prcRepository;
 
   @Mock
-  protected DataRepository bgtRepositoryStub;
+  protected DataRepository prcRepositoryStub;
 
   protected GraphQL graphQL;
 
   @BeforeEach
-  void setUp() {
-    bgtRepository = new FileSource(createBgtModel(), Paths.get("../data/bgt")).getDataRepository();
+  void setUp() throws FileNotFoundException {
+    var modelLoaderRegistry = ModelLoaderRegistry.getInstance()
+        .registerModelLoader(new YamlModelLoader());
+    var mappingParser = YamlModelMappingParser.getInstance(new ComponentFactory(), modelLoaderRegistry);
+    var mapping = mappingParser.parse(new FileInputStream("../data/geo/mapping.yaml"));
+
+    prcRepository = new FileSource(mapping.getSourceModel("prc"), Paths.get("../data/prc")).getDataRepository();
 
     var orchestration = Orchestration.builder()
-        .modelMapping(createModelMapping())
-        .source("bgt", () -> bgtRepositoryStub)
+        .modelMapping(mapping)
+        .source("prc", () -> prcRepositoryStub)
         .extension(new GeometryExtension())
         .build();
 
@@ -46,14 +55,14 @@ class SpatialIT {
 
   @Test
   void queryObject_withGeometry() {
-    when(bgtRepositoryStub.findOne(any(ObjectRequest.class)))
-        .thenAnswer(invocation -> bgtRepository.findOne(invocation.getArgument(0)));
+    when(prcRepositoryStub.findOne(any(ObjectRequest.class)))
+        .thenAnswer(invocation -> prcRepository.findOne(invocation.getArgument(0)));
 
     var result = graphQL.execute("""
           query {
-            gebouw(identificatie: "G0200.42b3d39246840268e0530a0a28492340") {
-              identificatie
-              bovenaanzichtgeometrie {
+            parcel(id: "P0001") {
+              id
+              geometry {
                 asWKT
               }
             }
@@ -61,7 +70,8 @@ class SpatialIT {
         """);
 
     Map<String, Map<String, Object>> data = result.getData();
+
     assertThat(data).isNotNull()
-        .containsKey("gebouw");
+        .containsKey("parcel");
   }
 }

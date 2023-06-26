@@ -8,7 +8,7 @@ import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.model.loader.ModelLoader;
 
 @AutoService(ModelLoader.class)
-public final class DefaultModelLoader implements ModelLoader {
+public final class YamlModelLoader implements ModelLoader {
 
   private final YamlModelParser modelParser = YamlModelParser.getInstance();
 
@@ -27,7 +27,7 @@ public final class DefaultModelLoader implements ModelLoader {
 
       return Optional.of(model);
     } catch (FileNotFoundException e) {
-      throw new RuntimeException(e);
+      throw new YamlModelParserException("Parsing model failed.", e);
     }
   }
 }
