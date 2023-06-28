@@ -2,12 +2,11 @@ package org.dotwebstack.orchestrate.parser.yaml;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Optional;
 import org.dotwebstack.orchestrate.model.ComponentRegistry;
 import org.dotwebstack.orchestrate.model.Model;
-import org.dotwebstack.orchestrate.model.types.ValueTypeRegistry;
 import org.dotwebstack.orchestrate.model.loader.ModelLoader;
 import org.dotwebstack.orchestrate.model.loader.ModelLoaderRegistry;
+import org.dotwebstack.orchestrate.model.types.ValueTypeRegistry;
 import org.junit.jupiter.api.Test;
 
 class YamlModelMappingParserTest {
@@ -19,12 +18,13 @@ class YamlModelMappingParserTest {
     modelLoaderRegistry.register(new ModelLoader() {
       @Override
       public String getName() {
-        return "mim";
+        return "custom";
       }
 
       @Override
-      public Optional<Model> load(String alias, String location, ValueTypeRegistry valueTypeRegistry) {
-        return Optional.of(Model.builder().alias(alias).build());
+      public Model load(String location, ValueTypeRegistry valueTypeRegistry) {
+        return Model.builder()
+            .build();
       }
     });
 
