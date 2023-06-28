@@ -3,8 +3,8 @@ package org.dotwebstack.orchestrate.engine.fetch;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableMap;
 import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.cast;
-import static org.dotwebstack.orchestrate.engine.fetch.FetchUtils.noopCombiner;
 import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.HAS_LINEAGE_FIELD;
+import static org.dotwebstack.orchestrate.model.ModelUtils.noopCombiner;
 
 import graphql.schema.DataFetchingFieldSelectionSet;
 import java.util.HashMap;

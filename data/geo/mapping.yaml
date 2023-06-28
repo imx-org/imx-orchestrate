@@ -1,10 +1,9 @@
 targetModel:
-  geo:
-    location: ../data/geo/model.yaml
+  location: ../data/geo/model.yaml
 
 sourceModels:
-  - bld:
-      location: ../data/bld/model.yaml
+  bld:
+    location: ../data/bld/model.yaml
 
 objectTypeMappings:
   Building:
@@ -38,3 +37,10 @@ objectTypeMappings:
       postalCode:
         pathMappings:
           path: postalCode
+      # TODO: auto-create inverse mappings
+      isAddressOf:
+        pathMappings:
+          - path: isMainAddressOf
+          - path: isSubAddressOf
+        combiner:
+          type: coalesce

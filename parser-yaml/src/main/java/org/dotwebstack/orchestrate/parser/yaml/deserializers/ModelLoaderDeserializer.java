@@ -1,17 +1,17 @@
 package org.dotwebstack.orchestrate.parser.yaml.deserializers;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.io.Serial;
-import java.util.Map;
+import java.util.Optional;
 import org.dotwebstack.orchestrate.model.Model;
-import org.dotwebstack.orchestrate.model.types.ValueTypeRegistry;
 import org.dotwebstack.orchestrate.model.loader.ModelLoaderRegistry;
+import org.dotwebstack.orchestrate.model.types.ValueTypeRegistry;
 import org.dotwebstack.orchestrate.parser.yaml.YamlModelMappingParserException;
 
 public class ModelLoaderDeserializer extends StdDeserializer<Model> {
@@ -36,32 +36,26 @@ public class ModelLoaderDeserializer extends StdDeserializer<Model> {
     var node = parser.getCodec()
         .readTree(parser);
 
-    if (node instanceof ObjectNode) {
-      var nodeMap = OBJECT_MAPPER.convertValue(node, new TypeReference<Map<String, Map<String, String>>>() {
-      });
-
-      return nodeMap.entrySet()
-          .stream()
-          .map(modelEntry -> resolveModel(modelEntry.getKey(), modelEntry.getValue()))
-          .findFirst()
-          .orElse(null);
-    } else {
-      throw new YamlModelMappingParserException("Node describing model should be a mapping node");
+    if (node instanceof ObjectNode modelNode) {
+      return resolveModel(modelNode);
     }
+
+    throw new YamlModelMappingParserException("Node describing model is not an object node.");
   }
 
-  private Model resolveModel(String alias, Map<String, String> modelSpec) {
-    if (!modelSpec.containsKey("location")) {
-      throw new YamlModelMappingParserException(
-          String.format("Expected property `location` is missing in model node: %s", modelSpec));
+  private Model resolveModel(ObjectNode modelNode) {
+    if (!modelNode.has("location")) {
+      throw new YamlModelMappingParserException("Expected property `location` is missing.");
     }
 
-    var loader = modelSpec.getOrDefault("loader", "yaml");
-    var location = modelSpec.get("location");
+    var loader = Optional.ofNullable(modelNode.get("loader"))
+        .map(JsonNode::textValue)
+        .orElse("yaml");
+
+    var location = modelNode.get("location")
+        .textValue();
 
     return modelLoaderRegistry.getModelLoader(loader)
-        .load(alias, location, valueTypeRegistry)
-        .orElseThrow(() -> new YamlModelMappingParserException(
-            String.format("Could not resolve model from `%s` for model: %s", location, modelSpec)));
+        .load(location, valueTypeRegistry);
   }
 }

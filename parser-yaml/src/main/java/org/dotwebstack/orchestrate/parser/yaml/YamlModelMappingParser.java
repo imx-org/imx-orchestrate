@@ -22,23 +22,28 @@ import org.dotwebstack.orchestrate.parser.yaml.deserializers.MatcherDeserializer
 import org.dotwebstack.orchestrate.parser.yaml.deserializers.ModelLoaderDeserializer;
 import org.dotwebstack.orchestrate.parser.yaml.deserializers.ResultCombinerDeserializer;
 import org.dotwebstack.orchestrate.parser.yaml.deserializers.ResultMapperDeserializer;
+import org.dotwebstack.orchestrate.parser.yaml.mixins.ModelMappingMixin;
 import org.dotwebstack.orchestrate.parser.yaml.mixins.PathMappingMixin;
 import org.dotwebstack.orchestrate.parser.yaml.mixins.PropertyMappingMixin;
 
 public final class YamlModelMappingParser {
 
+  public static final String SOURCE_MODELS_KEY = "sourceModels";
+
   private final YAMLMapper yamlMapper = new YAMLMapper();
 
-  public YamlModelMappingParser(ComponentRegistry componentRegistry, ModelLoaderRegistry modelLoaderRegistry, ValueTypeRegistry valueTypeRegistry) {
+  public YamlModelMappingParser(ComponentRegistry componentRegistry, ModelLoaderRegistry modelLoaderRegistry,
+      ValueTypeRegistry valueTypeRegistry) {
     var module = new SimpleModule()
+        .setMixInAnnotation(ModelMapping.ModelMappingBuilder.class, ModelMappingMixin.class)
         .setMixInAnnotation(PropertyMapping.PropertyMappingBuilder.class, PropertyMappingMixin.class)
         .setMixInAnnotation(PathMapping.PathMappingBuilder.class, PathMappingMixin.class)
+        .addDeserializer(Model.class, new ModelLoaderDeserializer(modelLoaderRegistry, valueTypeRegistry))
         .addDeserializer(ResultCombiner.class, new ResultCombinerDeserializer(componentRegistry))
         .addDeserializer(ResultMapper.class, new ResultMapperDeserializer(componentRegistry))
         .addDeserializer(Matcher.class, new MatcherDeserializer(componentRegistry))
         .addDeserializer(FilterOperator.class, new FilterOperatorDeserializer(componentRegistry))
-        .addDeserializer(Cardinality.class, new CardinalityDeserializer())
-        .addDeserializer(Model.class, new ModelLoaderDeserializer(modelLoaderRegistry, valueTypeRegistry));
+        .addDeserializer(Cardinality.class, new CardinalityDeserializer());
 
     yamlMapper.registerModule(module);
   }
