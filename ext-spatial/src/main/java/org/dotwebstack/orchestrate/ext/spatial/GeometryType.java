@@ -34,6 +34,10 @@ public class GeometryType implements ValueType {
   @Getter
   private final int srid;
 
+  public GeometryType() {
+    this(DEFAULT_SRID);
+  }
+
   @Override
   public String getName() {
     return TYPE_NAME;
