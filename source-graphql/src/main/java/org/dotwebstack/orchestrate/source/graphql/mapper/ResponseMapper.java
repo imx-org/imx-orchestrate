@@ -7,7 +7,7 @@ import graphql.ExecutionResult;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.dotwebstack.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
 import reactor.core.publisher.Flux;
@@ -19,8 +19,9 @@ public class ResponseMapper {
   private final GraphQlOrchestrateConfig config;
 
   public Mono<Map<String, Object>> processFindOneResult(Mono<ExecutionResult> executionResult) {
-    return executionResult.map(result -> (Map<String, Object>) result.getData())
-      .map(ResponseMapper::unwrapRefs);
+    return executionResult.map(result -> Optional.ofNullable((Map<String, Object>) result.getData())
+            .orElse(Map.of()))
+        .map(ResponseMapper::unwrapRefs);
   }
 
   public Flux<Map<String, Object>> processFindResult(Mono<ExecutionResult> executionResult, String objectName) {
@@ -46,25 +47,23 @@ public class ResponseMapper {
     var data = executionResult.getData();
     return ((Map<String, List<Map<String, Object>>>) data).get(uncapitalize(objectName) + config.getBatchSuffix());
   }
-
   private static Map<String, Object> unwrapRefs(Map<String, Object> item) {
     return item.entrySet()
-      .stream()
-      .collect(HashMap::new, (acc, e) -> {
-        var value = e.getValue();
+        .stream()
+        .collect(HashMap::new, (acc, e) -> {
+          var value = e.getValue();
 
-        if (value instanceof Map<?, ?> mapValue) {
-          if (mapValue.containsKey("ref")) {
-            value = mapValue.get("ref");
+          if (value instanceof Map<?, ?> mapValue) {
+            if (mapValue.containsKey("ref")) {
+              value = mapValue.get("ref");
+            }
+
+            if (mapValue.containsKey("refs")) {
+              value = mapValue.get("refs");
+            }
           }
 
-          if (mapValue.containsKey("refs")) {
-            value = mapValue.get("refs");
-          }
-        }
-
-        acc.put(e.getKey(), value);
-      }, HashMap::putAll);
+          acc.put(e.getKey(), value);
+        }, HashMap::putAll);
   }
-
 }
