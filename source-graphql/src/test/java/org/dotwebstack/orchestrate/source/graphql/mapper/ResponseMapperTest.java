@@ -34,7 +34,9 @@ class ResponseMapperTest {
 
     @Test
     void processFindResult_returnsFlux() {
-        var config = GraphQlOrchestrateConfig.builder().build();
+        var config = GraphQlOrchestrateConfig.builder()
+            .collectionSuffix("")
+            .build();
         var executionResult = Mono.just(ExecutionResult.newExecutionResult().data(Map.of("test",
                 Map.of("nodes", List.of(Map.of("testKey", "testValue"))))).build());
 
@@ -56,7 +58,9 @@ class ResponseMapperTest {
 
     @Test
     void processBatchResult_returnsFlux() {
-        var config = GraphQlOrchestrateConfig.builder().build();
+        var config = GraphQlOrchestrateConfig.builder()
+            .batchSuffix("")
+            .build();
         var executionResult = Mono.just(ExecutionResult.newExecutionResult().data(Map.of("test",
                 List.of(Map.of("testKey", "testValue")))).build());
 

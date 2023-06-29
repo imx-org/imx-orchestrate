@@ -2,11 +2,11 @@ package org.dotwebstack.orchestrate.source.graphql;
 
 import com.google.auto.service.AutoService;
 import java.util.Map;
-import org.dotwebstack.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
 import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.source.Source;
 import org.dotwebstack.orchestrate.source.SourceException;
 import org.dotwebstack.orchestrate.source.SourceType;
+import org.dotwebstack.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
 
 @AutoService(SourceType.class)
 public class GraphQlSourceType implements SourceType {
@@ -41,19 +41,26 @@ public class GraphQlSourceType implements SourceType {
   }
 
   private static GraphQlOrchestrateConfig createConfig(Map<String, Object> options) {
-    return GraphQlOrchestrateConfig.builder()
-        .authToken(toCharArray(getStringValue(options, BEARER_TOKEN)))
-        .baseUrl(getStringValue(options, URL_KEY))
-        .collectionSuffix(getStringValue(options, COLLECTION_SUFFIX))
-        .batchSuffix(getStringValue(options, BATCH_SUFFIX))
-        .build();
-  }
+    var configBuilder = GraphQlOrchestrateConfig.builder()
+        .baseUrl(options.get(URL_KEY)
+            .toString());
 
-  private static String getStringValue(Map<String, Object> options, String key) {
-    return (String) options.get(key);
-  }
+    if (options.containsKey(BEARER_TOKEN)) {
+      configBuilder.authToken(options.get(BEARER_TOKEN)
+          .toString()
+          .toCharArray());
+    }
 
-  private static char[] toCharArray(String value) {
-    return value == null ? null : value.toCharArray();
+    if (options.containsKey(COLLECTION_SUFFIX)) {
+      configBuilder.collectionSuffix(options.get(COLLECTION_SUFFIX)
+          .toString());
+    }
+
+    if (options.containsKey(BATCH_SUFFIX)) {
+      configBuilder.batchSuffix(options.get(BATCH_SUFFIX)
+          .toString());
+    }
+
+    return configBuilder.build();
   }
 }

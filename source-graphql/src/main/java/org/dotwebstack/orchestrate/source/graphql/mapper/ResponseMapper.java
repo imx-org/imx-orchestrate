@@ -41,6 +41,5 @@ public class ResponseMapper {
   private List<Map<String, Object>> getBatchResult(ExecutionResult executionResult, String objectName) {
     var data = executionResult.getData();
     return ((Map<String, List<Map<String, Object>>>) data).get(uncapitalize(objectName) + config.getBatchSuffix());
-
   }
 }
