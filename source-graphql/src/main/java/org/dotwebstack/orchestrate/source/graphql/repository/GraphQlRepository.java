@@ -44,11 +44,6 @@ public class GraphQlRepository implements DataRepository {
   @Override
   public Flux<Map<String, Object>> findBatch(BatchRequest batchRequest) {
     var graphQl = batchGraphQlMapper.convert(batchRequest);
-
-    if (graphQl != null) {
-      System.out.println(graphQl.getQuery());
-    }
-
     return responseMapper.processBatchResult(this.executor.execute(graphQl), getName(batchRequest));
   }
 
