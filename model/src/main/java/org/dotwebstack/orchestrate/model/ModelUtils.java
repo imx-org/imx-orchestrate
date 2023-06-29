@@ -3,6 +3,7 @@ package org.dotwebstack.orchestrate.model;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -58,5 +59,11 @@ public final class ModelUtils {
           return Optional.ofNullable(objectResult.getProperty(propertyName))
               .orElseThrow(() -> new ModelException("Key properties may never be null."));
         }));
+  }
+
+  public static <T> BinaryOperator<T> noopCombiner() {
+    return (a, b) -> {
+      throw new IllegalStateException("Combiner should never be called.");
+    };
   }
 }

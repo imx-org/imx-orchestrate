@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
 import java.io.Serial;
-import org.dotwebstack.orchestrate.model.ComponentFactory;
+import org.dotwebstack.orchestrate.model.ComponentRegistry;
 import org.dotwebstack.orchestrate.model.filters.FilterOperator;
 
 public final class FilterOperatorDeserializer extends StdDeserializer<FilterOperator> {
@@ -16,11 +16,11 @@ public final class FilterOperatorDeserializer extends StdDeserializer<FilterOper
   @Serial
   private static final long serialVersionUID = 4459661171812164269L;
 
-  private final transient ComponentFactory componentFactory;
+  private final transient ComponentRegistry componentRegistry;
 
-  public FilterOperatorDeserializer(ComponentFactory componentFactory) {
+  public FilterOperatorDeserializer(ComponentRegistry componentRegistry) {
     super(FilterOperator.class);
-    this.componentFactory = componentFactory;
+    this.componentRegistry = componentRegistry;
   }
 
   @Override
@@ -28,6 +28,6 @@ public final class FilterOperatorDeserializer extends StdDeserializer<FilterOper
     var node = parser.getCodec()
         .readTree(parser);
 
-    return componentFactory.createFilterOperator(parseType(node), parseOptions(node));
+    return componentRegistry.createFilterOperator(parseType(node), parseOptions(node));
   }
 }

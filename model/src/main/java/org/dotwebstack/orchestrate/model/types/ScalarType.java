@@ -1,8 +1,6 @@
 package org.dotwebstack.orchestrate.model.types;
 
-import org.dotwebstack.orchestrate.model.AttributeType;
-
-public interface ScalarType<T> extends AttributeType {
+public interface ScalarType<T> extends ValueType {
 
   Class<T> getJavaType();
 }

@@ -5,7 +5,6 @@ import static org.dotwebstack.orchestrate.engine.schema.SchemaConstants.HAS_LINE
 
 import graphql.schema.SelectedField;
 import java.util.Map;
-import java.util.function.BinaryOperator;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -34,11 +33,5 @@ final class FetchUtils {
 
   public static Map<String, Object> castToMap(Object value) {
     return cast(value);
-  }
-
-  public static <T> BinaryOperator<T> noopCombiner() {
-    return (a, b) -> {
-      throw new OrchestrateException("Combiner should never be called.");
-    };
   }
 }

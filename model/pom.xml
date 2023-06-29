@@ -21,5 +21,9 @@
             <groupId>org.projectnessie.cel</groupId>
             <artifactId>cel-tools</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.google.auto.service</groupId>
+            <artifactId>auto-service-annotations</artifactId>
+        </dependency>
     </dependencies>
 </project>

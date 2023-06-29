@@ -1,0 +1,10 @@
+objectTypes:
+  Parcel:
+    attributes:
+      id:
+        type: String
+        identifier: true
+        cardinality: 1
+      geometry:
+        type: Geometry
+        cardinality: 1

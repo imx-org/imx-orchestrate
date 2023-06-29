@@ -1,0 +1,46 @@
+targetModel:
+  location: ../data/geo/model.yaml
+
+sourceModels:
+  bld:
+    location: ../data/bld/model.yaml
+
+objectTypeMappings:
+  Building:
+    sourceRoot: bld:Building
+    propertyMappings:
+      id:
+        pathMappings:
+          path: id
+      surface:
+        pathMappings:
+          path: surface
+      hasAddress:
+        pathMappings:
+          - path: hasMainAddress
+          - path: hasSubAddress
+        combiner:
+          type: merge
+
+  Address:
+    sourceRoot: bld:Address
+    propertyMappings:
+      id:
+        pathMappings:
+          path: id
+      houseNumber:
+        pathMappings:
+          path: houseNumber
+      houseNumberAddition:
+        pathMappings:
+          path: houseNumberAddition
+      postalCode:
+        pathMappings:
+          path: postalCode
+      # TODO: auto-create inverse mappings
+      isAddressOf:
+        pathMappings:
+          - path: isMainAddressOf
+          - path: isSubAddressOf
+        combiner:
+          type: coalesce

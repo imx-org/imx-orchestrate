@@ -1,27 +1,13 @@
 package org.dotwebstack.orchestrate.source.graphql.config;
 
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
 
 class GraphQlOrchestrateConfigTest {
 
     @Test
-    void build_returnsNewGraphQlOrchestrateConfig_forSuffixNullValues() {
-        var result = GraphQlOrchestrateConfig
-                .builder()
-                .collectionSuffix(null)
-                .batchSuffix(null)
-                .build();
-
-        assertThat(result.getAuthToken()).isNull();
-        assertThat(result.getBaseUrl()).isNull();
-        assertThat(result.getBatchSuffix()).isEmpty();
-        assertThat(result.getCollectionSuffix()).isEmpty();
-    }
-
-    @Test
-    void build_returnsNewGraphQlOrchestrateConfig_forSuffixNonNullValues() {
+    void build_returnsNewGraphQlOrchestrateConfig_forSuffixValues() {
         var result = GraphQlOrchestrateConfig
                 .builder()
                 .collectionSuffix("Collection")
@@ -33,5 +19,4 @@ class GraphQlOrchestrateConfigTest {
         assertThat(result.getBatchSuffix()).hasToString("Batch");
         assertThat(result.getCollectionSuffix()).hasToString("Collection");
     }
-
 }

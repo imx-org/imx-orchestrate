@@ -1,15 +1,7 @@
 orchestrate:
-  gateway:
-    sources:
-      bag:
-        type: file
-        options:
-          dataPath: ../data/bag
-      bgt:
-        type: file
-        options:
-          dataPath: ../data/bgt
-      brk:
-        type: file
-        options:
-          dataPath: ../data/brk
+  mapping: ../data/geo/mapping.yaml
+  sources:
+    bld:
+      type: file
+      options:
+        dataPath: ../data/bld

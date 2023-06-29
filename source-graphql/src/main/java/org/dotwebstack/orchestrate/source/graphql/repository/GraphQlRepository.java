@@ -8,7 +8,6 @@ import org.dotwebstack.orchestrate.source.CollectionRequest;
 import org.dotwebstack.orchestrate.source.DataRepository;
 import org.dotwebstack.orchestrate.source.DataRequest;
 import org.dotwebstack.orchestrate.source.ObjectRequest;
-import org.dotwebstack.orchestrate.source.SourceException;
 import org.dotwebstack.orchestrate.source.graphql.executor.Executor;
 import org.dotwebstack.orchestrate.source.graphql.mapper.BatchGraphQlMapper;
 import org.dotwebstack.orchestrate.source.graphql.mapper.CollectionGraphQlMapper;
@@ -34,6 +33,10 @@ public class GraphQlRepository implements DataRepository {
   public Mono<Map<String, Object>> findOne(ObjectRequest objectRequest) {
     var graphQl = objectGraphQlMapper.convert(objectRequest);
 
+    if (graphQl != null) {
+      System.out.println(graphQl.getQuery());
+    }
+
     return responseMapper.processFindOneResult(this.executor.execute(graphQl));
   }
 
@@ -41,17 +44,20 @@ public class GraphQlRepository implements DataRepository {
   public Flux<Map<String, Object>> find(CollectionRequest collectionRequest) {
     var graphQl = collectionGraphQlMapper.convert(collectionRequest);
 
+    if (graphQl != null) {
+      System.out.println(graphQl.getQuery());
+    }
+
     return responseMapper.processFindResult(this.executor.execute(graphQl), getName(collectionRequest));
   }
 
   @Override
   public Flux<Map<String, Object>> findBatch(BatchRequest batchRequest) {
-    if (!supportsBatchLoading(batchRequest.getObjectType())) {
-      throw new SourceException(
-          "Batch loading is not supported for objecttype %s.".formatted(batchRequest.getObjectType()
-              .getName()));
-    }
     var graphQl = batchGraphQlMapper.convert(batchRequest);
+
+    if (graphQl != null) {
+      System.out.println(graphQl.getQuery());
+    }
 
     return responseMapper.processBatchResult(this.executor.execute(graphQl), getName(batchRequest));
   }

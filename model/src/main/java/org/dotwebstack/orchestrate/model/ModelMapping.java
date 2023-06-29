@@ -1,6 +1,7 @@
 package org.dotwebstack.orchestrate.model;
 
 import static java.util.stream.Collectors.toMap;
+import static org.dotwebstack.orchestrate.model.ModelUtils.noopCombiner;
 
 import java.util.Map;
 import java.util.Optional;
@@ -33,15 +34,12 @@ public final class ModelMapping {
       Map<String, String> lineageNameMapping) {
     // TODO: Remove null-check once parser workaround has been resolved
     if (targetModel != null) {
-      validateModel(targetModel);
-      this.targetModel = resolveInverseRelations(Set.of(targetModel))
-          .iterator()
-          .next();
+      this.targetModel = resolveInverseRelations(targetModel);
     } else {
       this.targetModel = targetModel;
     }
 
-    sourceModels.forEach(this::validateModel);
+    sourceModels.forEach(this::validateSourceModel);
     this.sourceRelations = sourceRelations;
     this.sourceModels = resolveInverseRelations(addSourceRelations(sourceModels));
     this.sourceModelMap = this.sourceModels.stream()
@@ -74,6 +72,27 @@ public final class ModelMapping {
     return Set.copyOf(mutableSourceModelMap.values());
   }
 
+  private Model resolveInverseRelations(Model model) {
+    return model.getObjectTypes()
+        .stream()
+        .flatMap(objectType -> objectType.getProperties(Relation.class)
+            .stream()
+            .map(relation -> {
+              var inverseRelation = InverseRelation.builder()
+                  .originRelation(relation)
+                  .target(ObjectTypeRef.forType(model.getAlias(), objectType.getName()))
+                  .build();
+
+              return Map.entry(relation.getTarget(), inverseRelation);
+            }))
+        .reduce(model, (acc, targetRelation) -> {
+          var targetObjectType = acc.getObjectType(targetRelation.getKey())
+              .appendProperty(targetRelation.getValue());
+
+          return acc.replaceObjectType(targetObjectType);
+        }, noopCombiner());
+  }
+
   private Set<Model> resolveInverseRelations(Set<Model> models) {
     var mutableSourceModelMap = models.stream()
         .collect(toMap(Model::getAlias, Function.identity()));
@@ -103,7 +122,7 @@ public final class ModelMapping {
     return Set.copyOf(mutableSourceModelMap.values());
   }
 
-  private void validateModel(Model model) {
+  private void validateSourceModel(Model model) {
     if (model.getAlias() == null) {
       throw new ModelException("Models must contain an alias.");
     }

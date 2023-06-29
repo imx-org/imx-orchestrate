@@ -6,8 +6,10 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import org.dotwebstack.orchestrate.model.Model;
 import org.dotwebstack.orchestrate.model.ObjectType;
 import org.dotwebstack.orchestrate.source.DataRepository;
@@ -15,6 +17,9 @@ import org.dotwebstack.orchestrate.source.Source;
 import org.dotwebstack.orchestrate.source.SourceException;
 
 public final class FileSource implements Source {
+
+  private static final PathMatcher matcher = FileSystems.getDefault()
+      .getPathMatcher("glob:**/*.json");
 
   private final Model model;
 
@@ -31,6 +36,7 @@ public final class FileSource implements Source {
 
     try (var filePaths = Files.list(folderPath)) {
       filePaths.filter(Files::isRegularFile)
+          .filter(matcher::matches)
           .forEach(this::loadFile);
     } catch (IOException e) {
       throw new SourceException("Folder could not be read.", e);
