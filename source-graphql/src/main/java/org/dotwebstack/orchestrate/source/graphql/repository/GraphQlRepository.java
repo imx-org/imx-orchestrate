@@ -32,22 +32,12 @@ public class GraphQlRepository implements DataRepository {
   @Override
   public Mono<Map<String, Object>> findOne(ObjectRequest objectRequest) {
     var graphQl = objectGraphQlMapper.convert(objectRequest);
-
-    if (graphQl != null) {
-      System.out.println(graphQl.getQuery());
-    }
-
     return responseMapper.processFindOneResult(this.executor.execute(graphQl));
   }
 
   @Override
   public Flux<Map<String, Object>> find(CollectionRequest collectionRequest) {
     var graphQl = collectionGraphQlMapper.convert(collectionRequest);
-
-    if (graphQl != null) {
-      System.out.println(graphQl.getQuery());
-    }
-
     return responseMapper.processFindResult(this.executor.execute(graphQl), getName(collectionRequest));
   }
 
