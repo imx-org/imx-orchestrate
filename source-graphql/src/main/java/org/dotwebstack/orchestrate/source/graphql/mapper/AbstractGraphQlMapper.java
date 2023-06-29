@@ -5,6 +5,7 @@ import graphql.language.Field;
 import graphql.language.SelectionSet;
 import java.util.ArrayList;
 import java.util.List;
+import org.dotwebstack.orchestrate.model.Relation;
 import org.dotwebstack.orchestrate.source.DataRequest;
 import org.dotwebstack.orchestrate.source.SelectedProperty;
 import org.dotwebstack.orchestrate.source.SourceException;
@@ -30,6 +31,13 @@ abstract class AbstractGraphQlMapper<T extends DataRequest> {
     SelectionSet selectionSet = null;
     if (!ObjectUtils.isEmpty(property.getSelectedProperties())) {
       selectionSet = createSelectionSet(new ArrayList<>(property.getSelectedProperties()));
+    }
+
+    if (property.getProperty() instanceof Relation) {
+      var refField = property.getProperty()
+        .getCardinality()
+        .isSingular() ? "ref" : "refs";
+      selectionSet = new SelectionSet(List.of(new Field(refField, selectionSet)));
     }
 
     return new Field(property.getProperty()

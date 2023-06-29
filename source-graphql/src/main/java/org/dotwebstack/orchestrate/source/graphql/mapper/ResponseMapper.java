@@ -4,6 +4,7 @@ import static org.dotwebstack.orchestrate.source.graphql.mapper.MapperConstants.
 import static org.springframework.util.StringUtils.uncapitalize;
 
 import graphql.ExecutionResult;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -18,17 +19,20 @@ public class ResponseMapper {
   private final GraphQlOrchestrateConfig config;
 
   public Mono<Map<String, Object>> processFindOneResult(Mono<ExecutionResult> executionResult) {
-    return executionResult.map(result -> Objects.requireNonNullElse(result.getData(), Map.of()));
+    return executionResult.map(result -> (Map<String, Object>) result.getData())
+      .map(ResponseMapper::unwrapRefs);
   }
 
   public Flux<Map<String, Object>> processFindResult(Mono<ExecutionResult> executionResult, String objectName) {
     return executionResult.map(e -> getCollectionResult(e, objectName))
-        .flatMapMany(Flux::fromIterable);
+        .flatMapMany(Flux::fromIterable)
+        .map(ResponseMapper::unwrapRefs);
   }
 
   public Flux<Map<String, Object>> processBatchResult(Mono<ExecutionResult> executionResult, String objectName) {
     return executionResult.map(e -> getBatchResult(e, objectName))
-        .flatMapMany(Flux::fromIterable);
+        .flatMapMany(Flux::fromIterable)
+        .map(ResponseMapper::unwrapRefs);
   }
 
   private List<Map<String, Object>> getCollectionResult(ExecutionResult executionResult, String objectName) {
@@ -42,4 +46,25 @@ public class ResponseMapper {
     var data = executionResult.getData();
     return ((Map<String, List<Map<String, Object>>>) data).get(uncapitalize(objectName) + config.getBatchSuffix());
   }
+
+  private static Map<String, Object> unwrapRefs(Map<String, Object> item) {
+    return item.entrySet()
+      .stream()
+      .collect(HashMap::new, (acc, e) -> {
+        var value = e.getValue();
+
+        if (value instanceof Map<?, ?> mapValue) {
+          if (mapValue.containsKey("ref")) {
+            value = mapValue.get("ref");
+          }
+
+          if (mapValue.containsKey("refs")) {
+            value = mapValue.get("refs");
+          }
+        }
+
+        acc.put(e.getKey(), value);
+      }, HashMap::putAll);
+  }
+
 }
