@@ -27,7 +27,7 @@
         <graphql-java.version>20.4</graphql-java.version>
         <spring-boot.version>3.1.1</spring-boot.version>
         <spring-graphql.version>1.2.1</spring-graphql.version>
-        <micrometer.version>1.11.1</micrometer.version>
+        <micrometer.version>1.11.2</micrometer.version>
         <commons-text.version>1.10.0</commons-text.version>
         <jts.version>1.19.0</jts.version>
         <lombok.version>1.18.28</lombok.version>
