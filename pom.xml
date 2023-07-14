@@ -32,7 +32,7 @@
         <jts.version>1.19.0</jts.version>
         <lombok.version>1.18.28</lombok.version>
         <jackson.version>2.15.2</jackson.version>
-        <cel.version>0.3.18</cel.version>
+        <cel.version>0.3.19</cel.version>
         <auto-service.version>1.1.1</auto-service.version>
         <junit.version>5.9.3</junit.version>
         <assertj.version>3.24.2</assertj.version>
