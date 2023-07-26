@@ -1,7 +1,7 @@
 logging:
   level:
     root: INFO
-    org.dotwebstack.orchestrate: DEBUG
+    nl.geostandaarden.imx.orchestrate: DEBUG
 
 orchestrate:
   mapping: ../data/geo/mapping.yaml

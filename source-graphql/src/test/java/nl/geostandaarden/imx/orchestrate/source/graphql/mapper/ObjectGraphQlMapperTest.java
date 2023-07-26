@@ -1,0 +1,81 @@
+package nl.geostandaarden.imx.orchestrate.source.graphql.mapper;
+
+import graphql.ExecutionInput;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import nl.geostandaarden.imx.orchestrate.source.ObjectRequest;
+import nl.geostandaarden.imx.orchestrate.source.SelectedProperty;
+import nl.geostandaarden.imx.orchestrate.source.SourceException;
+import nl.geostandaarden.imx.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
+import nl.geostandaarden.imx.orchestrate.model.Attribute;
+import nl.geostandaarden.imx.orchestrate.model.ObjectType;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+class ObjectGraphQlMapperTest {
+
+  private ObjectGraphQlMapper objectGraphQlMapper;
+
+  @BeforeEach
+  void init() {
+    var config = GraphQlOrchestrateConfig.builder()
+        .build();
+    objectGraphQlMapper = new ObjectGraphQlMapper(config);
+  }
+
+  @Test
+  void convert_returnsExpectedResult_forRequest() {
+    var naam = new SelectedProperty(Attribute.builder()
+        .name("naam")
+        .build());
+
+    var straat = new SelectedProperty(Attribute.builder()
+        .name("straat")
+        .build());
+    var huisnummer = new SelectedProperty(Attribute.builder()
+        .name("huisnummer")
+        .build());
+
+    var adres = new SelectedProperty(Attribute.builder()
+        .name("adres")
+        .build(), Set.of(straat, huisnummer));
+
+    var request = ObjectRequest.builder()
+        .objectKey(Map.of("identificatie", "12345", "id", "456"))
+        .objectType(ObjectType.builder()
+            .name("Nummeraanduiding")
+            .build())
+        .selectedProperties(List.of(naam, adres))
+        .build();
+
+    ExecutionInput result = objectGraphQlMapper.convert(request);
+
+    var expected = """
+      query Query {
+        nummeraanduiding(identificatie: "12345", id: "456") {
+          naam
+          adres {
+            straat
+            huisnummer
+          }
+        }
+      }""";
+
+    GraphQlAssert.assertThat(result.getQuery()).graphQlEquals(expected);
+  }
+
+  @Test
+  void convert_throwsException_forRequest_withoutSelectionSet() {
+    var request = ObjectRequest.builder()
+      .objectKey(Map.of("identificatie", "12345"))
+      .objectType(ObjectType.builder()
+        .name("Nummeraanduiding")
+        .build())
+      .build();
+
+    assertThrows(SourceException.class, () -> objectGraphQlMapper.convert(request));
+  }
+}
