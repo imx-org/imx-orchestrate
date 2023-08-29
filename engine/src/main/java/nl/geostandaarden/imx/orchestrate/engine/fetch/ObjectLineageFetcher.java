@@ -1,7 +1,5 @@
 package nl.geostandaarden.imx.orchestrate.engine.fetch;
 
-import static nl.geostandaarden.imx.orchestrate.engine.fetch.FetchUtils.cast;
-
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import graphql.schema.DataFetcher;

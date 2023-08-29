@@ -74,7 +74,7 @@ public final class FetchPlanner {
     return isCollection ? fetchResult : fetchResult.singleOrEmpty();
   }
 
-  public Set<Path> resolveSourcePaths(ObjectType objectType, DataFetchingFieldSelectionSet selectionSet,
+  private Set<Path> resolveSourcePaths(ObjectType objectType, DataFetchingFieldSelectionSet selectionSet,
       Path basePath) {
     var objectTypeMapping = modelMapping.getObjectTypeMapping(objectType);
 
