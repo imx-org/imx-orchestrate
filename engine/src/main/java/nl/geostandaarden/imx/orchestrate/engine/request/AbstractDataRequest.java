@@ -13,7 +13,7 @@ import nl.geostandaarden.imx.orchestrate.model.Relation;
 
 @Getter
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
-abstract class AbstractDataRequest implements DataRequest {
+public abstract class AbstractDataRequest implements DataRequest {
 
   @Getter(AccessLevel.NONE)
   protected final Model model;
@@ -23,7 +23,7 @@ abstract class AbstractDataRequest implements DataRequest {
   protected final Set<SelectedProperty> selectedProperties;
 
   @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
-  protected static abstract class Builder<B extends Builder<B>> {
+  public static abstract class Builder<B extends Builder<B>> {
 
     protected final Model model;
 

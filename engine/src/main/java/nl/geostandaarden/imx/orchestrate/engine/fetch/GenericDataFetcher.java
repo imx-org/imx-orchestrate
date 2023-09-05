@@ -1,13 +1,17 @@
 package nl.geostandaarden.imx.orchestrate.engine.fetch;
 
 import static graphql.schema.GraphQLTypeUtil.unwrapAll;
+import static graphql.schema.GraphQLTypeUtil.unwrapNonNull;
 
-import graphql.schema.DataFetcher;
-import graphql.schema.DataFetchingEnvironment;
-import graphql.schema.GraphQLObjectType;
+import graphql.schema.*;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
+import nl.geostandaarden.imx.orchestrate.engine.request.AbstractDataRequest;
+import nl.geostandaarden.imx.orchestrate.engine.request.CollectionRequest;
+import nl.geostandaarden.imx.orchestrate.engine.request.DataRequest;
+import nl.geostandaarden.imx.orchestrate.engine.request.ObjectRequest;
+import nl.geostandaarden.imx.orchestrate.engine.schema.SchemaConstants;
+import nl.geostandaarden.imx.orchestrate.model.Model;
 import org.reactivestreams.Publisher;
 
 @RequiredArgsConstructor
@@ -15,14 +19,59 @@ public final class GenericDataFetcher implements DataFetcher<Publisher<Map<Strin
 
   private final FetchPlanner fetchPlanner;
 
+  private final Model model;
+
   @Override
   public Publisher<Map<String, Object>> get(DataFetchingEnvironment environment) {
-    var graphQLType = unwrapAll(environment.getFieldType());
+    return fetchPlanner.fetch(createRequest(environment), environment.getArguments());
+  }
 
-    if (!(graphQLType instanceof GraphQLObjectType)) {
-      throw new OrchestrateException("The object fetcher only supports object types, no unions or interfaces (yet).");
+  private DataRequest createRequest(DataFetchingEnvironment environment) {
+    var typeName = unwrapAll(environment.getFieldType()).getName();
+
+    if (typeName.endsWith(SchemaConstants.QUERY_COLLECTION_SUFFIX)) {
+      var requestBuilder = CollectionRequest.builder(model, typeName);
+      return selectProperties(requestBuilder, environment.getSelectionSet())
+          .build();
     }
 
-    return fetchPlanner.fetch(environment, (GraphQLObjectType) graphQLType);
+    var requestBuilder = ObjectRequest.builder(model, typeName);
+    return selectProperties(requestBuilder, environment.getSelectionSet())
+        .build();
+  }
+
+  private <B extends AbstractDataRequest.Builder<B>> B selectProperties(B requestBuilder, DataFetchingFieldSelectionSet selectionSet) {
+    selectionSet.getImmediateFields()
+        .forEach(selectedField -> {
+          var fieldName = selectedField.getName();
+          var fieldType = unwrapNonNull(selectedField.getType());
+
+          if (fieldType instanceof GraphQLObjectType) {
+            requestBuilder.selectObjectProperty(fieldName, nestedRequestBuilder -> {
+              selectProperties(nestedRequestBuilder, selectedField.getSelectionSet());
+              return nestedRequestBuilder.build();
+            });
+
+            return;
+          }
+
+          if (fieldType instanceof GraphQLList) {
+            requestBuilder.selectCollectionProperty(fieldName, nestedRequestBuilder -> {
+              selectProperties(nestedRequestBuilder, selectedField.getSelectionSet());
+              return nestedRequestBuilder.build();
+            });
+
+            return;
+          }
+
+          if (fieldType instanceof GraphQLScalarType) {
+            requestBuilder.selectProperty(fieldName);
+            return;
+          }
+
+          throw new UnsupportedOperationException();
+        });
+
+    return requestBuilder;
   }
 }

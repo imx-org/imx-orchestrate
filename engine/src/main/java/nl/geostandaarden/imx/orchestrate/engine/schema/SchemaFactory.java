@@ -74,7 +74,7 @@ public final class SchemaFactory {
         fieldName -> modelMapping.getLineageNameMapping().getOrDefault(fieldName, fieldName);
 
     var fetchPlanner = new FetchPlanner(modelMapping, orchestration.getSources(), lineageRenamer);
-    var genericDataFetcher = new GenericDataFetcher(fetchPlanner);
+    var genericDataFetcher = new GenericDataFetcher(fetchPlanner, modelMapping.getTargetModel());
     var objectLineageFetcher = new ObjectLineageFetcher(modelMapping.getLineageNameMapping());
 
     return new SchemaFactory(modelMapping, genericDataFetcher, objectLineageFetcher, lineageRenamer,

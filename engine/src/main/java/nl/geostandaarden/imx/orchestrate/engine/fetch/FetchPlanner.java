@@ -1,21 +1,12 @@
 package nl.geostandaarden.imx.orchestrate.engine.fetch;
 
-import static graphql.schema.GraphQLTypeUtil.isList;
-import static graphql.schema.GraphQLTypeUtil.unwrapNonNull;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.function.Predicate.not;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.mapping;
-import static java.util.stream.Collectors.toSet;
-import static nl.geostandaarden.imx.orchestrate.engine.fetch.FetchUtils.castToMap;
+import static java.util.stream.Collectors.*;
 import static nl.geostandaarden.imx.orchestrate.engine.fetch.FetchUtils.isReservedField;
-import static nl.geostandaarden.imx.orchestrate.engine.schema.SchemaConstants.QUERY_FILTER_ARGUMENTS;
 import static nl.geostandaarden.imx.orchestrate.model.ModelUtils.extractKey;
-import static nl.geostandaarden.imx.orchestrate.model.ModelUtils.keyExtractor;
 
-import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
-import graphql.schema.GraphQLObjectType;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -24,20 +15,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
-import nl.geostandaarden.imx.orchestrate.model.AbstractRelation;
-import nl.geostandaarden.imx.orchestrate.model.Attribute;
-import nl.geostandaarden.imx.orchestrate.model.InverseRelation;
-import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
-import nl.geostandaarden.imx.orchestrate.model.ObjectType;
-import nl.geostandaarden.imx.orchestrate.model.ObjectTypeRef;
-import nl.geostandaarden.imx.orchestrate.model.Path;
-import nl.geostandaarden.imx.orchestrate.model.PathMapping;
-import nl.geostandaarden.imx.orchestrate.model.Property;
-import nl.geostandaarden.imx.orchestrate.model.Relation;
+import nl.geostandaarden.imx.orchestrate.engine.request.DataRequest;
+import nl.geostandaarden.imx.orchestrate.model.*;
 import nl.geostandaarden.imx.orchestrate.model.filters.FilterDefinition;
 import nl.geostandaarden.imx.orchestrate.source.SelectedProperty;
 import nl.geostandaarden.imx.orchestrate.source.Source;
 import org.reactivestreams.Publisher;
+import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 public final class FetchPlanner {
@@ -48,34 +32,38 @@ public final class FetchPlanner {
 
   private final UnaryOperator<String> lineageRenamer;
 
-  public Publisher<Map<String, Object>> fetch(DataFetchingEnvironment environment, GraphQLObjectType outputType) {
-    var targetType = modelMapping.getTargetModel()
-        .getObjectType(outputType.getName());
-    var targetMapping = modelMapping.getObjectTypeMapping(targetType.getName());
-    var sourcePaths = resolveSourcePaths(targetType, environment.getSelectionSet(), Path.fromProperties());
+//  public Publisher<Map<String, Object>> fetch(DataFetchingEnvironment environment, GraphQLObjectType outputType) {
+//    var targetType = modelMapping.getTargetModel()
+//        .getObjectType(outputType.getName());
+//    var targetMapping = modelMapping.getObjectTypeMapping(targetType.getName());
+//    var sourcePaths = resolveSourcePaths(targetType, environment.getSelectionSet(), Path.fromProperties());
+//
+//    // TODO: Refactor
+//    var isCollection = isList(unwrapNonNull(environment.getFieldType()));
+//
+//    var resultMapper = ObjectResultMapper.builder()
+//        .modelMapping(modelMapping)
+//        .build();
+//
+//    var input = FetchInput.newInput(keyExtractor(targetType, targetMapping)
+//        .apply(environment.getArguments()));
+//
+//    var filter = createFilterDefinition(targetType, castToMap(environment.getArguments()
+//        .get(QUERY_FILTER_ARGUMENTS)));
+//
+//    var fetchResult = fetchSourceObject(targetMapping.getSourceRoot(), sourcePaths, isCollection, filter)
+//        .execute(input)
+//        .map(result -> resultMapper.map(result, targetType, environment.getSelectionSet()));
+//
+//    return isCollection ? fetchResult : fetchResult.singleOrEmpty();
+//  }
 
-    // TODO: Refactor
-    var isCollection = isList(unwrapNonNull(environment.getFieldType()));
-
-    var resultMapper = ObjectResultMapper.builder()
-        .modelMapping(modelMapping)
-        .build();
-
-    var input = FetchInput.newInput(keyExtractor(targetType, targetMapping)
-        .apply(environment.getArguments()));
-
-    var filter = createFilterDefinition(targetType, castToMap(environment.getArguments()
-        .get(QUERY_FILTER_ARGUMENTS)));
-
-    var fetchResult = fetchSourceObject(targetMapping.getSourceRoot(), sourcePaths, isCollection, filter)
-        .execute(input)
-        .map(result -> resultMapper.map(result, targetType, environment.getSelectionSet()));
-
-    return isCollection ? fetchResult : fetchResult.singleOrEmpty();
+  public Publisher<Map<String, Object>> fetch(DataRequest request, Map<String, Object> arguments) {
+    return Mono.empty();
   }
 
   private Set<Path> resolveSourcePaths(ObjectType objectType, DataFetchingFieldSelectionSet selectionSet,
-      Path basePath) {
+                                       Path basePath) {
     var objectTypeMapping = modelMapping.getObjectTypeMapping(objectType);
 
     return selectionSet.getImmediateFields()
@@ -110,7 +98,7 @@ public final class FetchPlanner {
   }
 
   private FetchOperation fetchSourceObject(ObjectTypeRef sourceTypeRef, Set<Path> sourcePaths,
-      boolean isCollection, FilterDefinition filter) {
+                                           boolean isCollection, FilterDefinition filter) {
     var source = sources.get(sourceTypeRef.getModelAlias());
     var sourceType = modelMapping.getSourceType(sourceTypeRef);
     var selectedProperties = new HashSet<>(selectIdentity(sourceTypeRef));
