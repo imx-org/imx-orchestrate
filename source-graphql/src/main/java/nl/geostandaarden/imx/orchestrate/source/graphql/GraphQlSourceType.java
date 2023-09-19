@@ -2,11 +2,11 @@ package nl.geostandaarden.imx.orchestrate.source.graphql;
 
 import com.google.auto.service.AutoService;
 import java.util.Map;
+import nl.geostandaarden.imx.orchestrate.engine.source.Source;
+import nl.geostandaarden.imx.orchestrate.engine.source.SourceException;
+import nl.geostandaarden.imx.orchestrate.engine.source.SourceType;
 import nl.geostandaarden.imx.orchestrate.model.Model;
-import nl.geostandaarden.imx.orchestrate.source.Source;
 import nl.geostandaarden.imx.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
-import nl.geostandaarden.imx.orchestrate.source.SourceException;
-import nl.geostandaarden.imx.orchestrate.source.SourceType;
 
 @AutoService(SourceType.class)
 public class GraphQlSourceType implements SourceType {

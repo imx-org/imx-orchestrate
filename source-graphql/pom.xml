@@ -15,7 +15,7 @@
     <dependencies>
         <dependency>
             <groupId>nl.geostandaarden.imx.orchestrate</groupId>
-            <artifactId>orchestrate-source</artifactId>
+            <artifactId>orchestrate-engine</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

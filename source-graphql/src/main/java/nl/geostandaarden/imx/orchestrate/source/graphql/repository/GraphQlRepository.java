@@ -2,17 +2,17 @@ package nl.geostandaarden.imx.orchestrate.source.graphql.repository;
 
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.DataRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
+import nl.geostandaarden.imx.orchestrate.engine.source.DataRepository;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
+import nl.geostandaarden.imx.orchestrate.source.graphql.executor.Executor;
 import nl.geostandaarden.imx.orchestrate.source.graphql.mapper.BatchGraphQlMapper;
 import nl.geostandaarden.imx.orchestrate.source.graphql.mapper.CollectionGraphQlMapper;
 import nl.geostandaarden.imx.orchestrate.source.graphql.mapper.ObjectGraphQlMapper;
 import nl.geostandaarden.imx.orchestrate.source.graphql.mapper.ResponseMapper;
-import nl.geostandaarden.imx.orchestrate.source.BatchRequest;
-import nl.geostandaarden.imx.orchestrate.source.CollectionRequest;
-import nl.geostandaarden.imx.orchestrate.source.DataRepository;
-import nl.geostandaarden.imx.orchestrate.source.DataRequest;
-import nl.geostandaarden.imx.orchestrate.source.ObjectRequest;
-import nl.geostandaarden.imx.orchestrate.source.graphql.executor.Executor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

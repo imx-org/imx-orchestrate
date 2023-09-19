@@ -5,10 +5,10 @@ import java.util.Set;
 import java.util.function.Function;
 import lombok.Singular;
 import lombok.experimental.SuperBuilder;
-import nl.geostandaarden.imx.orchestrate.model.ObjectResult;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
-import nl.geostandaarden.imx.orchestrate.source.SelectedProperty;
-import nl.geostandaarden.imx.orchestrate.source.Source;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.SelectedProperty;
+import nl.geostandaarden.imx.orchestrate.engine.source.Source;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
@@ -20,7 +20,7 @@ abstract class AbstractFetchOperation implements FetchOperation {
   protected final ObjectType objectType;
 
   @Singular
-  protected final List<SelectedProperty> selectedProperties;
+  protected final Set<SelectedProperty> selectedProperties;
 
   @Singular
   protected final Set<NextOperation> nextOperations;

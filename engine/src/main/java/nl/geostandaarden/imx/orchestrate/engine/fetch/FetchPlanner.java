@@ -2,7 +2,9 @@ package nl.geostandaarden.imx.orchestrate.engine.fetch;
 
 import static java.util.Collections.unmodifiableSet;
 import static java.util.function.Predicate.not;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toSet;
 import static nl.geostandaarden.imx.orchestrate.engine.fetch.FetchUtils.isReservedField;
 import static nl.geostandaarden.imx.orchestrate.model.ModelUtils.extractKey;
 
@@ -15,11 +17,20 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
-import nl.geostandaarden.imx.orchestrate.engine.request.DataRequest;
-import nl.geostandaarden.imx.orchestrate.model.*;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.DataRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.SelectedProperty;
+import nl.geostandaarden.imx.orchestrate.engine.source.Source;
+import nl.geostandaarden.imx.orchestrate.model.AbstractRelation;
+import nl.geostandaarden.imx.orchestrate.model.Attribute;
+import nl.geostandaarden.imx.orchestrate.model.InverseRelation;
+import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
+import nl.geostandaarden.imx.orchestrate.model.ObjectType;
+import nl.geostandaarden.imx.orchestrate.model.ObjectTypeRef;
+import nl.geostandaarden.imx.orchestrate.model.Path;
+import nl.geostandaarden.imx.orchestrate.model.PathMapping;
+import nl.geostandaarden.imx.orchestrate.model.Property;
+import nl.geostandaarden.imx.orchestrate.model.Relation;
 import nl.geostandaarden.imx.orchestrate.model.filters.FilterDefinition;
-import nl.geostandaarden.imx.orchestrate.source.SelectedProperty;
-import nl.geostandaarden.imx.orchestrate.source.Source;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
@@ -107,7 +118,9 @@ public final class FetchPlanner {
         .filter(Path::isLeaf)
         .map(sourcePath -> sourceType.getProperty(sourcePath.getFirstSegment()))
         .filter(not(Property::isIdentifier))
-        .map(SelectedProperty::new)
+        .map(property -> SelectedProperty.builder()
+            .property(property)
+            .build())
         .forEach(selectedProperties::add);
 
     var nextOperations = new HashSet<NextOperation>();
@@ -144,7 +157,10 @@ public final class FetchPlanner {
               }
 
               var filterProperty = sourceType.getProperty(sourcePath.getFirstSegment());
-              selectedProperties.add(new SelectedProperty(filterProperty));
+
+              selectedProperties.add(SelectedProperty.builder()
+                  .property(filterProperty)
+                  .build());
 
               var targetProperty = targetType.getProperty(filterMapping.getProperty());
 
@@ -177,10 +193,13 @@ public final class FetchPlanner {
                     }
 
                     var keyProperty = sourceType.getProperty(keyPath.getFirstSegment());
-                    selectedProperties.add(new SelectedProperty(keyProperty));
+
+                    selectedProperties.add(SelectedProperty.builder()
+                        .property(keyProperty)
+                        .build());
                   });
-            } else {
-              selectedProperties.add(new SelectedProperty(property, selectIdentity(targetTypeRef)));
+//            } else {
+//              selectedProperties.add(new SelectedProperty(property, selectIdentity(targetTypeRef)));
             }
 
             var identityPaths = targetType.getIdentityProperties()
@@ -281,11 +300,13 @@ public final class FetchPlanner {
         .getIdentityProperties()
         .stream()
         .map(property -> {
-          if (property instanceof Relation relation) {
-            return new SelectedProperty(property, selectIdentity(relation.getTarget(typeRef)));
-          }
+//          if (property instanceof Relation relation) {
+//            return new SelectedProperty(property, selectIdentity(relation.getTarget(typeRef)));
+//          }
 
-          return new SelectedProperty(property);
+          return SelectedProperty.builder()
+              .property(property)
+              .build();
         })
         .collect(toSet());
   }

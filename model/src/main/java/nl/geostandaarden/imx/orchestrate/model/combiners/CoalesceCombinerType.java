@@ -5,8 +5,8 @@ import static java.util.Collections.emptySet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import nl.geostandaarden.imx.orchestrate.model.PathResult;
-import nl.geostandaarden.imx.orchestrate.model.PropertyResult;
+import nl.geostandaarden.imx.orchestrate.model.result.PathResult;
+import nl.geostandaarden.imx.orchestrate.model.result.PropertyResult;
 
 public final class CoalesceCombinerType implements ResultCombinerType {
 

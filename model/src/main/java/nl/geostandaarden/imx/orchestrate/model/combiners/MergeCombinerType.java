@@ -3,9 +3,8 @@ package nl.geostandaarden.imx.orchestrate.model.combiners;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import nl.geostandaarden.imx.orchestrate.model.PropertyResult;
-import nl.geostandaarden.imx.orchestrate.model.CollectionResult;
-import nl.geostandaarden.imx.orchestrate.model.PathResult;
+import nl.geostandaarden.imx.orchestrate.model.result.PathResult;
+import nl.geostandaarden.imx.orchestrate.model.result.PropertyResult;
 
 public final class MergeCombinerType implements ResultCombinerType {
 
@@ -22,10 +21,10 @@ public final class MergeCombinerType implements ResultCombinerType {
           .flatMap(pathResult -> {
             var pathValue = pathResult.getValue();
 
-            if (pathValue instanceof CollectionResult collectionResult) {
-              return collectionResult.getObjectResults()
-                  .stream();
-            }
+//            if (pathValue instanceof CollectionResult collectionResult) {
+//              return collectionResult.getObjectResults()
+//                  .stream();
+//            }
 
             return Stream.of(pathValue);
           })

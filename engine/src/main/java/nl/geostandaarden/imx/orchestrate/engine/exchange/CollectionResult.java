@@ -1,4 +1,4 @@
-package nl.geostandaarden.imx.orchestrate.model;
+package nl.geostandaarden.imx.orchestrate.engine.exchange;
 
 import java.util.List;
 import lombok.Builder;

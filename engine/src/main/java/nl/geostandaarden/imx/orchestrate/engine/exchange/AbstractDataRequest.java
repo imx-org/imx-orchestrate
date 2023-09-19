@@ -1,4 +1,4 @@
-package nl.geostandaarden.imx.orchestrate.engine.request;
+package nl.geostandaarden.imx.orchestrate.engine.exchange;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -9,13 +9,13 @@ import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
 import nl.geostandaarden.imx.orchestrate.model.Model;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
+import nl.geostandaarden.imx.orchestrate.model.ObjectTypeRef;
 import nl.geostandaarden.imx.orchestrate.model.Relation;
 
 @Getter
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class AbstractDataRequest implements DataRequest {
 
-  @Getter(AccessLevel.NONE)
   protected final Model model;
 
   protected final ObjectType objectType;
@@ -27,11 +27,26 @@ public abstract class AbstractDataRequest implements DataRequest {
 
     protected final Model model;
 
-    protected final ObjectType objectType;
+    protected ObjectType objectType;
 
-    protected final Set<SelectedProperty> selectedProperties = new LinkedHashSet<>();
+    protected Set<SelectedProperty> selectedProperties = new LinkedHashSet<>();
 
     protected abstract B self();
+
+    public B objectType(String name) {
+      objectType = model.getObjectType(name);
+      return self();
+    }
+
+    public B objectType(ObjectTypeRef typeRef) {
+      objectType = model.getObjectType(typeRef.getName());
+      return self();
+    }
+
+    public B selectedProperties(Set<SelectedProperty> selectedProperties) {
+      this.selectedProperties = selectedProperties;
+      return self();
+    }
 
     public B selectProperty(String name) {
       selectedProperties.add(SelectedProperty.builder()
@@ -46,7 +61,8 @@ public abstract class AbstractDataRequest implements DataRequest {
       if (property instanceof Relation relation) {
         selectedProperties.add(SelectedProperty.builder()
             .property(property)
-            .nestedRequest(selectionFn.apply(ObjectRequest.builder(model, relation.getTarget())))
+            .nestedRequest(selectionFn.apply(ObjectRequest.builder(model)
+                .objectType(relation.getTarget())))
             .build());
         return self();
       }
@@ -60,7 +76,7 @@ public abstract class AbstractDataRequest implements DataRequest {
       if (property instanceof Relation relation) {
         selectedProperties.add(SelectedProperty.builder()
             .property(property)
-            .nestedRequest(selectionFn.apply(CollectionRequest.builder(model, relation.getTarget())))
+            .nestedRequest(selectionFn.apply(CollectionRequest.builder(model).objectType(relation.getTarget())))
             .build());
         return self();
       }

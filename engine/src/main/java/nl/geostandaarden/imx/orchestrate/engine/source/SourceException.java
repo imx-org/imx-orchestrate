@@ -1,4 +1,4 @@
-package nl.geostandaarden.imx.orchestrate.source;
+package nl.geostandaarden.imx.orchestrate.engine.source;
 
 public class SourceException extends RuntimeException {
 

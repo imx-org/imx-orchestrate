@@ -1,17 +1,16 @@
 package nl.geostandaarden.imx.orchestrate.source.graphql.mapper;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import graphql.language.ArrayValue;
 import graphql.language.BooleanValue;
 import graphql.language.IntValue;
 import graphql.language.StringValue;
-import nl.geostandaarden.imx.orchestrate.source.SourceException;
-import org.junit.jupiter.api.Test;
-
 import java.math.BigInteger;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import nl.geostandaarden.imx.orchestrate.engine.source.SourceException;
+import org.junit.jupiter.api.Test;
 
 class ValueMapperTest {
 

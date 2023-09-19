@@ -2,18 +2,19 @@ package nl.geostandaarden.imx.orchestrate.engine.fetch;
 
 import static java.util.function.Function.identity;
 import static nl.geostandaarden.imx.orchestrate.engine.fetch.FetchUtils.cast;
+import static nl.geostandaarden.imx.orchestrate.engine.fetch.FetchUtils.keyFromResult;
 import static nl.geostandaarden.imx.orchestrate.model.ModelUtils.extractKey;
 
 import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
-import org.dataloader.DataLoader;
-import org.dataloader.DataLoaderFactory;
-import nl.geostandaarden.imx.orchestrate.model.CollectionResult;
-import nl.geostandaarden.imx.orchestrate.model.ObjectResult;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionResult;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import nl.geostandaarden.imx.orchestrate.model.Property;
 import nl.geostandaarden.imx.orchestrate.model.Relation;
+import org.dataloader.DataLoader;
+import org.dataloader.DataLoaderFactory;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -97,7 +98,7 @@ public class NextOperation {
       var keyMapping = relation.getKeyMapping();
 
       if (keyMapping != null) {
-        return extractKey(objectResult, keyMapping);
+        return keyFromResult(objectResult, keyMapping);
       }
     }
 

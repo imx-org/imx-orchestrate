@@ -7,18 +7,34 @@ import static nl.geostandaarden.imx.orchestrate.engine.schema.SchemaConstants.HA
 import static nl.geostandaarden.imx.orchestrate.model.ModelUtils.noopCombiner;
 
 import graphql.schema.DataFetchingFieldSelectionSet;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Builder;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
+import nl.geostandaarden.imx.orchestrate.model.AbstractRelation;
+import nl.geostandaarden.imx.orchestrate.model.Attribute;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionResult;
+import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
+import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 import nl.geostandaarden.imx.orchestrate.model.Path;
 import nl.geostandaarden.imx.orchestrate.model.PathMapping;
+import nl.geostandaarden.imx.orchestrate.model.result.PathResult;
+import nl.geostandaarden.imx.orchestrate.model.Property;
 import nl.geostandaarden.imx.orchestrate.model.PropertyMapping;
-import nl.geostandaarden.imx.orchestrate.model.*;
+import nl.geostandaarden.imx.orchestrate.model.result.PropertyResult;
 import nl.geostandaarden.imx.orchestrate.model.combiners.CoalesceCombinerType;
 import nl.geostandaarden.imx.orchestrate.model.combiners.NoopCombinerType;
-import nl.geostandaarden.imx.orchestrate.model.lineage.*;
+import nl.geostandaarden.imx.orchestrate.model.lineage.ObjectLineage;
+import nl.geostandaarden.imx.orchestrate.model.lineage.ObjectReference;
+import nl.geostandaarden.imx.orchestrate.model.lineage.OrchestratedProperty;
+import nl.geostandaarden.imx.orchestrate.model.lineage.PropertyMappingExecution;
+import nl.geostandaarden.imx.orchestrate.model.lineage.SourceProperty;
 
 @Builder
 public final class ObjectResultMapper {
@@ -26,7 +42,7 @@ public final class ObjectResultMapper {
   private final ModelMapping modelMapping;
 
   public Map<String, Object> map(ObjectResult objectResult, ObjectType targetType,
-      DataFetchingFieldSelectionSet selectionSet) {
+                                 DataFetchingFieldSelectionSet selectionSet) {
     var targetMapping = modelMapping.getObjectTypeMapping(targetType);
     var resultMap = new HashMap<String, Object>();
     var lineageBuilder = ObjectLineage.builder();
@@ -124,7 +140,11 @@ public final class ObjectResultMapper {
         .flatMap(pathMapping -> pathResult(objectResult, property, pathMapping)
             .map(pathResult -> pathResult.withPathMapping(nl.geostandaarden.imx.orchestrate.model.lineage.PathMapping.builder()
                 .addPath(nl.geostandaarden.imx.orchestrate.model.lineage.Path.builder()
-                    .startNode(ObjectReference.fromResult(objectResult))
+                    .startNode(ObjectReference.builder()
+                        .objectType(objectResult.getType()
+                            .getName())
+                        .build()
+                    )
                     .segments(pathMapping.getPath()
                         .getSegments())
                     .references(Optional.ofNullable(pathResult.getSourceProperty())
@@ -191,7 +211,7 @@ public final class ObjectResultMapper {
       var pathResult = PathResult.builder()
           .value(propertyValue)
           .sourceProperty(SourceProperty.builder()
-              .subject(ObjectReference.fromResult(objectResult))
+              .subject(objectResult.getObjectReference())
               .property(currentSegment)
               .value(propertyValue)
               .path(fullPath.getSegments())

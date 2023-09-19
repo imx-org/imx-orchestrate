@@ -10,17 +10,30 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>orchestrate-source</artifactId>
+    <artifactId>orchestrate-integration-test</artifactId>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
 
     <dependencies>
+        <!-- Test dependencies -->
         <dependency>
             <groupId>nl.geostandaarden.imx.orchestrate</groupId>
-            <artifactId>orchestrate-model</artifactId>
+            <artifactId>orchestrate-source-file</artifactId>
             <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-core</artifactId>
+            <groupId>nl.geostandaarden.imx.orchestrate</groupId>
+            <artifactId>orchestrate-parser-yaml</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

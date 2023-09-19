@@ -1,8 +1,7 @@
-package nl.geostandaarden.imx.orchestrate.source;
-
-import nl.geostandaarden.imx.orchestrate.model.Model;
+package nl.geostandaarden.imx.orchestrate.engine.source;
 
 import java.util.Map;
+import nl.geostandaarden.imx.orchestrate.model.Model;
 
 public interface SourceType {
 

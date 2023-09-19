@@ -1,5 +1,7 @@
 package nl.geostandaarden.imx.orchestrate.source.graphql.mapper;
 
+import static org.springframework.util.StringUtils.uncapitalize;
+
 import graphql.ExecutionInput;
 import graphql.language.Argument;
 import graphql.language.AstPrinter;
@@ -10,11 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
-import nl.geostandaarden.imx.orchestrate.source.BatchRequest;
-import nl.geostandaarden.imx.orchestrate.source.SourceException;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchRequest;
+import nl.geostandaarden.imx.orchestrate.engine.source.SourceException;
 import nl.geostandaarden.imx.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
-
-import static org.springframework.util.StringUtils.uncapitalize;
 
 @RequiredArgsConstructor
 public class BatchGraphQlMapper extends AbstractGraphQlMapper<BatchRequest> {

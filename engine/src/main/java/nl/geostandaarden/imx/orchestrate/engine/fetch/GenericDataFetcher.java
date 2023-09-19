@@ -6,10 +6,10 @@ import static graphql.schema.GraphQLTypeUtil.unwrapNonNull;
 import graphql.schema.*;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import nl.geostandaarden.imx.orchestrate.engine.request.AbstractDataRequest;
-import nl.geostandaarden.imx.orchestrate.engine.request.CollectionRequest;
-import nl.geostandaarden.imx.orchestrate.engine.request.DataRequest;
-import nl.geostandaarden.imx.orchestrate.engine.request.ObjectRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.AbstractDataRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.DataRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
 import nl.geostandaarden.imx.orchestrate.engine.schema.SchemaConstants;
 import nl.geostandaarden.imx.orchestrate.model.Model;
 import org.reactivestreams.Publisher;
@@ -30,12 +30,16 @@ public final class GenericDataFetcher implements DataFetcher<Publisher<Map<Strin
     var typeName = unwrapAll(environment.getFieldType()).getName();
 
     if (typeName.endsWith(SchemaConstants.QUERY_COLLECTION_SUFFIX)) {
-      var requestBuilder = CollectionRequest.builder(model, typeName);
+      var requestBuilder = CollectionRequest.builder(model)
+          .objectType(typeName);
+
       return selectProperties(requestBuilder, environment.getSelectionSet())
           .build();
     }
 
-    var requestBuilder = ObjectRequest.builder(model, typeName);
+    var requestBuilder = ObjectRequest.builder(model)
+        .objectType(typeName);
+
     return selectProperties(requestBuilder, environment.getSelectionSet())
         .build();
   }

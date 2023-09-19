@@ -53,10 +53,10 @@
         <module>engine</module>
         <module>ext-spatial</module>
         <module>gateway</module>
+        <module>integration-test</module>
         <module>model</module>
         <module>parser-yaml</module>
         <module>report-aggregate</module>
-        <module>source</module>
         <module>source-file</module>
         <module>source-graphql</module>
     </modules>

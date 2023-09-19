@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
-import nl.geostandaarden.imx.orchestrate.source.Source;
+import nl.geostandaarden.imx.orchestrate.engine.source.Source;
 
 @Getter
 @Builder(toBuilder = true)

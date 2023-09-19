@@ -4,14 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.SelectedProperty;
+import nl.geostandaarden.imx.orchestrate.engine.source.SourceException;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 import nl.geostandaarden.imx.orchestrate.model.Property;
-import nl.geostandaarden.imx.orchestrate.source.SelectedProperty;
-import nl.geostandaarden.imx.orchestrate.source.SourceException;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileUtils {
@@ -42,7 +42,7 @@ public class FileUtils {
   }
 
   public static Map<String, Object> getObjectProperties(ObjectNode objectNode,
-      List<SelectedProperty> selectedProperties) {
+      Set<SelectedProperty> selectedProperties) {
     var propertyNames = selectedProperties.stream()
         .map(SelectedProperty::getProperty)
         .map(Property::getName)

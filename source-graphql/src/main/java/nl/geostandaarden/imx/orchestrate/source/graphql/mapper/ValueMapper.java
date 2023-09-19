@@ -8,7 +8,7 @@ import graphql.language.Value;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import nl.geostandaarden.imx.orchestrate.source.SourceException;
+import nl.geostandaarden.imx.orchestrate.engine.source.SourceException;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 class ValueMapper {

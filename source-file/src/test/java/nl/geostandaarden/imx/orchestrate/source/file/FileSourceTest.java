@@ -4,15 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.file.Paths;
-import java.util.List;
-import nl.geostandaarden.imx.orchestrate.model.Attribute;
-import nl.geostandaarden.imx.orchestrate.model.Model;
-import nl.geostandaarden.imx.orchestrate.model.ObjectType;
-import nl.geostandaarden.imx.orchestrate.model.ObjectTypeRef;
-import nl.geostandaarden.imx.orchestrate.model.Relation;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
+import nl.geostandaarden.imx.orchestrate.model.*;
 import nl.geostandaarden.imx.orchestrate.model.types.ScalarTypes;
-import nl.geostandaarden.imx.orchestrate.source.CollectionRequest;
-import nl.geostandaarden.imx.orchestrate.source.SelectedProperty;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -28,14 +22,12 @@ class FileSourceTest {
     var fileSource = new FileSource(MODEL, folderPath);
     assertThat(fileSource).isNotNull();
 
-    var objectType = MODEL.getObjectType("Building");
     var objectFlux = fileSource.getDataRepository()
-        .find(CollectionRequest.builder()
-        .objectType(objectType)
-        .selectedProperties(List.of(
-            new SelectedProperty(objectType.getProperty("id")),
-            new SelectedProperty(objectType.getProperty("name"))))
-        .build());
+        .find(CollectionRequest.builder(MODEL)
+            .objectType("Building")
+            .selectProperty("id")
+            .selectProperty("name")
+            .build());
 
     StepVerifier.create(objectFlux)
         .expectNextCount(3)

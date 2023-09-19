@@ -44,11 +44,6 @@
         </dependency>
         <dependency>
             <groupId>nl.geostandaarden.imx.orchestrate</groupId>
-            <artifactId>orchestrate-source</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>nl.geostandaarden.imx.orchestrate</groupId>
             <artifactId>orchestrate-source-file</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -1,4 +1,4 @@
-package nl.geostandaarden.imx.orchestrate.engine.request;
+package nl.geostandaarden.imx.orchestrate.engine.exchange;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -39,7 +39,8 @@ class ObjectRequestTest {
 
   @Test
   void builder_Succeeds_ForValidProperties() {
-    var buildingRequest = ObjectRequest.builder(model, "Building")
+    var buildingRequest = ObjectRequest.builder(model)
+        .objectType("Building")
         .selectProperty("surface")
         .selectObjectProperty("city", b -> b.selectProperty("name")
             .build())
@@ -70,25 +71,29 @@ class ObjectRequestTest {
 
   @Test
   void builder_ThrowsException_ForUnknownObjectType() {
-    assertThatThrownBy(() -> ObjectRequest.builder(model, "Foo"))
+    var requestBuilder = ObjectRequest.builder(model);
+
+    assertThatThrownBy(() -> requestBuilder.objectType("Foo"))
         .isInstanceOf(ModelException.class)
         .hasMessage("Object type not found: Foo");
   }
 
   @Test
   void builder_ThrowsException_ForUnknownProperty() {
-    var builder = ObjectRequest.builder(model, "Building");
+    var requestBuilder = ObjectRequest.builder(model)
+        .objectType("Building");
 
-    assertThatThrownBy(() -> builder.selectProperty("foo"))
+    assertThatThrownBy(() -> requestBuilder.selectProperty("foo"))
         .isInstanceOf(ModelException.class)
         .hasMessage("Attribute not found: foo");
   }
 
   @Test
   void builder_ThrowsException_ForAttributeAsObjectProperty() {
-    var builder = ObjectRequest.builder(model, "Building");
+    var requestBuilder = ObjectRequest.builder(model)
+        .objectType("Building");
 
-    assertThatThrownBy(() -> builder.selectObjectProperty("surface", b -> b.selectProperty("name").build()))
+    assertThatThrownBy(() -> requestBuilder.selectObjectProperty("surface", b -> b.selectProperty("name").build()))
         .isInstanceOf(OrchestrateException.class)
         .hasMessage("Child selection can only be applied on relation properties.");
   }
