@@ -1,4 +1,4 @@
-package nl.geostandaarden.imx.orchestrate.engine.fetch;
+package nl.geostandaarden.imx.orchestrate.gateway.fetch;
 
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
@@ -13,7 +13,7 @@ public class ObjectKeyFetcher implements DataFetcher<String> {
 
   @SuppressWarnings("unchecked")
   @Override
-  public String get(DataFetchingEnvironment environment) throws Exception {
+  public String get(DataFetchingEnvironment environment) {
     var sourceMap = (Map<String, Object>) environment.getSource();
     var objectKey = (Map<String, Object>) sourceMap.get(fieldRenamer.apply("objectKey"));
 

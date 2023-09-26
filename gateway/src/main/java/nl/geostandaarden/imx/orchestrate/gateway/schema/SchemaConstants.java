@@ -1,4 +1,4 @@
-package nl.geostandaarden.imx.orchestrate.engine.schema;
+package nl.geostandaarden.imx.orchestrate.gateway.schema;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

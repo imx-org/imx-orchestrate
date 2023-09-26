@@ -1,4 +1,4 @@
-package nl.geostandaarden.imx.orchestrate.engine.schema;
+package nl.geostandaarden.imx.orchestrate.gateway.schema;
 
 import static graphql.language.FieldDefinition.newFieldDefinition;
 import static graphql.language.ObjectTypeDefinition.newObjectTypeDefinition;
@@ -6,10 +6,10 @@ import static graphql.schema.FieldCoordinates.coordinates;
 import static graphql.schema.GraphQLCodeRegistry.newCodeRegistry;
 import static graphql.schema.SchemaTransformer.transformSchema;
 import static graphql.schema.idl.RuntimeWiring.newRuntimeWiring;
+import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.applyCardinality;
+import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.requiredListType;
+import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.requiredType;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
-import static nl.geostandaarden.imx.orchestrate.engine.schema.SchemaUtils.applyCardinality;
-import static nl.geostandaarden.imx.orchestrate.engine.schema.SchemaUtils.requiredListType;
-import static nl.geostandaarden.imx.orchestrate.engine.schema.SchemaUtils.requiredType;
 
 import graphql.language.InputObjectTypeDefinition;
 import graphql.language.InputValueDefinition;
@@ -26,14 +26,13 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import nl.geostandaarden.imx.orchestrate.engine.OrchestrateEngine;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateExtension;
-import nl.geostandaarden.imx.orchestrate.engine.fetch.FetchPlanner;
-import nl.geostandaarden.imx.orchestrate.engine.Orchestration;
-import nl.geostandaarden.imx.orchestrate.engine.fetch.GenericDataFetcher;
-import nl.geostandaarden.imx.orchestrate.engine.fetch.ObjectKeyFetcher;
-import nl.geostandaarden.imx.orchestrate.engine.fetch.ObjectLineageFetcher;
-import nl.geostandaarden.imx.orchestrate.engine.fetch.PropertyValueFetcher;
+import nl.geostandaarden.imx.orchestrate.gateway.fetch.GenericDataFetcher;
+import nl.geostandaarden.imx.orchestrate.gateway.fetch.ObjectKeyFetcher;
+import nl.geostandaarden.imx.orchestrate.gateway.fetch.ObjectLineageFetcher;
+import nl.geostandaarden.imx.orchestrate.gateway.fetch.PropertyValueFetcher;
 import nl.geostandaarden.imx.orchestrate.model.AbstractRelation;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
@@ -67,18 +66,17 @@ public final class SchemaFactory {
 
   private final Set<OrchestrateExtension> extensions;
 
-  public static GraphQLSchema create(Orchestration orchestration) {
-    var modelMapping = orchestration.getModelMapping();
+  public static GraphQLSchema create(OrchestrateEngine engine) {
+    var modelMapping = engine.getModelMapping();
 
     UnaryOperator<String> lineageRenamer =
         fieldName -> modelMapping.getLineageNameMapping().getOrDefault(fieldName, fieldName);
 
-    var fetchPlanner = new FetchPlanner(modelMapping, orchestration.getSources(), lineageRenamer);
-    var genericDataFetcher = new GenericDataFetcher(fetchPlanner, modelMapping.getTargetModel());
+    var genericDataFetcher = new GenericDataFetcher(engine);
     var objectLineageFetcher = new ObjectLineageFetcher(modelMapping.getLineageNameMapping());
 
     return new SchemaFactory(modelMapping, genericDataFetcher, objectLineageFetcher, lineageRenamer,
-        orchestration.getExtensions()).create();
+        engine.getExtensions()).create();
   }
 
   private GraphQLSchema create() {
@@ -89,7 +87,7 @@ public final class SchemaFactory {
         .forEach(this::registerObjectType);
 
     typeDefinitionRegistry.add(queryTypeBuilder.build());
-    extensions.forEach(extension -> extension.enhanceSchema(typeDefinitionRegistry, codeRegistryBuilder));
+//    extensions.forEach(extension -> extension.enhanceSchema(typeDefinitionRegistry, codeRegistryBuilder));
 
     var runtimeWiring = newRuntimeWiring()
         .codeRegistry(codeRegistryBuilder.build())

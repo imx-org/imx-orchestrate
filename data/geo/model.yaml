@@ -1,5 +1,5 @@
 objectTypes:
-  Building:
+  Construction:
     attributes:
       id:
         type: String
@@ -11,7 +11,7 @@ objectTypes:
     relations:
       hasAddress:
         target: Address
-        cardinality: 1..*
+        cardinality: 0..*
         inverseName: isAddressOf
         inverseCardinality: 1
 

@@ -12,7 +12,7 @@ import reactor.core.publisher.Flux;
 
 @Slf4j
 @SuperBuilder(toBuilder = true)
-final class CollectionFetchOperation extends AbstractFetchOperation {
+public final class CollectionFetchOperation extends AbstractFetchOperation {
 
   private final FilterDefinition filter;
 

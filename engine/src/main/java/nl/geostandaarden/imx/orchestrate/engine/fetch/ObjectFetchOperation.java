@@ -11,10 +11,10 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @SuperBuilder(toBuilder = true)
-final class ObjectFetchOperation extends AbstractFetchOperation {
+public final class ObjectFetchOperation extends AbstractFetchOperation {
 
   public Mono<ObjectResult> fetch(FetchInput input) {
-    var objectRequest = ObjectRequest.builder(null)
+    var objectRequest = ObjectRequest.builder(model)
         .objectType(objectType.getName())
         .objectKey(input.getData())
         .selectedProperties(selectedProperties)

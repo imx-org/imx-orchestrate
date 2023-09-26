@@ -5,10 +5,22 @@ objectTypes:
         type: String
         identifier: true
         cardinality: 1
-      surface:
+      area:
         type: Integer
         cardinality: 0..1
+
+  BuildingPart:
+    attributes:
+      id:
+        type: String
+        identifier: true
+        cardinality: 1
     relations:
+      isPartOf:
+        target: Building
+        cardinality: 1..*
+        inverseName: consistsOf
+        inverseCardinality: 0..*
       hasMainAddress:
         target: Address
         cardinality: 1

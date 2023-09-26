@@ -1,4 +1,4 @@
-package nl.geostandaarden.imx.orchestrate.engine.fetch;
+package nl.geostandaarden.imx.orchestrate.gateway.fetch;
 
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;

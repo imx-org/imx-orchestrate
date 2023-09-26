@@ -6,12 +6,14 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
+import lombok.ToString;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 import nl.geostandaarden.imx.orchestrate.model.lineage.ObjectReference;
 
 @Getter
+@ToString
 @Builder(toBuilder = true)
-public class ObjectResult {
+public class ObjectResult implements DataResult {
 
   private final ObjectType type;
 

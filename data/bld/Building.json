@@ -1,31 +1,14 @@
 [
   {
     "id": "B0001",
-    "surface": 382,
-    "hasMainAddress": {
-      "id": "A0001"
-    }
+    "area": 382
   },
   {
     "id": "B0002",
-    "surface": 195,
-    "hasMainAddress": {
-      "id": "A0002"
-    }
+    "area": 195
   },
   {
     "id": "B0003",
-    "surface": 254,
-    "hasMainAddress": {
-      "id": "A0003"
-    },
-    "hasSubAddress": [
-      {
-        "id": "A0004"
-      },
-      {
-        "id": "A0005"
-      }
-    ]
+    "area": 254
   }
 ]

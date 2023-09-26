@@ -1,4 +1,4 @@
-package nl.geostandaarden.imx.orchestrate.engine.schema;
+package nl.geostandaarden.imx.orchestrate.gateway.schema;
 
 import static graphql.schema.DataFetcherFactories.wrapDataFetcher;
 import static graphql.util.TraversalControl.CONTINUE;

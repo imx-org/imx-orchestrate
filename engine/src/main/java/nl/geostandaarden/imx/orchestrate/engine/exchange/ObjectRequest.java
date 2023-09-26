@@ -5,10 +5,12 @@ import static java.util.Collections.unmodifiableSet;
 import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
+import lombok.ToString;
 import nl.geostandaarden.imx.orchestrate.model.Model;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 
 @Getter
+@ToString
 public final class ObjectRequest extends AbstractDataRequest {
 
   private final Map<String, Object> objectKey;

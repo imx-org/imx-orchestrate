@@ -1,4 +1,4 @@
-package nl.geostandaarden.imx.orchestrate.engine.fetch;
+package nl.geostandaarden.imx.orchestrate.gateway.fetch;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,7 +9,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
-import nl.geostandaarden.imx.orchestrate.engine.schema.SchemaConstants;
+import nl.geostandaarden.imx.orchestrate.engine.fetch.FetchUtils;
+import nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaConstants;
 import nl.geostandaarden.imx.orchestrate.model.lineage.ObjectLineage;
 
 @RequiredArgsConstructor

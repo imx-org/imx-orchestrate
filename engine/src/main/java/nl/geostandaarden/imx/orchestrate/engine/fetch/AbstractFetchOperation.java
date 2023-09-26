@@ -6,6 +6,7 @@ import java.util.function.Function;
 import lombok.Singular;
 import lombok.experimental.SuperBuilder;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
+import nl.geostandaarden.imx.orchestrate.model.Model;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.SelectedProperty;
 import nl.geostandaarden.imx.orchestrate.engine.source.Source;
@@ -14,6 +15,8 @@ import reactor.core.publisher.Flux;
 
 @SuperBuilder(toBuilder = true)
 abstract class AbstractFetchOperation implements FetchOperation {
+
+  protected final Model model;
 
   protected final Source source;
 

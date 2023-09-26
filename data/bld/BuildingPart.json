@@ -1,0 +1,46 @@
+[
+  {
+    "id": "B0001",
+    "isPartOf": [
+      {
+        "id": "B0001"
+      }
+    ],
+    "hasMainAddress": {
+      "id": "A0001"
+    }
+  },
+  {
+    "id": "B0002",
+    "isPartOf": [
+      {
+        "id": "B0002"
+      }
+    ],
+    "hasMainAddress": {
+      "id": "A0002"
+    }
+  },
+  {
+    "id": "B0003",
+    "isPartOf": [
+      {
+        "id": "B0002"
+      },
+      {
+        "id": "B0003"
+      }
+    ],
+    "hasMainAddress": {
+      "id": "A0003"
+    },
+    "hasSubAddress": [
+      {
+        "id": "A0004"
+      },
+      {
+        "id": "A0005"
+      }
+    ]
+  }
+]

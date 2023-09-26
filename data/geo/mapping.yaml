@@ -6,7 +6,7 @@ sourceModels:
     location: ../data/bld/model.yaml
 
 objectTypeMappings:
-  Building:
+  Construction:
     sourceRoot: bld:Building
     propertyMappings:
       id:
@@ -14,11 +14,11 @@ objectTypeMappings:
           path: id
       surface:
         pathMappings:
-          path: surface
+          path: area
       hasAddress:
         pathMappings:
-          - path: hasMainAddress
-          - path: hasSubAddress
+          - path: consistsOf/hasMainAddress
+          - path: consistsOf/hasSubAddress
         combiner:
           type: merge
 
@@ -37,10 +37,10 @@ objectTypeMappings:
       postalCode:
         pathMappings:
           path: postalCode
-      # TODO: auto-create inverse mappings
-      isAddressOf:
-        pathMappings:
-          - path: isMainAddressOf
-          - path: isSubAddressOf
-        combiner:
-          type: coalesce
+#      # TODO: auto-create inverse mappings
+#      isAddressOf:
+#        pathMappings:
+#          - path: isMainAddressOf
+#          - path: isSubAddressOf
+#        combiner:
+#          type: coalesce
