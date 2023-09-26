@@ -17,7 +17,7 @@ public final class CollectionFetchOperation extends AbstractFetchOperation {
   private final FilterDefinition filter;
 
   public Flux<ObjectResult> fetch(FetchInput input) {
-    var collectionRequest = CollectionRequest.builder(null)
+    var collectionRequest = CollectionRequest.builder(model)
         .objectType(objectType.getName())
         .filter(filter != null ? filter.createExpression(input.getData()) : null)
         .selectedProperties(selectedProperties)

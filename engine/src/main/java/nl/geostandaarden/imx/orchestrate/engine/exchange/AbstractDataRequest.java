@@ -22,6 +22,12 @@ public abstract class AbstractDataRequest implements DataRequest {
 
   protected final Set<SelectedProperty> selectedProperties;
 
+  public String toString() {
+    return ("\n=== " + getClass().getSimpleName() + " ===\n")
+        .concat("Object type: " + objectType.getName() + "\n")
+        .concat("Selected properties: " + selectedProperties + "\n");
+  }
+
   @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
   public static abstract class Builder<B extends Builder<B>> {
 

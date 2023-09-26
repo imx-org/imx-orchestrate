@@ -44,7 +44,7 @@ public final class ObjectFetchOperation extends AbstractFetchOperation {
         .map(FetchInput::getData)
         .toList();
 
-    var batchRequest = BatchRequest.builder(null)
+    var batchRequest = BatchRequest.builder(model)
         .objectType(objectType.getName())
         .objectKeys(objectKeys)
         .selectedProperties(selectedProperties)

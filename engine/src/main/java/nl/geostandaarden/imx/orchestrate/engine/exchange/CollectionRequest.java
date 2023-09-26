@@ -18,6 +18,12 @@ public final class CollectionRequest extends AbstractDataRequest {
     this.filter = filter;
   }
 
+  @Override
+  public String toString() {
+    return super.toString()
+        .concat(filter == null ? "" : "Filter: " + filter + "\n");
+  }
+
   public static CollectionRequest.Builder builder(Model model) {
     return new Builder(model);
   }

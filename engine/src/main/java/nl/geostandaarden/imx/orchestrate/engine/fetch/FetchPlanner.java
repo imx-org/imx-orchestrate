@@ -106,8 +106,9 @@ public final class FetchPlanner {
           if (property instanceof AbstractRelation) {
             var nestedRequest = Optional.ofNullable(selectedProperty.getNestedRequest())
                 .orElseThrow(() -> new OrchestrateException("Nested request not present for relation: " + property.getName()));
+            var nestedTypeMapping = modelMapping.getObjectTypeMapping(nestedRequest.getObjectType());
 
-            return sourcePaths.flatMap(sourcePath -> resolveSourcePaths(nestedRequest, typeMapping, sourcePath).stream());
+            return sourcePaths.flatMap(sourcePath -> resolveSourcePaths(nestedRequest, nestedTypeMapping, sourcePath).stream());
           }
 
           return sourcePaths;

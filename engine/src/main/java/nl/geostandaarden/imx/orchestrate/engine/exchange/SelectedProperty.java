@@ -20,6 +20,11 @@ public final class SelectedProperty {
     return property.getName();
   }
 
+  @Override
+  public String toString() {
+    return property.getName();
+  }
+
   public static SelectedProperty forProperty(Property property) {
     if (property instanceof Relation) {
       throw new OrchestrateException("Using static constructor for Relation properties is not supported (yet).");

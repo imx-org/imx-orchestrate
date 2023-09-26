@@ -60,6 +60,10 @@ class OrchestrateEngineTest {
         .objectKey(Map.of("id", "B0001"))
         .selectProperty("id")
         .selectProperty("surface")
+        .selectCollectionProperty("hasAddress", builder -> builder
+            .selectProperty("postalCode")
+            .selectProperty("houseNumber")
+            .build())
         .build();
 
     when(dataRepositoryMock.findOne(any(ObjectRequest.class)))

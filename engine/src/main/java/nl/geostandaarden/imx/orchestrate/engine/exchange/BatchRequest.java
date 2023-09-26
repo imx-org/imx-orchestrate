@@ -21,6 +21,12 @@ public final class BatchRequest extends AbstractDataRequest {
     this.objectKeys = objectKeys;
   }
 
+  @Override
+  public String toString() {
+    return super.toString()
+        .concat("Object keys: " + objectKeys + "\n");
+  }
+
   public static BatchRequest.Builder builder(Model model) {
     return new Builder(model);
   }
