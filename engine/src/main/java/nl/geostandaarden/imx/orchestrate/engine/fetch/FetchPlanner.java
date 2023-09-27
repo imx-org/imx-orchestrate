@@ -198,8 +198,29 @@ public final class FetchPlanner {
                     var keyProperty = sourceType.getProperty(keyPath.getFirstSegment());
                     selectedProperties.add(SelectedProperty.forProperty(keyProperty));
                   });
-//            } else {
-//              selectedProperties.add(new SelectedProperty(property, selectIdentity(targetTypeRef)));
+            } else {
+              var targetModel = modelMapping.getSourceModel(targetTypeRef.getModelAlias());
+
+              // TODO: Refactoe
+              if (property.getCardinality().isSingular()) {
+                selectedProperties.add(SelectedProperty.builder()
+                    .property(property)
+                    .nestedRequest(ObjectRequest.builder(targetModel)
+                        .objectType(targetTypeRef)
+                        .objectKey(Map.of())
+                        .selectedProperties(selectIdentity(targetTypeRef))
+                        .build())
+                    .build());
+              } else {
+                // TODO: Filter
+                selectedProperties.add(SelectedProperty.builder()
+                    .property(property)
+                    .nestedRequest(CollectionRequest.builder(targetModel)
+                        .objectType(targetTypeRef)
+                        .selectedProperties(selectIdentity(targetTypeRef))
+                        .build())
+                    .build());
+              }
             }
 
             var identityPaths = targetType.getIdentityProperties()
@@ -304,13 +325,7 @@ public final class FetchPlanner {
     return modelMapping.getSourceType(typeRef)
         .getIdentityProperties()
         .stream()
-        .map(property -> {
-//          if (property instanceof Relation relation) {
-//            return new SelectedProperty(property, selectIdentity(relation.getTarget(typeRef)));
-//          }
-
-          return SelectedProperty.forProperty(property);
-        })
+        .map(SelectedProperty::forProperty)
         .collect(toSet());
   }
 }

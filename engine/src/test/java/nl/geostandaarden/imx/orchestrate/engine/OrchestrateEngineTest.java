@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Map;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
 import nl.geostandaarden.imx.orchestrate.engine.source.DataRepository;
 import nl.geostandaarden.imx.orchestrate.model.ComponentRegistry;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -67,13 +69,31 @@ class OrchestrateEngineTest {
         .build();
 
     when(dataRepositoryMock.findOne(any(ObjectRequest.class)))
-        .thenReturn(Mono.just(Map.of("id", "B0001", "area", 123)));
+        .thenAnswer(invocation -> {
+          var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+
+          return switch (objectType.getName()) {
+            case "Building" -> Mono.just(Map.of("id", "B0001", "area", 123));
+            case "Address" -> Mono.just(Map.of("id", "A0001", "houseNumber", 23, "postalCode", "1234AB"));
+            default -> throw new IllegalStateException();
+          };
+        });
+
+    when(dataRepositoryMock.find(any(CollectionRequest.class)))
+        .thenAnswer(invocation -> {
+          var objectType = ((CollectionRequest) invocation.getArgument(0)).getObjectType();
+
+          return switch (objectType.getName()) {
+            case "BuildingPart" -> Flux.just(Map.of("id", "BP0001", "hasMainAddress", Map.of("id", "A0001")));
+            default -> throw new IllegalStateException();
+          };
+        });
 
     var resultMono = engine.fetch(request);
 
     StepVerifier.create(resultMono)
         .assertNext(result -> {
-          System.out.println(result);
+          System.out.println(result.getProperties());
         })
         .expectComplete()
         .verify();
