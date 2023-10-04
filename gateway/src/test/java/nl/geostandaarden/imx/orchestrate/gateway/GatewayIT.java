@@ -19,7 +19,7 @@ class GatewayIT {
 
   private static final String QUERY = """
         {
-          building(id: "B0001") {
+          construction(id: "B0002") {
             id
             surface
           }
@@ -49,11 +49,11 @@ class GatewayIT {
   void queryReturnsResponse_forGraphQLMediaType() {
     Map<String, Object> adres = (Map<String, Object>) graphQlTester.document(QUERY)
         .execute()
-        .path("building")
+        .path("construction")
         .entity(Map.class)
         .get();
 
     assertThat(adres).isNotNull()
-        .containsEntry("id", "B0001");
+        .containsEntry("id", "B0002");
   }
 }
