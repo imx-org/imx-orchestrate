@@ -7,8 +7,6 @@ import lombok.Getter;
 import lombok.Singular;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionResult;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.DataRequest;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.DataResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import nl.geostandaarden.imx.orchestrate.engine.fetch.FetchPlanner;
@@ -33,18 +31,6 @@ public final class OrchestrateEngine {
     this.sources = sources;
     this.extensions = extensions;
     this.fetchPlanner = new FetchPlanner(modelMapping, sources);
-  }
-
-  public Mono<? extends DataResult> fetch(DataRequest request) {
-    if (request instanceof ObjectRequest objectRequest) {
-      return fetch(objectRequest);
-    }
-
-    if (request instanceof CollectionRequest collectionRequest) {
-      return fetch(collectionRequest);
-    }
-
-    throw new OrchestrateException("Unsupported request: " + request.getClass());
   }
 
   public Mono<ObjectResult> fetch(ObjectRequest request) {

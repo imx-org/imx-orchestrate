@@ -37,10 +37,10 @@ objectTypeMappings:
       postalCode:
         pathMappings:
           path: postalCode
-#      # TODO: auto-create inverse mappings
-#      isAddressOf:
-#        pathMappings:
-#          - path: isMainAddressOf
-#          - path: isSubAddressOf
-#        combiner:
-#          type: coalesce
+      # TODO: auto-create inverse mappings
+      isAddressOf:
+        pathMappings:
+          - path: isMainAddressOf
+          - path: isSubAddressOf
+        combiner:
+          type: coalesce
