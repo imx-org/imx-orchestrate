@@ -112,13 +112,15 @@ public final class ObjectResultMapper {
 
     if (value instanceof List<?> nestedResultList) {
       return nestedResultList.stream()
-          .map(nestedResult -> {
+          .flatMap(nestedResult -> {
             if (nestedResult instanceof ObjectResult nestedObjectResult) {
-              return map(nestedObjectResult, request);
+              return Stream.of(map(nestedObjectResult, request));
             }
 
-            if (nestedResult instanceof Map<?, ?> nestedMapResult) {
-              return cast(nestedMapResult);
+            if (nestedResult instanceof CollectionResult nestedCollectionResult) {
+              return nestedCollectionResult.getObjectResults()
+                  .stream()
+                  .map(nestedObjectResult -> map(nestedObjectResult, request));
             }
 
             throw new OrchestrateException("Could not map nested result");

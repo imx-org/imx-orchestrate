@@ -2,20 +2,23 @@ package nl.geostandaarden.imx.orchestrate.engine;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
-import static org.assertj.core.api.InstanceOfAssertFactories.map;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import graphql.ExecutionResult;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import nl.geostandaarden.imx.orchestrate.engine.source.DataRepository;
 import nl.geostandaarden.imx.orchestrate.model.ComponentRegistry;
+import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
 import nl.geostandaarden.imx.orchestrate.model.loader.ModelLoaderRegistry;
 import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeRegistry;
 import nl.geostandaarden.imx.orchestrate.parser.yaml.YamlModelLoader;
@@ -26,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 class EngineIT {
@@ -35,7 +39,9 @@ class EngineIT {
   @Mock
   private DataRepository bldRepositoryStub;
 
-//  private GraphQL graphQL;
+  private ModelMapping modelMapping;
+
+  private OrchestrateEngine engine;
 
   @BeforeEach
   void setUp() throws FileNotFoundException {
@@ -43,17 +49,14 @@ class EngineIT {
         .register(new YamlModelLoader());
     var mappingParser = new YamlModelMappingParser(new ComponentRegistry(), modelLoaderRegistry,
         new ValueTypeRegistry());
-    var mapping = mappingParser.parse(new FileInputStream("../data/geo/mapping.yaml"));
 
-    bldRepository = new FileSource(mapping.getSourceModel("bld"), Paths.get("../data/bld")).getDataRepository();
+    modelMapping = mappingParser.parse(new FileInputStream("../data/geo/mapping.yaml"));
+    bldRepository = new FileSource(modelMapping.getSourceModel("bld"), Paths.get("../data/bld")).getDataRepository();
 
-    var engine = OrchestrateEngine.builder()
-        .modelMapping(mapping)
+    engine = OrchestrateEngine.builder()
+        .modelMapping(modelMapping)
         .source("bld", () -> bldRepositoryStub)
         .build();
-
-//    graphQL = GraphQL.newGraphQL(SchemaFactory.create(orchestration))
-//        .build();
   }
 
   @Test
@@ -61,34 +64,29 @@ class EngineIT {
     when(bldRepositoryStub.findOne(any(ObjectRequest.class)))
         .thenAnswer(invocation -> bldRepository.findOne(invocation.getArgument(0)));
 
-//    var result = graphQL.execute("""
-//          query {
-//            building(id: "B0003") {
-//              id
-//              surface
-//              hasAddress {
-//                id
-//                houseNumber
-//                postalCode
-//              }
-//              hasLineage {
-//                orchestratedProperties {
-//                  property
-//                  isDerivedFrom {
-//                    property
-//                    subject {
-//                      objectType
-//                      objectKey
-//                    }
-//                  }
-//                }
-//              }
-//            }
-//          }
-//        """);
-//
-//    verify(bldRepositoryStub, times(4)).findOne(any(ObjectRequest.class));
-//    assertResult(result);
+    when(bldRepositoryStub.find(any(CollectionRequest.class)))
+        .thenAnswer(invocation -> bldRepository.find(invocation.getArgument(0)));
+
+    var request = ObjectRequest.builder(modelMapping.getTargetModel())
+        .objectType("Construction")
+        .objectKey(Map.of("id", "B0002"))
+        .selectProperty("id")
+        .selectProperty("surface")
+        .selectCollectionProperty("hasAddress", b1 -> b1
+            .selectProperty("id")
+            .selectProperty("houseNumber")
+            .selectProperty("postalCode")
+            .build())
+        .build();
+
+    var result = engine.fetch(request);
+
+    StepVerifier.create(result)
+        .assertNext(this::assertResult)
+        .verifyComplete();
+
+    verify(bldRepositoryStub, times(5)).findOne(any(ObjectRequest.class));
+    verify(bldRepositoryStub, times(1)).find(any(CollectionRequest.class));
   }
 
   @Test
@@ -98,64 +96,43 @@ class EngineIT {
     when(bldRepositoryStub.findOne(any(ObjectRequest.class)))
         .thenAnswer(invocation -> bldRepository.findOne(invocation.getArgument(0)));
 
+    when(bldRepositoryStub.find(any(CollectionRequest.class)))
+        .thenAnswer(invocation -> bldRepository.find(invocation.getArgument(0)));
+
     when(bldRepositoryStub.findBatch(any(BatchRequest.class)))
         .thenAnswer(invocation -> bldRepository.findBatch(invocation.getArgument(0)));
 
-//    var result = graphQL.execute("""
-//          query {
-//            building(id: "B0003") {
-//              id
-//              surface
-//              hasAddress {
-//                id
-//                houseNumber
-//                postalCode
-//              }
-//              hasLineage {
-//                orchestratedProperties {
-//                  property
-//                  isDerivedFrom {
-//                    property
-//                    subject {
-//                      objectType
-//                      objectKey
-//                    }
-//                  }
-//                }
-//              }
-//            }
-//          }
-//        """);
-//
-//    verify(bldRepositoryStub, times(2)).findOne(any(ObjectRequest.class));
-//    verify(bldRepositoryStub, times(1)).findBatch(any(BatchRequest.class));
-//    assertResult(result);
+    var request = ObjectRequest.builder(modelMapping.getTargetModel())
+        .objectType("Construction")
+        .objectKey(Map.of("id", "B0002"))
+        .selectProperty("id")
+        .selectProperty("surface")
+        .selectCollectionProperty("hasAddress", b1 -> b1
+            .selectProperty("id")
+            .selectProperty("houseNumber")
+            .selectProperty("postalCode")
+            .build())
+        .build();
+
+    var result = engine.fetch(request);
+
+    StepVerifier.create(result)
+        .assertNext(this::assertResult)
+        .verifyComplete();
+
+    verify(bldRepositoryStub, times(1)).findOne(any(ObjectRequest.class));
+    verify(bldRepositoryStub, times(1)).find(any(CollectionRequest.class));
+    verify(bldRepositoryStub, times(2)).findBatch(any(BatchRequest.class));
   }
 
-  private void assertResult(ExecutionResult result) {
-    Map<String, Object> data = result.getData();
-
-    assertThat(result.getErrors()).isEmpty();
-    assertThat(data).isNotNull()
-        .hasEntrySatisfying("building", building ->
-            assertThat(building).isNotNull()
-                .isInstanceOf(Map.class)
-                .asInstanceOf(map(String.class, Object.class))
-                .containsEntry("id", "B0003")
-                .containsEntry("surface", 254)
-                .hasEntrySatisfying("hasAddress", hasAddress ->
-                    assertThat(hasAddress).isNotNull()
-                        .isInstanceOf(List.class)
-                        .asInstanceOf(list(Map.class))
-                        .hasSize(3))
-                .hasEntrySatisfying("hasLineage", hasLineage ->
-                    assertThat(hasLineage).isNotNull()
-                        .isInstanceOf(Map.class)
-                        .asInstanceOf(map(String.class, Object.class))
-                        .hasEntrySatisfying("orchestratedProperties", orchestratedProperties ->
-                            assertThat(orchestratedProperties).isNotNull()
-                                .isInstanceOf(List.class)
-                                .asInstanceOf(list(Map.class))
-                                .hasSize(3))));
+  private void assertResult(ObjectResult result) {
+    assertThat(result.getProperties()).isNotNull()
+        .containsEntry("id", "B0002")
+        .containsEntry("surface", 195)
+        .hasEntrySatisfying("hasAddress", hasAddress ->
+            assertThat(hasAddress).isNotNull()
+                .isInstanceOf(List.class)
+                .asInstanceOf(list(Map.class))
+                .hasSize(4));
   }
 }
