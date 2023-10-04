@@ -55,9 +55,7 @@ public abstract class AbstractDataRequest implements DataRequest {
     }
 
     public B selectProperty(String name) {
-      selectedProperties.add(SelectedProperty.builder()
-          .property(objectType.getProperty(name))
-          .build());
+      selectedProperties.add(SelectedProperty.forProperty(objectType.getProperty(name)));
       return self();
     }
 
@@ -65,11 +63,9 @@ public abstract class AbstractDataRequest implements DataRequest {
       var property = objectType.getProperty(name);
 
       if (property instanceof Relation relation) {
-        selectedProperties.add(SelectedProperty.builder()
-            .property(property)
-            .nestedRequest(selectionFn.apply(ObjectRequest.builder(model)
-                .objectType(relation.getTarget())))
-            .build());
+        var nestedRequest = selectionFn.apply(ObjectRequest.builder(model)
+            .objectType(relation.getTarget()));
+        selectedProperties.add(SelectedProperty.forProperty(property, nestedRequest));
         return self();
       }
 
@@ -80,10 +76,9 @@ public abstract class AbstractDataRequest implements DataRequest {
       var property = objectType.getProperty(name);
 
       if (property instanceof Relation relation) {
-        selectedProperties.add(SelectedProperty.builder()
-            .property(property)
-            .nestedRequest(selectionFn.apply(CollectionRequest.builder(model).objectType(relation.getTarget())))
-            .build());
+        var nestedRequest = selectionFn.apply(CollectionRequest.builder(model)
+            .objectType(relation.getTarget()));
+        selectedProperties.add(SelectedProperty.forProperty(property, nestedRequest));
         return self();
       }
 

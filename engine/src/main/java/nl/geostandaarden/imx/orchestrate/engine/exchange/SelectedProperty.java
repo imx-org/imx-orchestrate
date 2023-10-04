@@ -1,15 +1,17 @@
 package nl.geostandaarden.imx.orchestrate.engine.exchange;
 
-import lombok.Builder;
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
+import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.Property;
 import nl.geostandaarden.imx.orchestrate.model.Relation;
 
 @Getter
 @EqualsAndHashCode
-@Builder(toBuilder = true)
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SelectedProperty {
 
   private final Property property;
@@ -26,12 +28,18 @@ public final class SelectedProperty {
   }
 
   public static SelectedProperty forProperty(Property property) {
-    if (property instanceof Relation) {
-      throw new OrchestrateException("Using static constructor for Relation properties is not supported (yet).");
+    return forProperty(property, null);
+  }
+
+  public static SelectedProperty forProperty(Property property, DataRequest nestedRequest) {
+    if (property instanceof Attribute && nestedRequest != null) {
+      throw new OrchestrateException("Attribute properties can not have a nested request.");
     }
 
-    return SelectedProperty.builder()
-        .property(property)
-        .build();
+    if (property instanceof Relation && nestedRequest == null) {
+      throw new OrchestrateException("Relation properties require a nested request.");
+    }
+
+    return new SelectedProperty(property, nestedRequest);
   }
 }

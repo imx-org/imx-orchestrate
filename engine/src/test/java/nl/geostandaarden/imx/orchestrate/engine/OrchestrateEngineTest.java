@@ -92,9 +92,7 @@ class OrchestrateEngineTest {
     var resultMono = engine.fetch(request);
 
     StepVerifier.create(resultMono)
-        .assertNext(result -> {
-          System.out.println(result.getProperties());
-        })
+        .expectNextCount(1)
         .expectComplete()
         .verify();
   }

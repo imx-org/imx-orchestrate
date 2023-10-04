@@ -1,6 +1,8 @@
 package nl.geostandaarden.imx.orchestrate.source.file;
 
-import static nl.geostandaarden.imx.orchestrate.source.file.FileUtils.*;
+import static nl.geostandaarden.imx.orchestrate.source.file.FileUtils.getBaseName;
+import static nl.geostandaarden.imx.orchestrate.source.file.FileUtils.getObjectKey;
+import static nl.geostandaarden.imx.orchestrate.source.file.FileUtils.getObjectProperties;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -48,9 +50,10 @@ class FileUtilsTest {
   void getObjectProperties_ReturnsProperties_ForSelectedProperties() {
     var objectNode = createObjectNode();
     var objectType = createObjectType();
+
     var selectedProperties = Set.of(
-        SelectedProperty.builder().property(objectType.getProperty("id")).build(),
-        SelectedProperty.builder().property(objectType.getProperty("name")).build());
+        SelectedProperty.forProperty(objectType.getProperty("id")),
+        SelectedProperty.forProperty(objectType.getProperty("name")));
 
     var objectProperties = getObjectProperties(objectNode, selectedProperties);
 

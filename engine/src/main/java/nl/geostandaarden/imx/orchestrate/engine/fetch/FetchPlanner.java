@@ -203,23 +203,17 @@ public final class FetchPlanner {
 
               // TODO: Refactor
               if (property.getCardinality().isSingular()) {
-                selectedProperties.add(SelectedProperty.builder()
-                    .property(property)
-                    .nestedRequest(ObjectRequest.builder(targetModel)
-                        .objectType(targetTypeRef)
-                        .objectKey(Map.of())
-                        .selectedProperties(selectIdentity(targetTypeRef))
-                        .build())
-                    .build());
+                selectedProperties.add(SelectedProperty.forProperty(property, ObjectRequest.builder(targetModel)
+                    .objectType(targetTypeRef)
+                    .objectKey(Map.of())
+                    .selectedProperties(selectIdentity(targetTypeRef))
+                    .build()));
               } else {
                 // TODO: Filter
-                selectedProperties.add(SelectedProperty.builder()
-                    .property(property)
-                    .nestedRequest(CollectionRequest.builder(targetModel)
-                        .objectType(targetTypeRef)
-                        .selectedProperties(selectIdentity(targetTypeRef))
-                        .build())
-                    .build());
+                selectedProperties.add(SelectedProperty.forProperty(property, CollectionRequest.builder(targetModel)
+                    .objectType(targetTypeRef)
+                    .selectedProperties(selectIdentity(targetTypeRef))
+                    .build()));
               }
             }
 
