@@ -116,8 +116,7 @@ public final class FetchPlanner {
         .collect(toSet());
   }
 
-  private FetchOperation fetchSourceObject(ObjectTypeRef sourceTypeRef, Set<Path> sourcePaths,
-                                           boolean isCollection, FilterDefinition filter) {
+  private FetchOperation fetchSourceObject(ObjectTypeRef sourceTypeRef, Set<Path> sourcePaths, boolean isCollection, FilterDefinition filter) {
     var source = sources.get(sourceTypeRef.getModelAlias());
     var sourceType = modelMapping.getSourceType(sourceTypeRef);
     var selectedProperties = new HashSet<>(selectIdentity(sourceTypeRef));
