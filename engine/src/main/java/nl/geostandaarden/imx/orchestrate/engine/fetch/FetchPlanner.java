@@ -201,7 +201,7 @@ public final class FetchPlanner {
             } else {
               var targetModel = modelMapping.getSourceModel(targetTypeRef.getModelAlias());
 
-              // TODO: Refactoe
+              // TODO: Refactor
               if (property.getCardinality().isSingular()) {
                 selectedProperties.add(SelectedProperty.builder()
                     .property(property)

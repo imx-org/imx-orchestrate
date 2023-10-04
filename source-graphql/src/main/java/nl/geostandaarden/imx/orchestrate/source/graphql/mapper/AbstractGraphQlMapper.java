@@ -8,7 +8,6 @@ import java.util.Set;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.DataRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.SelectedProperty;
 import nl.geostandaarden.imx.orchestrate.engine.source.SourceException;
-import nl.geostandaarden.imx.orchestrate.model.Relation;
 
 abstract class AbstractGraphQlMapper<T extends DataRequest> {
 
@@ -20,8 +19,8 @@ abstract class AbstractGraphQlMapper<T extends DataRequest> {
     }
 
     var fields = selectedProperties.stream()
-      .map(this::getField)
-      .toList();
+        .map(this::getField)
+        .toList();
 
     return new SelectionSet(fields);
   }
@@ -29,19 +28,12 @@ abstract class AbstractGraphQlMapper<T extends DataRequest> {
   private Field getField(SelectedProperty property) {
     SelectionSet selectionSet = null;
 
-//    if (!ObjectUtils.isEmpty(property.getSelectedProperties())) {
-//      selectionSet = createSelectionSet(new ArrayList<>(property.getSelectedProperties()));
-//    }
-
-    if (property.getProperty() instanceof Relation) {
-      var refField = property.getProperty()
-        .getCardinality()
-        .isSingular() ? "ref" : "refs";
-      selectionSet = new SelectionSet(List.of(new Field(refField, selectionSet)));
+    if (property.getNestedRequest() != null) {
+      selectionSet = createSelectionSet(property.getNestedRequest()
+          .getSelectedProperties());
     }
 
     return new Field(property.getProperty()
-      .getName(), List.of(), selectionSet);
+        .getName(), List.of(), selectionSet);
   }
-
 }
