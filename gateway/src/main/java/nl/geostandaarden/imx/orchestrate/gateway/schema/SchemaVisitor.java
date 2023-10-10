@@ -25,8 +25,7 @@ public final class SchemaVisitor extends GraphQLTypeVisitorStub {
   private final String hasLineageFieldName;
 
   @Override
-  public TraversalControl visitGraphQLFieldDefinition(GraphQLFieldDefinition fieldDefinition,
-                                                      TraverserContext<GraphQLSchemaElement> context) {
+  public TraversalControl visitGraphQLFieldDefinition(GraphQLFieldDefinition fieldDefinition, TraverserContext<GraphQLSchemaElement> context) {
     var codeRegistryBuilder = context.getVarFromParents(GraphQLCodeRegistry.Builder.class);
 
     if (context.getParentNode() instanceof GraphQLObjectType objectType) {
