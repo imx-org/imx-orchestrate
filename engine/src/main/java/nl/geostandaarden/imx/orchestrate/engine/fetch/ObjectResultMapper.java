@@ -1,7 +1,6 @@
 package nl.geostandaarden.imx.orchestrate.engine.fetch;
 
 import static java.util.Collections.emptySet;
-import static java.util.Collections.unmodifiableMap;
 import static nl.geostandaarden.imx.orchestrate.engine.fetch.FetchUtils.cast;
 import static nl.geostandaarden.imx.orchestrate.model.ModelUtils.noopCombiner;
 
@@ -39,10 +38,10 @@ public final class ObjectResultMapper {
 
   private final ModelMapping modelMapping;
 
-  public Map<String, Object> map(ObjectResult objectResult, DataRequest request) {
+  public ObjectResult map(ObjectResult objectResult, DataRequest request) {
     var targetType = request.getObjectType();
     var targetMapping = modelMapping.getObjectTypeMapping(targetType);
-    var resultMap = new HashMap<String, Object>();
+    var properties = new HashMap<String, Object>();
     var lineageBuilder = ObjectLineage.builder();
 
     request.getSelectedProperties()
@@ -76,7 +75,7 @@ public final class ObjectResultMapper {
           }
 
           if (propertyValue != null) {
-            resultMap.put(property.getName(), propertyValue);
+            properties.put(property.getName(), propertyValue);
 
             lineageBuilder.orchestratedProperty(OrchestratedProperty.builder()
                 .subject(ObjectReference.builder()
@@ -93,7 +92,11 @@ public final class ObjectResultMapper {
           }
         });
 
-    return unmodifiableMap(resultMap);
+    return ObjectResult.builder()
+        .type(targetType)
+        .properties(properties)
+        .lineage(lineageBuilder.build())
+        .build();
   }
 
   private Object mapAttribute(Attribute attribute, Object value) {

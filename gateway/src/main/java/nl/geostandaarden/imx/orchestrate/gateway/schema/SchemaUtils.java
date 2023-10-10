@@ -1,14 +1,11 @@
 package nl.geostandaarden.imx.orchestrate.gateway.schema;
 
-import static graphql.introspection.Introspection.INTROSPECTION_SYSTEM_FIELDS;
 import static nl.geostandaarden.imx.orchestrate.model.Cardinality.REQUIRED;
 
 import graphql.language.ListType;
 import graphql.language.NonNullType;
 import graphql.language.Type;
 import graphql.language.TypeName;
-import graphql.schema.SelectedField;
-import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.model.Cardinality;
@@ -34,10 +31,5 @@ public class SchemaUtils {
     }
 
     return type;
-  }
-
-  public static boolean isReservedField(SelectedField selectedField, UnaryOperator<String> lineageRenamer) {
-    var fieldName = selectedField.getName();
-    return INTROSPECTION_SYSTEM_FIELDS.contains(fieldName); // || lineageRenamer.apply(SchemaConstants.HAS_LINEAGE_FIELD).equals(fieldName);
   }
 }

@@ -72,7 +72,7 @@ public final class SchemaFactory {
     UnaryOperator<String> lineageRenamer =
         fieldName -> modelMapping.getLineageNameMapping().getOrDefault(fieldName, fieldName);
 
-    var genericDataFetcher = new GenericDataFetcher(engine);
+    var genericDataFetcher = new GenericDataFetcher(engine, lineageRenamer.apply(SchemaConstants.HAS_LINEAGE_FIELD));
     var objectLineageFetcher = new ObjectLineageFetcher(modelMapping.getLineageNameMapping());
 
     return new SchemaFactory(modelMapping, genericDataFetcher, objectLineageFetcher, lineageRenamer,
@@ -96,7 +96,7 @@ public final class SchemaFactory {
     var schema = new SchemaGenerator()
         .makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
 
-    return transformSchema(schema, new SchemaVisitor());
+    return transformSchema(schema, new SchemaVisitor(lineageRenamer.apply(SchemaConstants.HAS_LINEAGE_FIELD)));
   }
 
   private void registerObjectType(ObjectType objectType) {

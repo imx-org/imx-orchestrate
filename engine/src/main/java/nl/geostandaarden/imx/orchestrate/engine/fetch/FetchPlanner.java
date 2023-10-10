@@ -56,10 +56,7 @@ public final class FetchPlanner {
     return fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, false, null)
         .execute(input)
         .singleOrEmpty()
-        .map(result -> ObjectResult.builder()
-            .type(request.getObjectType())
-            .properties(resultMapper.map(result, request))
-            .build());
+        .map(result -> resultMapper.map(result, request));
   }
 
   public Mono<CollectionResult> fetch(CollectionRequest request) {
@@ -74,10 +71,7 @@ public final class FetchPlanner {
 
     return fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, true, null)
         .execute(input)
-        .map(result -> ObjectResult.builder()
-            .type(request.getObjectType())
-            .properties(resultMapper.map(result, request))
-            .build())
+        .map(result -> resultMapper.map(result, request))
         .collectList()
         .map(objectResults -> CollectionResult.builder()
             .objectResults(objectResults)

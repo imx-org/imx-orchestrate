@@ -1,5 +1,7 @@
 package nl.geostandaarden.imx.orchestrate.engine;
 
+import static org.assertj.core.api.Assertions.as;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -8,13 +10,16 @@ import java.io.IOException;
 import java.util.Map;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import nl.geostandaarden.imx.orchestrate.engine.source.DataRepository;
 import nl.geostandaarden.imx.orchestrate.model.ComponentRegistry;
 import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
+import nl.geostandaarden.imx.orchestrate.model.lineage.ObjectLineage;
 import nl.geostandaarden.imx.orchestrate.model.loader.ModelLoaderRegistry;
 import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeRegistry;
 import nl.geostandaarden.imx.orchestrate.parser.yaml.YamlModelLoader;
 import nl.geostandaarden.imx.orchestrate.parser.yaml.YamlModelMappingParser;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -92,7 +97,10 @@ class OrchestrateEngineTest {
     var resultMono = engine.fetch(request);
 
     StepVerifier.create(resultMono)
-        .expectNextCount(1)
+        .assertNext(result -> assertThat(result).isNotNull()
+            .extracting(ObjectResult::getLineage)
+            .extracting(ObjectLineage::getOrchestratedProperties, as(InstanceOfAssertFactories.COLLECTION))
+            .hasSize(3))
         .expectComplete()
         .verify();
   }

@@ -1,8 +1,10 @@
 package nl.geostandaarden.imx.orchestrate.gateway;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,15 @@ class GatewayIT {
           construction(id: "B0002") {
             id
             surface
+            hasLineage {
+              orchestratedProperties {
+                property
+                isDerivedFrom {
+                  property
+                  path
+                }
+              }
+            }
           }
         }
       """;
@@ -54,6 +65,10 @@ class GatewayIT {
         .get();
 
     assertThat(adres).isNotNull()
-        .containsEntry("id", "B0002");
+        .containsEntry("id", "B0002")
+        .containsEntry("surface", 195)
+        .extractingByKey("hasLineage", as(InstanceOfAssertFactories.MAP))
+        .extractingByKey("orchestratedProperties", as(InstanceOfAssertFactories.COLLECTION))
+        .hasSize(2);
   }
 }

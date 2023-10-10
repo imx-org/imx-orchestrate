@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Singular;
 import lombok.ToString;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
+import nl.geostandaarden.imx.orchestrate.model.lineage.ObjectLineage;
 import nl.geostandaarden.imx.orchestrate.model.lineage.ObjectReference;
 
 @Getter
@@ -19,6 +20,8 @@ public class ObjectResult implements DataResult {
 
   @Singular
   private final Map<String, Object> properties;
+
+  private final ObjectLineage lineage;
 
   public Map<String, Object> getKey() {
     return extractKey(type, properties);

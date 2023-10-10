@@ -11,16 +11,22 @@ import graphql.schema.GraphQLSchemaElement;
 import graphql.schema.GraphQLTypeVisitorStub;
 import graphql.util.TraversalControl;
 import graphql.util.TraverserContext;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import reactor.core.publisher.Flux;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionResult;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 public final class SchemaVisitor extends GraphQLTypeVisitorStub {
 
+  private final String hasLineageFieldName;
+
   @Override
   public TraversalControl visitGraphQLFieldDefinition(GraphQLFieldDefinition fieldDefinition,
-      TraverserContext<GraphQLSchemaElement> context) {
+                                                      TraverserContext<GraphQLSchemaElement> context) {
     var codeRegistryBuilder = context.getVarFromParents(GraphQLCodeRegistry.Builder.class);
 
     if (context.getParentNode() instanceof GraphQLObjectType objectType) {
@@ -33,13 +39,37 @@ public final class SchemaVisitor extends GraphQLTypeVisitorStub {
 
   private Object mapResult(DataFetchingEnvironment environment, Object result) {
     if (result instanceof Mono<?> resultMono) {
-      return resultMono.toFuture();
+      return resultMono.map(this::mapResult)
+          .toFuture();
     }
 
-    if (result instanceof Flux<?> resultFlux) {
-      return mapResult(environment, resultFlux.collectList());
+    if (result instanceof List<?> resultList) {
+      return resultList.stream()
+          .map(this::mapResult)
+          .toList();
     }
 
     return result;
+  }
+
+  private Object mapResult(Object result) {
+    if (result instanceof ObjectResult objectResult) {
+      return objectResultToMap(objectResult);
+    }
+
+    if (result instanceof CollectionResult collectionResult) {
+      return collectionResult.getObjectResults()
+          .stream()
+          .map(this::objectResultToMap)
+          .toList();
+    }
+
+    return result;
+  }
+
+  private Map<String, Object> objectResultToMap(ObjectResult result) {
+    var properties = new HashMap<>(result.getProperties());
+    properties.put(hasLineageFieldName, result.getLineage());
+    return properties;
   }
 }
