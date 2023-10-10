@@ -12,6 +12,7 @@ import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import nl.geostandaarden.imx.orchestrate.engine.fetch.FetchPlanner;
 import nl.geostandaarden.imx.orchestrate.engine.source.Source;
 import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
+import nl.geostandaarden.imx.orchestrate.model.OrchestrateExtension;
 import reactor.core.publisher.Mono;
 
 @Getter

@@ -1,4 +1,4 @@
-package nl.geostandaarden.imx.orchestrate.ext.spatial;
+package nl.geostandaarden.imx.orchestrate.ext.spatial.geometry;
 
 import java.util.Map;
 import nl.geostandaarden.imx.orchestrate.model.ModelException;

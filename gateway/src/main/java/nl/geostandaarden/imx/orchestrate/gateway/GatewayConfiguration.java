@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateEngine;
 import nl.geostandaarden.imx.orchestrate.engine.source.Source;
 import nl.geostandaarden.imx.orchestrate.engine.source.SourceType;
-import nl.geostandaarden.imx.orchestrate.ext.spatial.GeometryExtension;
+import nl.geostandaarden.imx.orchestrate.ext.spatial.SpatialExtension;
 import nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaFactory;
 import nl.geostandaarden.imx.orchestrate.model.ComponentRegistry;
 import nl.geostandaarden.imx.orchestrate.model.Model;
@@ -40,7 +40,7 @@ public class GatewayConfiguration {
 
   @Bean
   public GraphQlSource graphQlSource() throws IOException {
-    var extensions = Set.of(new GeometryExtension());
+    var extensions = Set.of(new SpatialExtension());
 
     var componentRegistry = new ComponentRegistry();
     extensions.forEach(extension -> extension.registerComponents(componentRegistry));

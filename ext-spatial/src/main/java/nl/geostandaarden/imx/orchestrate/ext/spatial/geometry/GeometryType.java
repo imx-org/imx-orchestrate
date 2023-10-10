@@ -1,4 +1,4 @@
-package nl.geostandaarden.imx.orchestrate.ext.spatial;
+package nl.geostandaarden.imx.orchestrate.ext.spatial.geometry;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,7 +7,7 @@ import java.util.Map;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
-import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
+import nl.geostandaarden.imx.orchestrate.ext.spatial.SpatialException;
 import nl.geostandaarden.imx.orchestrate.ext.spatial.filters.IntersectsOperatorType;
 import nl.geostandaarden.imx.orchestrate.model.Path;
 import nl.geostandaarden.imx.orchestrate.model.filters.FilterDefinition;
@@ -53,11 +53,11 @@ public class GeometryType implements ValueType {
 
         return geometry;
       } catch (JsonProcessingException | ParseException e) {
-        throw new OrchestrateException("Failed mapping geometry value.", e);
+        throw new SpatialException("Failed mapping geometry value.", e);
       }
     }
 
-    throw new OrchestrateException("Failed mapping geometry value.");
+    throw new SpatialException("Failed mapping geometry value.");
   }
 
   @Override
@@ -66,7 +66,7 @@ public class GeometryType implements ValueType {
       return geometry.toString();
     }
 
-    throw new OrchestrateException("Failed mapping lineage value.");
+    throw new SpatialException("Failed mapping lineage value.");
   }
 
   @Override
@@ -83,7 +83,7 @@ public class GeometryType implements ValueType {
     try {
       geometry = wktReader.read(wkt);
     } catch (ParseException e) {
-      throw new OrchestrateException("Failed parsing geometry", e);
+      throw new SpatialException("Failed parsing geometry", e);
     }
 
     return FilterDefinition.builder()

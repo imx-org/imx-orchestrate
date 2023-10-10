@@ -7,11 +7,13 @@ import static org.mockito.Mockito.when;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import nl.geostandaarden.imx.orchestrate.engine.source.DataRepository;
+import nl.geostandaarden.imx.orchestrate.ext.spatial.SpatialExtension;
 import nl.geostandaarden.imx.orchestrate.model.ComponentRegistry;
 import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
 import nl.geostandaarden.imx.orchestrate.model.lineage.ObjectLineage;
@@ -31,10 +33,10 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
-class OrchestrateEngineTest {
+class OrchestrateEngineIT {
 
+  private static final SpatialExtension SPATIAL_EXTENSION = new SpatialExtension();
   private static ModelMapping MODEL_MAPPING;
-
   @Mock
   private DataRepository dataRepositoryMock;
 
@@ -44,8 +46,9 @@ class OrchestrateEngineTest {
   static void beforeAll() throws IOException {
     var modelLoaderRegistry = new ModelLoaderRegistry()
         .register(new YamlModelLoader());
-    var mappingParser = new YamlModelMappingParser(new ComponentRegistry(), modelLoaderRegistry,
-        new ValueTypeRegistry());
+    var valueTypeRegistry = new ValueTypeRegistry();
+    SPATIAL_EXTENSION.registerValueTypes(valueTypeRegistry);
+    var mappingParser = new YamlModelMappingParser(new ComponentRegistry(), modelLoaderRegistry, valueTypeRegistry);
     MODEL_MAPPING = mappingParser.parse(new FileInputStream("../data/geo/mapping.yaml"));
   }
 
@@ -54,6 +57,7 @@ class OrchestrateEngineTest {
     engine = OrchestrateEngine.builder()
         .modelMapping(MODEL_MAPPING)
         .source("bld", () -> dataRepositoryMock)
+        .extension(SPATIAL_EXTENSION)
         .build();
   }
 
@@ -67,6 +71,7 @@ class OrchestrateEngineTest {
         .objectKey(Map.of("id", "B0001"))
         .selectProperty("id")
         .selectProperty("surface")
+        .selectProperty("geometry")
         .selectCollectionProperty("hasAddress", builder -> builder
             .selectProperty("postalCode")
             .selectProperty("houseNumber")
@@ -78,7 +83,9 @@ class OrchestrateEngineTest {
           var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
 
           return switch (objectType.getName()) {
-            case "Building" -> Mono.just(Map.of("id", "B0001", "area", 123));
+            case "Building" -> Mono.just(Map.of("id", "B0001", "area", 123, "geometry",
+                Map.of("type", "Polygon", "coordinates",
+                    List.of(List.of(List.of(0, 0), List.of(10, 0), List.of(10, 10), List.of(0, 10), List.of(0, 0))))));
             case "Address" -> Mono.just(Map.of("id", "A0001", "houseNumber", 23, "postalCode", "1234AB"));
             default -> throw new IllegalStateException();
           };
@@ -100,7 +107,7 @@ class OrchestrateEngineTest {
         .assertNext(result -> assertThat(result).isNotNull()
             .extracting(ObjectResult::getLineage)
             .extracting(ObjectLineage::getOrchestratedProperties, as(InstanceOfAssertFactories.COLLECTION))
-            .hasSize(3))
+            .hasSize(4))
         .expectComplete()
         .verify();
   }

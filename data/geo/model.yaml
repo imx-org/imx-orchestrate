@@ -8,6 +8,9 @@ objectTypes:
       surface:
         type: Integer
         cardinality: 0..1
+      geometry:
+        type: Geometry
+        cardinality: 0..1
     relations:
       hasAddress:
         target: Address

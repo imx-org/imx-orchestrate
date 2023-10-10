@@ -22,13 +22,11 @@ import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import java.util.List;
-import java.util.Set;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateEngine;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
-import nl.geostandaarden.imx.orchestrate.engine.OrchestrateExtension;
 import nl.geostandaarden.imx.orchestrate.gateway.fetch.GenericDataFetcher;
 import nl.geostandaarden.imx.orchestrate.gateway.fetch.ObjectKeyFetcher;
 import nl.geostandaarden.imx.orchestrate.gateway.fetch.ObjectLineageFetcher;
@@ -64,8 +62,6 @@ public final class SchemaFactory {
 
   private final UnaryOperator<String> lineageRenamer;
 
-  private final Set<OrchestrateExtension> extensions;
-
   public static GraphQLSchema create(OrchestrateEngine engine) {
     var modelMapping = engine.getModelMapping();
 
@@ -75,8 +71,7 @@ public final class SchemaFactory {
     var genericDataFetcher = new GenericDataFetcher(engine, lineageRenamer.apply(SchemaConstants.HAS_LINEAGE_FIELD));
     var objectLineageFetcher = new ObjectLineageFetcher(modelMapping.getLineageNameMapping());
 
-    return new SchemaFactory(modelMapping, genericDataFetcher, objectLineageFetcher, lineageRenamer,
-        engine.getExtensions()).create();
+    return new SchemaFactory(modelMapping, genericDataFetcher, objectLineageFetcher, lineageRenamer).create();
   }
 
   private GraphQLSchema create() {
@@ -87,7 +82,6 @@ public final class SchemaFactory {
         .forEach(this::registerObjectType);
 
     typeDefinitionRegistry.add(queryTypeBuilder.build());
-//    extensions.forEach(extension -> extension.enhanceSchema(typeDefinitionRegistry, codeRegistryBuilder));
 
     var runtimeWiring = newRuntimeWiring()
         .codeRegistry(codeRegistryBuilder.build())
@@ -125,16 +119,10 @@ public final class SchemaFactory {
     var filterFields = objectType.getProperties(Attribute.class)
         .stream()
         .filter(attribute -> isFilterable(objectType, attribute))
-        .map(attribute -> {
-          var typeName = attribute.getType()
-              .getName();
-
-          // TODO: Decouple Geometry type handling
-          return InputValueDefinition.newInputValueDefinition()
-              .name(attribute.getName())
-              .type(typeName.equals("Geometry") ? new TypeName("GeometryFilter") : mapFieldType(attribute, false))
-              .build();
-        })
+        .map(attribute -> InputValueDefinition.newInputValueDefinition()
+            .name(attribute.getName())
+            .type(mapFieldType(attribute, false))
+            .build())
         .toList();
 
     if (!filterFields.isEmpty()) {
@@ -355,6 +343,8 @@ public final class SchemaFactory {
     var type = switch (typeName) {
       case "Integer" -> new TypeName("Int");
       case "Double" -> new TypeName("Float");
+      // TODO: Refactor
+      case "Geometry" -> new TypeName("String");
       default -> new TypeName(typeName);
     };
 

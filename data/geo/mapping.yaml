@@ -15,6 +15,9 @@ objectTypeMappings:
       surface:
         pathMappings:
           path: area
+      geometry:
+        pathMappings:
+          path: geometry
       hasAddress:
         pathMappings:
           - path: consistsOf/hasMainAddress

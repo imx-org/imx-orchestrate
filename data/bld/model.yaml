@@ -8,6 +8,9 @@ objectTypes:
       area:
         type: Integer
         cardinality: 0..1
+      geometry:
+        type: Geometry
+        cardinality: 0..1
 
   BuildingPart:
     attributes:

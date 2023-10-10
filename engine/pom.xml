@@ -38,6 +38,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>nl.geostandaarden.imx.orchestrate</groupId>
+            <artifactId>orchestrate-ext-spatial</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <scope>test</scope>
