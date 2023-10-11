@@ -22,13 +22,13 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <reactor.version>2022.0.11</reactor.version>
+        <reactor.version>2022.0.12</reactor.version>
         <slf4j.version>2.0.9</slf4j.version>
         <graphql-java.version>21.1</graphql-java.version>
         <java-dataloader.version>3.2.0</java-dataloader.version>
         <spring-boot.version>3.1.4</spring-boot.version>
         <spring-graphql.version>1.2.3</spring-graphql.version>
-        <micrometer.version>1.11.4</micrometer.version>
+        <micrometer.version>1.11.5</micrometer.version>
         <commons-text.version>1.10.0</commons-text.version>
         <jts.version>1.19.0</jts.version>
         <lombok.version>1.18.30</lombok.version>
