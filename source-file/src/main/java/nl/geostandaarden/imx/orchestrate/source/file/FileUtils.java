@@ -41,8 +41,7 @@ public class FileUtils {
         .retain(propertyNames));
   }
 
-  public static Map<String, Object> getObjectProperties(ObjectNode objectNode,
-      Set<SelectedProperty> selectedProperties) {
+  public static Map<String, Object> getObjectProperties(ObjectNode objectNode, Set<SelectedProperty> selectedProperties) {
     var propertyNames = selectedProperties.stream()
         .map(SelectedProperty::getProperty)
         .map(Property::getName)
