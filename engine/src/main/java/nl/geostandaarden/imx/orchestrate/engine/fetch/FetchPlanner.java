@@ -32,6 +32,7 @@ import nl.geostandaarden.imx.orchestrate.model.ObjectTypeRef;
 import nl.geostandaarden.imx.orchestrate.model.Path;
 import nl.geostandaarden.imx.orchestrate.model.PathMapping;
 import nl.geostandaarden.imx.orchestrate.model.Property;
+import nl.geostandaarden.imx.orchestrate.model.PropertyMapping;
 import nl.geostandaarden.imx.orchestrate.model.Relation;
 import nl.geostandaarden.imx.orchestrate.model.filters.FilterDefinition;
 import reactor.core.publisher.Mono;
@@ -81,33 +82,35 @@ public final class FetchPlanner {
   public Set<Path> resolveSourcePaths(DataRequest request, ObjectTypeMapping typeMapping, Path basePath) {
     return request.getSelectedProperties()
         .stream()
-        .flatMap(selectedProperty -> {
-          var property = selectedProperty.getProperty();
-          var propertyMapping = typeMapping.getPropertyMapping(property);
-
-          var sourcePaths = propertyMapping.getPathMappings()
-              .stream()
-              .flatMap(pathMapping -> {
-                // TODO: Conditionality & recursion
-                var nextPaths = pathMapping.getNextPathMappings()
-                    .stream()
-                    .map(PathMapping::getPath);
-
-                return Stream.concat(Stream.of(pathMapping.getPath()), nextPaths)
-                    .map(basePath::append);
-              });
-
-          if (property instanceof AbstractRelation) {
-            var nestedRequest = Optional.ofNullable(selectedProperty.getNestedRequest())
-                .orElseThrow(() -> new OrchestrateException("Nested request not present for relation: " + property.getName()));
-            var nestedTypeMapping = modelMapping.getObjectTypeMapping(nestedRequest.getObjectType());
-
-            return sourcePaths.flatMap(sourcePath -> resolveSourcePaths(nestedRequest, nestedTypeMapping, sourcePath).stream());
-          }
-
-          return sourcePaths;
-        })
+        .flatMap(selectedProperty -> resolveSourcePaths(selectedProperty,
+            typeMapping.getPropertyMapping(selectedProperty.getProperty()), basePath))
         .collect(toSet());
+  }
+
+  private Stream<Path> resolveSourcePaths(SelectedProperty selectedProperty, PropertyMapping propertyMapping, Path basePath) {
+    var property = selectedProperty.getProperty();
+
+    var sourcePaths = propertyMapping.getPathMappings()
+        .stream()
+        .flatMap(pathMapping -> {
+          // TODO: Conditionality & recursion
+          var nextPaths = pathMapping.getNextPathMappings()
+              .stream()
+              .map(PathMapping::getPath);
+
+          return Stream.concat(Stream.of(pathMapping.getPath()), nextPaths)
+              .map(basePath::append);
+        });
+
+    if (property instanceof AbstractRelation) {
+      var nestedRequest = Optional.ofNullable(selectedProperty.getNestedRequest())
+          .orElseThrow(() -> new OrchestrateException("Nested request not present for relation: " + property.getName()));
+      var nestedTypeMapping = modelMapping.getObjectTypeMapping(nestedRequest.getObjectType());
+
+      return sourcePaths.flatMap(sourcePath -> resolveSourcePaths(nestedRequest, nestedTypeMapping, sourcePath).stream());
+    }
+
+    return sourcePaths;
   }
 
   private FetchOperation fetchSourceObject(ObjectTypeRef sourceTypeRef, Set<Path> sourcePaths, boolean isCollection, FilterDefinition filter) {

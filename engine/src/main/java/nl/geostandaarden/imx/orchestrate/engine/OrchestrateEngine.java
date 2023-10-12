@@ -27,7 +27,7 @@ public final class OrchestrateEngine {
   private final FetchPlanner fetchPlanner;
 
   @Builder
-  public OrchestrateEngine(ModelMapping modelMapping, @Singular Map<String, Source> sources, @Singular Set<OrchestrateExtension> extensions) {
+  private OrchestrateEngine(ModelMapping modelMapping, @Singular Map<String, Source> sources, @Singular Set<OrchestrateExtension> extensions) {
     this.modelMapping = modelMapping;
     this.sources = sources;
     this.extensions = extensions;
