@@ -1,7 +1,7 @@
 package nl.geostandaarden.imx.orchestrate.engine.fetch;
 
 import java.util.List;
-import nl.geostandaarden.imx.orchestrate.model.ObjectResult;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import reactor.core.publisher.Flux;
 
 interface FetchOperation {

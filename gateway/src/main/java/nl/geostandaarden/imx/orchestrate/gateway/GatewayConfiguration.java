@@ -13,17 +13,17 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import nl.geostandaarden.imx.orchestrate.engine.Orchestration;
-import nl.geostandaarden.imx.orchestrate.engine.schema.SchemaFactory;
-import nl.geostandaarden.imx.orchestrate.ext.spatial.GeometryExtension;
+import nl.geostandaarden.imx.orchestrate.engine.OrchestrateEngine;
+import nl.geostandaarden.imx.orchestrate.engine.source.Source;
+import nl.geostandaarden.imx.orchestrate.engine.source.SourceType;
+import nl.geostandaarden.imx.orchestrate.ext.spatial.SpatialExtension;
+import nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaFactory;
 import nl.geostandaarden.imx.orchestrate.model.ComponentRegistry;
 import nl.geostandaarden.imx.orchestrate.model.Model;
 import nl.geostandaarden.imx.orchestrate.model.loader.ModelLoader;
 import nl.geostandaarden.imx.orchestrate.model.loader.ModelLoaderRegistry;
 import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeRegistry;
 import nl.geostandaarden.imx.orchestrate.parser.yaml.YamlModelMappingParser;
-import nl.geostandaarden.imx.orchestrate.source.Source;
-import nl.geostandaarden.imx.orchestrate.source.SourceType;
 import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -40,7 +40,7 @@ public class GatewayConfiguration {
 
   @Bean
   public GraphQlSource graphQlSource() throws IOException {
-    var extensions = Set.of(new GeometryExtension());
+    var extensions = Set.of(new SpatialExtension());
 
     var componentRegistry = new ComponentRegistry();
     extensions.forEach(extension -> extension.registerComponents(componentRegistry));
@@ -62,13 +62,13 @@ public class GatewayConfiguration {
         .stream()
         .collect(Collectors.toMap(Map.Entry::getKey, e -> resolveSource(e.getKey(), e.getValue(), sourceModelMap)));
 
-    var orchestration = Orchestration.builder()
+    var engine = OrchestrateEngine.builder()
         .modelMapping(modelMapping)
         .sources(sources)
         .extensions(extensions)
         .build();
 
-    var graphQL = GraphQL.newGraphQL(SchemaFactory.create(orchestration)).build();
+    var graphQL = GraphQL.newGraphQL(SchemaFactory.create(engine)).build();
 
     return new GraphQlSource() {
       @Override

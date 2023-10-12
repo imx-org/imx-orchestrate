@@ -12,9 +12,9 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import nl.geostandaarden.imx.orchestrate.model.Model;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
-import nl.geostandaarden.imx.orchestrate.source.Source;
-import nl.geostandaarden.imx.orchestrate.source.DataRepository;
-import nl.geostandaarden.imx.orchestrate.source.SourceException;
+import nl.geostandaarden.imx.orchestrate.engine.source.Source;
+import nl.geostandaarden.imx.orchestrate.engine.source.DataRepository;
+import nl.geostandaarden.imx.orchestrate.engine.source.SourceException;
 
 public final class FileSource implements Source {
 

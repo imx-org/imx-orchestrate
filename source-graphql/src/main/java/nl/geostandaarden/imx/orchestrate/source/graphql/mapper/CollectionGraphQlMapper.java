@@ -1,5 +1,8 @@
 package nl.geostandaarden.imx.orchestrate.source.graphql.mapper;
 
+import static nl.geostandaarden.imx.orchestrate.source.graphql.mapper.MapperConstants.NODES;
+import static org.springframework.util.StringUtils.uncapitalize;
+
 import graphql.ExecutionInput;
 import graphql.language.Argument;
 import graphql.language.AstPrinter;
@@ -12,14 +15,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import nl.geostandaarden.imx.orchestrate.source.CollectionRequest;
-import nl.geostandaarden.imx.orchestrate.source.SourceException;
-import nl.geostandaarden.imx.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
+import nl.geostandaarden.imx.orchestrate.engine.source.SourceException;
 import nl.geostandaarden.imx.orchestrate.model.filters.FilterExpression;
 import nl.geostandaarden.imx.orchestrate.model.filters.FilterOperator;
-
-import static nl.geostandaarden.imx.orchestrate.source.graphql.mapper.MapperConstants.NODES;
-import static org.springframework.util.StringUtils.uncapitalize;
+import nl.geostandaarden.imx.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
 
 @RequiredArgsConstructor
 public class CollectionGraphQlMapper extends AbstractGraphQlMapper<CollectionRequest> {

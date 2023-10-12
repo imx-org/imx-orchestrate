@@ -7,8 +7,8 @@ import nl.geostandaarden.imx.orchestrate.source.graphql.mapper.CollectionGraphQl
 import nl.geostandaarden.imx.orchestrate.source.graphql.mapper.ObjectGraphQlMapper;
 import nl.geostandaarden.imx.orchestrate.source.graphql.mapper.ResponseMapper;
 import nl.geostandaarden.imx.orchestrate.source.graphql.repository.GraphQlRepository;
-import nl.geostandaarden.imx.orchestrate.source.DataRepository;
-import nl.geostandaarden.imx.orchestrate.source.Source;
+import nl.geostandaarden.imx.orchestrate.engine.source.DataRepository;
+import nl.geostandaarden.imx.orchestrate.engine.source.Source;
 
 public class GraphQlSource implements Source {
 

@@ -1,43 +1,41 @@
 package nl.geostandaarden.imx.orchestrate.engine.fetch;
 
-import static graphql.schema.GraphQLTypeUtil.isList;
-import static graphql.schema.GraphQLTypeUtil.unwrapNonNull;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toSet;
-import static nl.geostandaarden.imx.orchestrate.engine.fetch.FetchUtils.castToMap;
-import static nl.geostandaarden.imx.orchestrate.engine.fetch.FetchUtils.isReservedField;
-import static nl.geostandaarden.imx.orchestrate.engine.schema.SchemaConstants.QUERY_FILTER_ARGUMENTS;
 import static nl.geostandaarden.imx.orchestrate.model.ModelUtils.extractKey;
-import static nl.geostandaarden.imx.orchestrate.model.ModelUtils.keyExtractor;
 
-import graphql.schema.DataFetchingEnvironment;
-import graphql.schema.DataFetchingFieldSelectionSet;
-import graphql.schema.GraphQLObjectType;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionResult;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.DataRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.SelectedProperty;
+import nl.geostandaarden.imx.orchestrate.engine.source.Source;
 import nl.geostandaarden.imx.orchestrate.model.AbstractRelation;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.InverseRelation;
 import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
+import nl.geostandaarden.imx.orchestrate.model.ObjectTypeMapping;
 import nl.geostandaarden.imx.orchestrate.model.ObjectTypeRef;
 import nl.geostandaarden.imx.orchestrate.model.Path;
 import nl.geostandaarden.imx.orchestrate.model.PathMapping;
 import nl.geostandaarden.imx.orchestrate.model.Property;
+import nl.geostandaarden.imx.orchestrate.model.PropertyMapping;
 import nl.geostandaarden.imx.orchestrate.model.Relation;
 import nl.geostandaarden.imx.orchestrate.model.filters.FilterDefinition;
-import nl.geostandaarden.imx.orchestrate.source.SelectedProperty;
-import nl.geostandaarden.imx.orchestrate.source.Source;
-import org.reactivestreams.Publisher;
+import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 public final class FetchPlanner {
@@ -46,71 +44,76 @@ public final class FetchPlanner {
 
   private final Map<String, Source> sources;
 
-  private final UnaryOperator<String> lineageRenamer;
-
-  public Publisher<Map<String, Object>> fetch(DataFetchingEnvironment environment, GraphQLObjectType outputType) {
-    var targetType = modelMapping.getTargetModel()
-        .getObjectType(outputType.getName());
-    var targetMapping = modelMapping.getObjectTypeMapping(targetType.getName());
-    var sourcePaths = resolveSourcePaths(targetType, environment.getSelectionSet(), Path.fromProperties());
-
-    // TODO: Refactor
-    var isCollection = isList(unwrapNonNull(environment.getFieldType()));
+  public Mono<ObjectResult> fetch(ObjectRequest request) {
+    var typeMapping = modelMapping.getObjectTypeMapping(request.getObjectType());
+    var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
 
     var resultMapper = ObjectResultMapper.builder()
         .modelMapping(modelMapping)
         .build();
 
-    var input = FetchInput.newInput(keyExtractor(targetType, targetMapping)
-        .apply(environment.getArguments()));
+    var input = FetchInput.newInput(request.getObjectKey());
 
-    var filter = createFilterDefinition(targetType, castToMap(environment.getArguments()
-        .get(QUERY_FILTER_ARGUMENTS)));
-
-    var fetchResult = fetchSourceObject(targetMapping.getSourceRoot(), sourcePaths, isCollection, filter)
+    return fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, false, null)
         .execute(input)
-        .map(result -> resultMapper.map(result, targetType, environment.getSelectionSet()));
-
-    return isCollection ? fetchResult : fetchResult.singleOrEmpty();
+        .singleOrEmpty()
+        .map(result -> resultMapper.map(result, request));
   }
 
-  public Set<Path> resolveSourcePaths(ObjectType objectType, DataFetchingFieldSelectionSet selectionSet,
-      Path basePath) {
-    var objectTypeMapping = modelMapping.getObjectTypeMapping(objectType);
+  public Mono<CollectionResult> fetch(CollectionRequest request) {
+    var typeMapping = modelMapping.getObjectTypeMapping(request.getObjectType());
+    var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
 
-    return selectionSet.getImmediateFields()
+    var resultMapper = ObjectResultMapper.builder()
+        .modelMapping(modelMapping)
+        .build();
+
+    var input = FetchInput.newInput(Map.of());
+
+    return fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, true, null)
+        .execute(input)
+        .map(result -> resultMapper.map(result, request))
+        .collectList()
+        .map(objectResults -> CollectionResult.builder()
+            .objectResults(objectResults)
+            .build());
+  }
+
+  public Set<Path> resolveSourcePaths(DataRequest request, ObjectTypeMapping typeMapping, Path basePath) {
+    return request.getSelectedProperties()
         .stream()
-        .filter(not(field -> isReservedField(field, lineageRenamer)))
-        .flatMap(field -> {
-          var property = objectType.getProperty(field.getName());
-          var propertyMapping = objectTypeMapping.getPropertyMapping(property);
-
-          var sourcePaths = propertyMapping.getPathMappings()
-              .stream()
-              .flatMap(pathMapping -> {
-                // TODO: Conditionality & recursion
-                var nextPaths = pathMapping.getNextPathMappings()
-                    .stream()
-                    .map(PathMapping::getPath);
-
-                return Stream.concat(Stream.of(pathMapping.getPath()), nextPaths)
-                    .map(basePath::append);
-              });
-
-          if (property instanceof AbstractRelation relation) {
-            var targetType = modelMapping.getTargetType(relation.getTarget());
-
-            return sourcePaths.flatMap(sourcePath ->
-                resolveSourcePaths(targetType, field.getSelectionSet(), sourcePath).stream());
-          }
-
-          return sourcePaths;
-        })
+        .flatMap(selectedProperty -> resolveSourcePaths(selectedProperty,
+            typeMapping.getPropertyMapping(selectedProperty.getProperty()), basePath))
         .collect(toSet());
   }
 
-  private FetchOperation fetchSourceObject(ObjectTypeRef sourceTypeRef, Set<Path> sourcePaths,
-      boolean isCollection, FilterDefinition filter) {
+  private Stream<Path> resolveSourcePaths(SelectedProperty selectedProperty, PropertyMapping propertyMapping, Path basePath) {
+    var property = selectedProperty.getProperty();
+
+    var sourcePaths = propertyMapping.getPathMappings()
+        .stream()
+        .flatMap(pathMapping -> {
+          // TODO: Conditionality & recursion
+          var nextPaths = pathMapping.getNextPathMappings()
+              .stream()
+              .map(PathMapping::getPath);
+
+          return Stream.concat(Stream.of(pathMapping.getPath()), nextPaths)
+              .map(basePath::append);
+        });
+
+    if (property instanceof AbstractRelation) {
+      var nestedRequest = Optional.ofNullable(selectedProperty.getNestedRequest())
+          .orElseThrow(() -> new OrchestrateException("Nested request not present for relation: " + property.getName()));
+      var nestedTypeMapping = modelMapping.getObjectTypeMapping(nestedRequest.getObjectType());
+
+      return sourcePaths.flatMap(sourcePath -> resolveSourcePaths(nestedRequest, nestedTypeMapping, sourcePath).stream());
+    }
+
+    return sourcePaths;
+  }
+
+  private FetchOperation fetchSourceObject(ObjectTypeRef sourceTypeRef, Set<Path> sourcePaths, boolean isCollection, FilterDefinition filter) {
     var source = sources.get(sourceTypeRef.getModelAlias());
     var sourceType = modelMapping.getSourceType(sourceTypeRef);
     var selectedProperties = new HashSet<>(selectIdentity(sourceTypeRef));
@@ -119,7 +122,7 @@ public final class FetchPlanner {
         .filter(Path::isLeaf)
         .map(sourcePath -> sourceType.getProperty(sourcePath.getFirstSegment()))
         .filter(not(Property::isIdentifier))
-        .map(SelectedProperty::new)
+        .map(SelectedProperty::forProperty)
         .forEach(selectedProperties::add);
 
     var nextOperations = new HashSet<NextOperation>();
@@ -156,7 +159,7 @@ public final class FetchPlanner {
               }
 
               var filterProperty = sourceType.getProperty(sourcePath.getFirstSegment());
-              selectedProperties.add(new SelectedProperty(filterProperty));
+              selectedProperties.add(SelectedProperty.forProperty(filterProperty));
 
               var targetProperty = targetType.getProperty(filterMapping.getProperty());
 
@@ -189,10 +192,25 @@ public final class FetchPlanner {
                     }
 
                     var keyProperty = sourceType.getProperty(keyPath.getFirstSegment());
-                    selectedProperties.add(new SelectedProperty(keyProperty));
+                    selectedProperties.add(SelectedProperty.forProperty(keyProperty));
                   });
             } else {
-              selectedProperties.add(new SelectedProperty(property, selectIdentity(targetTypeRef)));
+              var targetModel = modelMapping.getSourceModel(targetTypeRef.getModelAlias());
+
+              // TODO: Refactor
+              if (property.getCardinality().isSingular()) {
+                selectedProperties.add(SelectedProperty.forProperty(property, ObjectRequest.builder(targetModel)
+                    .objectType(targetTypeRef)
+                    .objectKey(Map.of())
+                    .selectedProperties(selectIdentity(targetTypeRef))
+                    .build()));
+              } else {
+                // TODO: Filter
+                selectedProperties.add(SelectedProperty.forProperty(property, CollectionRequest.builder(targetModel)
+                    .objectType(targetTypeRef)
+                    .selectedProperties(selectIdentity(targetTypeRef))
+                    .build()));
+              }
             }
 
             var identityPaths = targetType.getIdentityProperties()
@@ -216,8 +234,12 @@ public final class FetchPlanner {
           throw new OrchestrateException("Could not map property: " + propertyName);
         });
 
+    // TODO: Refactor
+    var sourceModel = modelMapping.getSourceModel(sourceTypeRef.getModelAlias());
+
     if (isCollection) {
       return CollectionFetchOperation.builder()
+          .model(sourceModel)
           .source(source)
           .objectType(sourceType)
           .selectedProperties(unmodifiableSet(selectedProperties))
@@ -227,6 +249,7 @@ public final class FetchPlanner {
     }
 
     return ObjectFetchOperation.builder()
+        .model(sourceModel)
         .source(source)
         .objectType(sourceType)
         .selectedProperties(unmodifiableSet(selectedProperties))
@@ -292,13 +315,7 @@ public final class FetchPlanner {
     return modelMapping.getSourceType(typeRef)
         .getIdentityProperties()
         .stream()
-        .map(property -> {
-          if (property instanceof Relation relation) {
-            return new SelectedProperty(property, selectIdentity(relation.getTarget(typeRef)));
-          }
-
-          return new SelectedProperty(property);
-        })
+        .map(SelectedProperty::forProperty)
         .collect(toSet());
   }
 }

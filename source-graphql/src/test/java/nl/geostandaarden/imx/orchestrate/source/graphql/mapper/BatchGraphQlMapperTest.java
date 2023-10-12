@@ -1,19 +1,20 @@
 package nl.geostandaarden.imx.orchestrate.source.graphql.mapper;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import graphql.ExecutionInput;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import nl.geostandaarden.imx.orchestrate.source.BatchRequest;
-import nl.geostandaarden.imx.orchestrate.source.SelectedProperty;
-import nl.geostandaarden.imx.orchestrate.source.SourceException;
-import nl.geostandaarden.imx.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchRequest;
+import nl.geostandaarden.imx.orchestrate.engine.source.SourceException;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
+import nl.geostandaarden.imx.orchestrate.model.Model;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
+import nl.geostandaarden.imx.orchestrate.model.ObjectTypeRef;
+import nl.geostandaarden.imx.orchestrate.model.Relation;
+import nl.geostandaarden.imx.orchestrate.model.types.ScalarTypes;
+import nl.geostandaarden.imx.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class BatchGraphQlMapperTest {
 
@@ -22,81 +23,81 @@ class BatchGraphQlMapperTest {
   @BeforeEach
   void init() {
     var config = GraphQlOrchestrateConfig.builder()
-      .collectionSuffix("Collectie")
-      .batchSuffix("Batch")
-      .build();
+        .collectionSuffix("Collectie")
+        .batchSuffix("Batch")
+        .build();
     batchGraphQlMapper = new BatchGraphQlMapper(config);
   }
 
   @Test
   void convert_returnsExpectedResult_forRequest() {
-    var naam = new SelectedProperty(Attribute.builder()
-      .name("naam")
-      .build());
-
-    var straat = new SelectedProperty(Attribute.builder()
-      .name("straat")
-      .build());
-    var huisnummer = new SelectedProperty(Attribute.builder()
-      .name("huisnummer")
-      .build());
-
-    var adres = new SelectedProperty(Attribute.builder()
-      .name("adres")
-      .build(), Set.of(straat, huisnummer));
-
-    var request = BatchRequest.builder()
-      .objectKey(Map.of("identificatie", "12345"))
-      .objectKey(Map.of("identificatie", "34567"))
-      .objectType(ObjectType.builder()
-        .name("Nummeraanduiding")
-        .build())
-      .selectedProperties(List.of(naam, adres))
-      .build();
+    var request = BatchRequest.builder(createModel())
+        .objectKey(Map.of("identificatie", "12345"))
+        .objectKey(Map.of("identificatie", "34567"))
+        .objectType("Nummeraanduiding")
+        .selectProperty("naam")
+        .selectObjectProperty("adres", builder -> builder
+            .selectProperty("straat")
+            .selectProperty("huisnummer")
+            .build())
+        .build();
 
     ExecutionInput result = batchGraphQlMapper.convert(request);
 
     var expected = """
-      query Query {
-        nummeraanduidingBatch(identificatie: ["12345", "34567"]) {
-          naam
-          adres {
-            straat
-            huisnummer
+        query Query {
+          nummeraanduidingBatch(identificatie: ["12345", "34567"]) {
+            naam
+            adres {
+              straat
+              huisnummer
+            }
           }
-        }
-      }""";
+        }""";
 
     GraphQlAssert.assertThat(result.getQuery()).graphQlEquals(expected);
   }
 
   @Test
   void convert_throwsException_forRequest_withMoreThanOneKeyProperty() {
-    var naam = new SelectedProperty(Attribute.builder()
-      .name("naam")
-      .build());
-
-    var straat = new SelectedProperty(Attribute.builder()
-      .name("straat")
-      .build());
-    var huisnummer = new SelectedProperty(Attribute.builder()
-      .name("huisnummer")
-      .build());
-
-    var adres = new SelectedProperty(Attribute.builder()
-      .name("adres")
-      .build(), Set.of(straat, huisnummer));
-
-    var request = BatchRequest.builder()
-      .objectKey(Map.of("identificatie", "12345"))
-      .objectKey(Map.of("id", "34567"))
-      .objectType(ObjectType.builder()
-        .name("Nummeraanduiding")
-        .build())
-      .selectedProperties(List.of(naam, adres))
-      .build();
+    var request = BatchRequest.builder(createModel())
+        .objectKey(Map.of("identificatie", "12345"))
+        .objectKey(Map.of("id", "34567"))
+        .objectType("Nummeraanduiding")
+        .selectProperty("naam")
+        .selectObjectProperty("adres", builder -> builder
+            .selectProperty("straat")
+            .selectProperty("huisnummer")
+            .build())
+        .build();
 
     assertThrows(SourceException.class, () -> batchGraphQlMapper.convert(request));
   }
 
+  private Model createModel() {
+    return Model.builder()
+        .objectType(ObjectType.builder()
+            .name("Nummeraanduiding")
+            .property(Attribute.builder()
+                .name("naam")
+                .type(ScalarTypes.STRING)
+                .build())
+            .property(Relation.builder()
+                .name("adres")
+                .target(ObjectTypeRef.forType("Adres"))
+                .build())
+            .build())
+        .objectType(ObjectType.builder()
+            .name("Adres")
+            .property(Attribute.builder()
+                .name("straat")
+                .type(ScalarTypes.STRING)
+                .build())
+            .property(Attribute.builder()
+                .name("huisnummer")
+                .type(ScalarTypes.INTEGER)
+                .build())
+            .build())
+        .build();
+  }
 }

@@ -3,19 +3,19 @@ package nl.geostandaarden.imx.orchestrate.engine.fetch;
 import java.util.List;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
-import nl.geostandaarden.imx.orchestrate.model.ObjectResult;
-import nl.geostandaarden.imx.orchestrate.source.BatchRequest;
-import nl.geostandaarden.imx.orchestrate.source.ObjectRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Slf4j
 @SuperBuilder(toBuilder = true)
-final class ObjectFetchOperation extends AbstractFetchOperation {
+public final class ObjectFetchOperation extends AbstractFetchOperation {
 
   public Mono<ObjectResult> fetch(FetchInput input) {
-    var objectRequest = ObjectRequest.builder()
-        .objectType(objectType)
+    var objectRequest = ObjectRequest.builder(model)
+        .objectType(objectType.getName())
         .objectKey(input.getData())
         .selectedProperties(selectedProperties)
         .build();
@@ -44,8 +44,8 @@ final class ObjectFetchOperation extends AbstractFetchOperation {
         .map(FetchInput::getData)
         .toList();
 
-    var batchRequest = BatchRequest.builder()
-        .objectType(objectType)
+    var batchRequest = BatchRequest.builder(model)
+        .objectType(objectType.getName())
         .objectKeys(objectKeys)
         .selectedProperties(selectedProperties)
         .build();

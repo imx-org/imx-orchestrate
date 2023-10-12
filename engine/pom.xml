@@ -19,17 +19,12 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>nl.geostandaarden.imx.orchestrate</groupId>
-            <artifactId>orchestrate-source</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.graphql-java</groupId>
-            <artifactId>graphql-java</artifactId>
+            <artifactId>java-dataloader</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -38,13 +33,13 @@
         <!-- Test dependencies -->
         <dependency>
             <groupId>nl.geostandaarden.imx.orchestrate</groupId>
-            <artifactId>orchestrate-source-file</artifactId>
+            <artifactId>orchestrate-parser-yaml</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>nl.geostandaarden.imx.orchestrate</groupId>
-            <artifactId>orchestrate-parser-yaml</artifactId>
+            <artifactId>orchestrate-ext-spatial</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>

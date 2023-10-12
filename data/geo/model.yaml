@@ -1,5 +1,5 @@
 objectTypes:
-  Building:
+  Construction:
     attributes:
       id:
         type: String
@@ -8,10 +8,13 @@ objectTypes:
       surface:
         type: Integer
         cardinality: 0..1
+      geometry:
+        type: Geometry
+        cardinality: 0..1
     relations:
       hasAddress:
         target: Address
-        cardinality: 1..*
+        cardinality: 0..*
         inverseName: isAddressOf
         inverseCardinality: 1
 

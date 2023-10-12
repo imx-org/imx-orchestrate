@@ -2,18 +2,19 @@ package nl.geostandaarden.imx.orchestrate.source.file;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.util.List;
 import java.util.Map;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
+import nl.geostandaarden.imx.orchestrate.model.Model;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 import nl.geostandaarden.imx.orchestrate.model.types.ScalarTypes;
-import nl.geostandaarden.imx.orchestrate.source.CollectionRequest;
-import nl.geostandaarden.imx.orchestrate.source.ObjectRequest;
-import nl.geostandaarden.imx.orchestrate.source.SelectedProperty;
 import org.junit.jupiter.api.Test;
 import reactor.test.StepVerifier;
 
 class FileRepositoryTest {
+
+  private static final Model MODEL = createModel();
 
   private static final ObjectNode BUILDING1_NODE = new ObjectMapper()
       .createObjectNode()
@@ -38,13 +39,11 @@ class FileRepositoryTest {
 
   @Test
   void findOne_ReturnsObject_IfExists() {
-    var objectType = createObjectType();
-    var objectRequest = ObjectRequest.builder()
-        .objectType(objectType)
+    var objectRequest = ObjectRequest.builder(MODEL)
+        .objectType("Building")
         .objectKey(Map.of("id", 1))
-        .selectedProperties(List.of(
-            new SelectedProperty(objectType.getProperty("id")),
-            new SelectedProperty(objectType.getProperty("name"))))
+        .selectProperty("id")
+        .selectProperty("name")
         .build();
     var result = fileRepository.findOne(objectRequest);
 
@@ -55,13 +54,11 @@ class FileRepositoryTest {
 
   @Test
   void findOne_ReturnsEmptyMono_IfNotExists() {
-    var objectType = createObjectType();
-    var objectRequest = ObjectRequest.builder()
-        .objectType(objectType)
+    var objectRequest = ObjectRequest.builder(MODEL)
+        .objectType("Building")
         .objectKey(Map.of("id", 123))
-        .selectedProperties(List.of(
-            new SelectedProperty(objectType.getProperty("id")),
-            new SelectedProperty(objectType.getProperty("name"))))
+        .selectProperty("id")
+        .selectProperty("name")
         .build();
     var result = fileRepository.findOne(objectRequest);
 
@@ -71,13 +68,12 @@ class FileRepositoryTest {
 
   @Test
   void find_ReturnsObjects_ForAllObjects() {
-    var objectType = createObjectType();
-    var collectionRequest = CollectionRequest.builder()
-        .objectType(objectType)
-        .selectedProperties(List.of(
-            new SelectedProperty(objectType.getProperty("id")),
-            new SelectedProperty(objectType.getProperty("name"))))
+    var collectionRequest = CollectionRequest.builder(MODEL)
+        .objectType("Building")
+        .selectProperty("id")
+        .selectProperty("name")
         .build();
+
     var result = fileRepository.find(collectionRequest);
 
     StepVerifier.create(result)
@@ -86,7 +82,7 @@ class FileRepositoryTest {
         .verifyComplete();
   }
 
-  private static ObjectType createObjectType() {
+  private static ObjectType createBuildingType() {
     return ObjectType.builder()
         .name("Building")
         .property(Attribute.builder()
@@ -98,6 +94,12 @@ class FileRepositoryTest {
             .name("name")
             .type(ScalarTypes.STRING)
             .build())
+        .build();
+  }
+
+  private static Model createModel() {
+    return Model.builder()
+        .objectType(createBuildingType())
         .build();
   }
 }

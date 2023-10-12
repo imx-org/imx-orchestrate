@@ -1,13 +1,12 @@
 package nl.geostandaarden.imx.orchestrate.source.graphql;
 
-import nl.geostandaarden.imx.orchestrate.source.SourceException;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-
-import java.util.Map;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.util.Map;
+import nl.geostandaarden.imx.orchestrate.engine.source.SourceException;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 class GraphQlSourceTypeTest {
 

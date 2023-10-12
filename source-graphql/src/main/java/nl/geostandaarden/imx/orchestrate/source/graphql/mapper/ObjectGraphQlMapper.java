@@ -1,19 +1,17 @@
 package nl.geostandaarden.imx.orchestrate.source.graphql.mapper;
 
+import static org.springframework.util.StringUtils.uncapitalize;
+
 import graphql.ExecutionInput;
 import graphql.language.Argument;
 import graphql.language.AstPrinter;
 import graphql.language.Field;
 import graphql.language.OperationDefinition;
 import graphql.language.SelectionSet;
-
 import java.util.List;
-
 import lombok.RequiredArgsConstructor;
-import nl.geostandaarden.imx.orchestrate.source.ObjectRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
 import nl.geostandaarden.imx.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
-
-import static org.springframework.util.StringUtils.uncapitalize;
 
 @RequiredArgsConstructor
 public class ObjectGraphQlMapper extends AbstractGraphQlMapper<ObjectRequest> {

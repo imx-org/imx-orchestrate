@@ -1,20 +1,20 @@
 package nl.geostandaarden.imx.orchestrate.source.file;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static nl.geostandaarden.imx.orchestrate.source.file.FileUtils.getBaseName;
 import static nl.geostandaarden.imx.orchestrate.source.file.FileUtils.getObjectKey;
 import static nl.geostandaarden.imx.orchestrate.source.file.FileUtils.getObjectProperties;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.SelectedProperty;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 import nl.geostandaarden.imx.orchestrate.model.types.ScalarTypes;
-import nl.geostandaarden.imx.orchestrate.source.SelectedProperty;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -50,9 +50,10 @@ class FileUtilsTest {
   void getObjectProperties_ReturnsProperties_ForSelectedProperties() {
     var objectNode = createObjectNode();
     var objectType = createObjectType();
-    var selectedProperties = List.of(
-        new SelectedProperty(objectType.getProperty("id")),
-        new SelectedProperty(objectType.getProperty("name")));
+
+    var selectedProperties = Set.of(
+        SelectedProperty.forProperty(objectType.getProperty("id")),
+        SelectedProperty.forProperty(objectType.getProperty("name")));
 
     var objectProperties = getObjectProperties(objectNode, selectedProperties);
 

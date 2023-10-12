@@ -25,6 +25,7 @@
         <reactor.version>2022.0.12</reactor.version>
         <slf4j.version>2.0.9</slf4j.version>
         <graphql-java.version>21.1</graphql-java.version>
+        <java-dataloader.version>3.2.0</java-dataloader.version>
         <spring-boot.version>3.1.4</spring-boot.version>
         <spring-graphql.version>1.2.3</spring-graphql.version>
         <micrometer.version>1.11.5</micrometer.version>
@@ -56,7 +57,6 @@
         <module>model</module>
         <module>parser-yaml</module>
         <module>report-aggregate</module>
-        <module>source</module>
         <module>source-file</module>
         <module>source-graphql</module>
     </modules>
@@ -135,6 +135,11 @@
                 <groupId>com.graphql-java</groupId>
                 <artifactId>graphql-java</artifactId>
                 <version>${graphql-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.graphql-java</groupId>
+                <artifactId>java-dataloader</artifactId>
+                <version>${java-dataloader.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>

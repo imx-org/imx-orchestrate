@@ -2,8 +2,8 @@ package nl.geostandaarden.imx.orchestrate.model.combiners;
 
 import java.util.Map;
 import java.util.stream.Collectors;
-import nl.geostandaarden.imx.orchestrate.model.PathResult;
-import nl.geostandaarden.imx.orchestrate.model.PropertyResult;
+import nl.geostandaarden.imx.orchestrate.model.result.PathResult;
+import nl.geostandaarden.imx.orchestrate.model.result.PropertyResult;
 
 public final class JoinCombinerType implements ResultCombinerType {
 

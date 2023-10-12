@@ -1,8 +1,10 @@
 package nl.geostandaarden.imx.orchestrate.gateway;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +21,18 @@ class GatewayIT {
 
   private static final String QUERY = """
         {
-          building(id: "B0001") {
+          construction(id: "B0002") {
             id
             surface
+            hasLineage {
+              orchestratedProperties {
+                property
+                isDerivedFrom {
+                  property
+                  path
+                }
+              }
+            }
           }
         }
       """;
@@ -49,11 +60,15 @@ class GatewayIT {
   void queryReturnsResponse_forGraphQLMediaType() {
     Map<String, Object> adres = (Map<String, Object>) graphQlTester.document(QUERY)
         .execute()
-        .path("building")
+        .path("construction")
         .entity(Map.class)
         .get();
 
     assertThat(adres).isNotNull()
-        .containsEntry("id", "B0001");
+        .containsEntry("id", "B0002")
+        .containsEntry("surface", 195)
+        .extractingByKey("hasLineage", as(InstanceOfAssertFactories.MAP))
+        .extractingByKey("orchestratedProperties", as(InstanceOfAssertFactories.COLLECTION))
+        .hasSize(2);
   }
 }
