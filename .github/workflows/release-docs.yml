@@ -11,6 +11,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - run: gh release create $GITHUB_REF_NAME --generate-notes
+      - name: Create release
+        run: gh release create $GITHUB_REF_NAME --generate-notes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
