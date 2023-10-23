@@ -5,9 +5,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
+import nl.geostandaarden.imx.orchestrate.model.AbstractRelation;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.Property;
-import nl.geostandaarden.imx.orchestrate.model.Relation;
 
 @Getter
 @EqualsAndHashCode
@@ -36,7 +36,7 @@ public final class SelectedProperty {
       throw new OrchestrateException("Attribute properties can not have a nested request.");
     }
 
-    if (property instanceof Relation && nestedRequest == null) {
+    if (property instanceof AbstractRelation && nestedRequest == null) {
       throw new OrchestrateException("Relation properties require a nested request.");
     }
 

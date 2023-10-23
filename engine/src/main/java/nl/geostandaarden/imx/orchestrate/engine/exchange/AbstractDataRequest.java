@@ -7,10 +7,10 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
+import nl.geostandaarden.imx.orchestrate.model.AbstractRelation;
 import nl.geostandaarden.imx.orchestrate.model.Model;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 import nl.geostandaarden.imx.orchestrate.model.ObjectTypeRef;
-import nl.geostandaarden.imx.orchestrate.model.Relation;
 
 @Getter
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
@@ -62,7 +62,7 @@ public abstract class AbstractDataRequest implements DataRequest {
     public B selectObjectProperty(String name, Function<ObjectRequest.Builder, DataRequest> selectionFn) {
       var property = objectType.getProperty(name);
 
-      if (property instanceof Relation relation) {
+      if (property instanceof AbstractRelation relation) {
         var nestedRequest = selectionFn.apply(ObjectRequest.builder(model)
             .objectType(relation.getTarget()));
         selectedProperties.add(SelectedProperty.forProperty(property, nestedRequest));
@@ -75,7 +75,7 @@ public abstract class AbstractDataRequest implements DataRequest {
     public B selectCollectionProperty(String name, Function<CollectionRequest.Builder, DataRequest> selectionFn) {
       var property = objectType.getProperty(name);
 
-      if (property instanceof Relation relation) {
+      if (property instanceof AbstractRelation relation) {
         var nestedRequest = selectionFn.apply(CollectionRequest.builder(model)
             .objectType(relation.getTarget()));
         selectedProperties.add(SelectedProperty.forProperty(property, nestedRequest));
