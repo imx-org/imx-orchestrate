@@ -38,7 +38,10 @@ class OrchestrateEngineIT {
   private static final SpatialExtension SPATIAL_EXTENSION = new SpatialExtension();
   private static ModelMapping MODEL_MAPPING;
   @Mock
-  private DataRepository dataRepositoryMock;
+  private DataRepository adrRepositoryMock;
+
+  @Mock
+  private DataRepository cityRepositoryMock;
 
   private OrchestrateEngine engine;
 
@@ -56,7 +59,8 @@ class OrchestrateEngineIT {
   void beforeEach() {
     engine = OrchestrateEngine.builder()
         .modelMapping(MODEL_MAPPING)
-        .source("bld", () -> dataRepositoryMock)
+        .source("adr", () -> adrRepositoryMock)
+        .source("city", () -> cityRepositoryMock)
         .extension(SPATIAL_EXTENSION)
         .build();
   }
@@ -78,7 +82,17 @@ class OrchestrateEngineIT {
             .build())
         .build();
 
-    when(dataRepositoryMock.findOne(any(ObjectRequest.class)))
+    when(adrRepositoryMock.findOne(any(ObjectRequest.class)))
+        .thenAnswer(invocation -> {
+          var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+
+          return switch (objectType.getName()) {
+            case "Address" -> Mono.just(Map.of("id", "A0001", "houseNumber", 23, "postalCode", "1234AB"));
+            default -> throw new IllegalStateException();
+          };
+        });
+
+    when(cityRepositoryMock.findOne(any(ObjectRequest.class)))
         .thenAnswer(invocation -> {
           var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
 
@@ -86,12 +100,11 @@ class OrchestrateEngineIT {
             case "Building" -> Mono.just(Map.of("id", "B0001", "area", 123, "geometry",
                 Map.of("type", "Polygon", "coordinates",
                     List.of(List.of(List.of(0, 0), List.of(10, 0), List.of(10, 10), List.of(0, 10), List.of(0, 0))))));
-            case "Address" -> Mono.just(Map.of("id", "A0001", "houseNumber", 23, "postalCode", "1234AB"));
             default -> throw new IllegalStateException();
           };
         });
 
-    when(dataRepositoryMock.find(any(CollectionRequest.class)))
+    when(cityRepositoryMock.find(any(CollectionRequest.class)))
         .thenAnswer(invocation -> {
           var objectType = ((CollectionRequest) invocation.getArgument(0)).getObjectType();
 

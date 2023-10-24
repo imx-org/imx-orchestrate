@@ -25,28 +25,12 @@ objectTypes:
         inverseName: consistsOf
         inverseCardinality: 0..*
       hasMainAddress:
-        target: Address
+        target: adr:Address
         cardinality: 1
         inverseName: isMainAddressOf
         inverseCardinality: 1
       hasSubAddress:
-        target: Address
+        target: adr:Address
         cardinality: 0..*
         inverseName: isSubAddressOf
         inverseCardinality: 1
-
-  Address:
-    attributes:
-      id:
-        type: String
-        identifier: true
-        cardinality: 1
-      houseNumber:
-        type: Integer
-        cardinality: 1
-      houseNumberAddition:
-        type: String
-        cardinality: 0..1
-      postalCode:
-        type: String
-        cardinality: 0..1

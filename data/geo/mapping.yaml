@@ -2,12 +2,14 @@ targetModel:
   location: ../data/geo/model.yaml
 
 sourceModels:
-  bld:
-    location: ../data/bld/model.yaml
+  adr:
+    location: ../data/adr/model.yaml
+  city:
+    location: ../data/city/model.yaml
 
 objectTypeMappings:
   Construction:
-    sourceRoot: bld:Building
+    sourceRoot: city:Building
     propertyMappings:
       id:
         pathMappings:
@@ -26,7 +28,7 @@ objectTypeMappings:
           type: merge
 
   Address:
-    sourceRoot: bld:Address
+    sourceRoot: adr:Address
     propertyMappings:
       id:
         pathMappings:
@@ -43,7 +45,7 @@ objectTypeMappings:
       # TODO: auto-create inverse mappings
       isAddressOf:
         pathMappings:
-          - path: isMainAddressOf
-          - path: isSubAddressOf
+          - path: isMainAddressOf/isPartOf
+          - path: isSubAddressOf/isPartOf
         combiner:
           type: coalesce

@@ -1,7 +1,11 @@
 orchestrate:
   mapping: ../data/geo/mapping.yaml
   sources:
-    bld:
+    adr:
       type: file
       options:
-        dataPath: ../data/bld
+        dataPath: ../data/adr
+    city:
+      type: file
+      options:
+        dataPath: ../data/city
