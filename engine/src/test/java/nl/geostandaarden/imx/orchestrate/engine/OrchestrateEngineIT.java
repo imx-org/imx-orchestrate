@@ -36,7 +36,9 @@ import reactor.test.StepVerifier;
 class OrchestrateEngineIT {
 
   private static final SpatialExtension SPATIAL_EXTENSION = new SpatialExtension();
+
   private static ModelMapping MODEL_MAPPING;
+
   @Mock
   private DataRepository adrRepositoryMock;
 
