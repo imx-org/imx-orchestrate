@@ -35,10 +35,12 @@ public final class OrchestrateEngine {
   }
 
   public Mono<ObjectResult> fetch(ObjectRequest request) {
-    return fetchPlanner.fetch(request);
+    return fetchPlanner.plan(request)
+        .execute();
   }
 
   public Mono<CollectionResult> fetch(CollectionRequest request) {
-    return fetchPlanner.fetch(request);
+    return fetchPlanner.plan(request)
+        .execute();
   }
 }
