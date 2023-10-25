@@ -35,7 +35,6 @@ import nl.geostandaarden.imx.orchestrate.model.Property;
 import nl.geostandaarden.imx.orchestrate.model.PropertyMapping;
 import nl.geostandaarden.imx.orchestrate.model.Relation;
 import nl.geostandaarden.imx.orchestrate.model.filters.FilterDefinition;
-import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 public final class FetchPlanner {
@@ -44,7 +43,7 @@ public final class FetchPlanner {
 
   private final Map<String, Source> sources;
 
-  public Mono<ObjectResult> fetch(ObjectRequest request) {
+  public FetchPlan<ObjectResult> plan(ObjectRequest request) {
     var typeMapping = modelMapping.getObjectTypeMapping(request.getObjectType());
     var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
 
@@ -54,13 +53,13 @@ public final class FetchPlanner {
 
     var input = FetchInput.newInput(request.getObjectKey());
 
-    return fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, false, null)
+    return () -> fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, false, null)
         .execute(input)
         .singleOrEmpty()
         .map(result -> resultMapper.map(result, request));
   }
 
-  public Mono<CollectionResult> fetch(CollectionRequest request) {
+  public FetchPlan<CollectionResult> plan(CollectionRequest request) {
     var typeMapping = modelMapping.getObjectTypeMapping(request.getObjectType());
     var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
 
@@ -70,7 +69,7 @@ public final class FetchPlanner {
 
     var input = FetchInput.newInput(Map.of());
 
-    return fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, true, null)
+    return () -> fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, true, null)
         .execute(input)
         .map(result -> resultMapper.map(result, request))
         .collectList()
@@ -79,7 +78,7 @@ public final class FetchPlanner {
             .build());
   }
 
-  public Set<Path> resolveSourcePaths(DataRequest request, ObjectTypeMapping typeMapping, Path basePath) {
+  private Set<Path> resolveSourcePaths(DataRequest request, ObjectTypeMapping typeMapping, Path basePath) {
     return request.getSelectedProperties()
         .stream()
         .flatMap(selectedProperty -> resolveSourcePaths(selectedProperty,
