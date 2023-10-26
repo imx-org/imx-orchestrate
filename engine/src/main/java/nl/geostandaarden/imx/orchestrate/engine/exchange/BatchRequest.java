@@ -16,8 +16,8 @@ public final class BatchRequest extends AbstractDataRequest {
 
   private final Collection<Map<String, Object>> objectKeys;
 
-  private BatchRequest(Model model, ObjectType objectType, Set<SelectedProperty> selectedProperties, Collection<Map<String, Object>> objectKeys) {
-    super(model, objectType, selectedProperties);
+  private BatchRequest(ObjectType objectType, Set<SelectedProperty> selectedProperties, Collection<Map<String, Object>> objectKeys) {
+    super(objectType, selectedProperties);
     this.objectKeys = objectKeys;
   }
 
@@ -50,7 +50,7 @@ public final class BatchRequest extends AbstractDataRequest {
     }
 
     public BatchRequest build() {
-      return new BatchRequest(model, objectType, unmodifiableSet(selectedProperties), unmodifiableCollection(objectKeys));
+      return new BatchRequest(objectType, unmodifiableSet(selectedProperties), unmodifiableCollection(objectKeys));
     }
 
     @Override
