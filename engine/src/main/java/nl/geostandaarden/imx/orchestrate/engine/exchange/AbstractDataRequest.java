@@ -16,8 +16,6 @@ import nl.geostandaarden.imx.orchestrate.model.ObjectTypeRef;
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class AbstractDataRequest implements DataRequest {
 
-  protected final Model model;
-
   protected final ObjectType objectType;
 
   protected final Set<SelectedProperty> selectedProperties;
