@@ -34,7 +34,7 @@
         <spring-boot.version>3.1.5</spring-boot.version>
         <spring-graphql.version>1.2.3</spring-graphql.version>
         <micrometer.version>1.11.5</micrometer.version>
-        <commons-text.version>1.10.0</commons-text.version>
+        <commons-text.version>1.11.0</commons-text.version>
         <jts.version>1.19.0</jts.version>
         <lombok.version>1.18.30</lombok.version>
         <jackson.version>2.15.3</jackson.version>
