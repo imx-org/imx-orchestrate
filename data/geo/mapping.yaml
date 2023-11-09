@@ -42,6 +42,22 @@ objectTypeMappings:
       postalCode:
         pathMappings:
           path: postalCode
+      fullAddress:
+        pathMappings:
+          - path: postalCode
+          - path: houseNumber
+            map:
+              type: prepend
+              options:
+                prefix: ' '
+          - path: houseNumberAddition
+            map:
+              type: prepend
+              options:
+                prefix: ' '
+        combiner:
+          type: join
+
       # TODO: auto-create inverse mappings
       isAddressOf:
         pathMappings:

@@ -1,16 +1,15 @@
 package nl.geostandaarden.imx.orchestrate.engine.fetch;
 
-import static java.util.Collections.emptySet;
 import static nl.geostandaarden.imx.orchestrate.engine.fetch.FetchUtils.cast;
 import static nl.geostandaarden.imx.orchestrate.model.ModelUtils.noopCombiner;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import lombok.Builder;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionResult;
@@ -27,11 +26,14 @@ import nl.geostandaarden.imx.orchestrate.model.combiners.CoalesceCombinerType;
 import nl.geostandaarden.imx.orchestrate.model.combiners.NoopCombinerType;
 import nl.geostandaarden.imx.orchestrate.model.lineage.ObjectLineage;
 import nl.geostandaarden.imx.orchestrate.model.lineage.ObjectReference;
-import nl.geostandaarden.imx.orchestrate.model.lineage.OrchestratedProperty;
+import nl.geostandaarden.imx.orchestrate.model.lineage.OrchestratedDataElement;
+import nl.geostandaarden.imx.orchestrate.model.lineage.PathExecution;
+import nl.geostandaarden.imx.orchestrate.model.lineage.PathMappingExecution;
 import nl.geostandaarden.imx.orchestrate.model.lineage.PropertyMappingExecution;
-import nl.geostandaarden.imx.orchestrate.model.lineage.SourceProperty;
+import nl.geostandaarden.imx.orchestrate.model.lineage.SourceDataElement;
+import nl.geostandaarden.imx.orchestrate.model.result.PathMappingResult;
 import nl.geostandaarden.imx.orchestrate.model.result.PathResult;
-import nl.geostandaarden.imx.orchestrate.model.result.PropertyResult;
+import nl.geostandaarden.imx.orchestrate.model.result.PropertyMappingResult;
 
 @Builder
 public final class ObjectResultMapper {
@@ -51,7 +53,8 @@ public final class ObjectResultMapper {
           }
 
           var property = targetType.getProperty(selectedProperty.getName());
-          var propertyResult = mapProperty(objectResult, property, targetMapping.getPropertyMapping(property));
+          var propertyMapping = targetMapping.getPropertyMapping(property);
+          var propertyResult = mapProperty(objectResult, property, propertyMapping);
 
           if (propertyResult == null) {
             return;
@@ -77,17 +80,15 @@ public final class ObjectResultMapper {
           if (propertyValue != null) {
             properties.put(property.getName(), propertyValue);
 
-            lineageBuilder.orchestratedProperty(OrchestratedProperty.builder()
+            lineageBuilder.orchestratedDataElement(OrchestratedDataElement.builder()
                 .subject(ObjectReference.builder()
                     .objectType(targetType.getName())
                     .objectKey(objectResult.getKey())
                     .build())
                 .property(property.getName())
                 .value(lineageValue)
-                .isDerivedFrom(propertyResult.getSourceProperties())
-                .wasGeneratedBy(PropertyMappingExecution.builder()
-                    .used(propertyResult.getPropertyMapping())
-                    .build())
+                .isDerivedFrom(propertyResult.getSourceDataElements())
+                .wasGeneratedBy(propertyResult.getPropertyMappingExecution())
                 .build());
           }
         });
@@ -134,21 +135,11 @@ public final class ObjectResultMapper {
     return null;
   }
 
-  private PropertyResult mapProperty(ObjectResult objectResult, Property property, PropertyMapping propertyMapping) {
-    var pathResults = propertyMapping.getPathMappings()
-        .stream()
-        .flatMap(pathMapping -> pathResult(objectResult, property, pathMapping)
-            .map(pathResult -> pathResult.withPathMapping(nl.geostandaarden.imx.orchestrate.model.lineage.PathMapping.builder()
-                .addPath(nl.geostandaarden.imx.orchestrate.model.lineage.Path.builder()
-                    .startNode(objectResult.getObjectReference())
-                    .segments(pathMapping.getPath()
-                        .getSegments())
-                    .references(Optional.ofNullable(pathResult.getSourceProperty())
-                        .map(Set::of)
-                        .orElse(emptySet()))
-                    .build())
-                .build())))
-        .toList();
+  private PropertyMappingResult mapProperty(ObjectResult objectResult, Property property, PropertyMapping propertyMapping) {
+    var pathMappingResults = propertyMapping.getPathMappings()
+            .stream()
+            .map(pathMapping -> pathMappingResult(objectResult, property, pathMapping))
+            .toList();
 
     var combiner = propertyMapping.getCombiner();
 
@@ -161,41 +152,36 @@ public final class ObjectResultMapper {
           : new CoalesceCombinerType().create(Map.of());
     }
 
-    var propertyMappingExecution = nl.geostandaarden.imx.orchestrate.model.lineage.PropertyMapping.builder()
-        .pathMapping(pathResults.stream()
-            .map(PathResult::getPathMapping)
-            .collect(Collectors.toSet()))
+    PropertyMappingExecution propertyMappingExecution = PropertyMappingExecution.builder()
+        .used(propertyMapping)
+        .wasInformedBy(pathMappingResults.stream()
+            .map(PathMappingResult::getPathMappingExecution)
+            .toList())
         .build();
+    
+    var pathResults = pathMappingResults.stream()
+            .map(PathMappingResult::getPathResults)
+            .flatMap(List::stream)
+            .toList();
 
     return combiner.apply(pathResults)
-        .withPropertyMapping(propertyMappingExecution);
+        .withPropertyMappingExecution(propertyMappingExecution);
   }
+  
+  private PathMappingResult pathMappingResult(ObjectResult objectResult, Property property, PathMapping pathMapping) {
+    var pathResults = pathResult(objectResult, pathMapping.getPath(), pathMapping.getPath())
+        .flatMap(pathResult -> resultMapPathResult(pathResult, objectResult, property, pathMapping))
+        .toList();
 
-  private Stream<PathResult> pathResult(ObjectResult objectResult, Property property, PathMapping pathMapping) {
-    var pathResults = pathResult(objectResult, pathMapping.getPath(), pathMapping.getPath());
-
-    return pathResults.flatMap(pathResult -> {
-      // TODO: Lazy fetching & multi cardinality
-      var nextedPathResult = pathMapping.getNextPathMappings()
-          .stream()
-          .flatMap(nextPathMapping -> {
-            var ifMatch = nextPathMapping.getIfMatch();
-
-            if (ifMatch != null && ifMatch.test(pathResult.getValue())) {
-              return pathResult(objectResult, property, nextPathMapping);
-            }
-
-            return Stream.of(pathResult);
-          })
-          .findFirst()
-          .orElse(pathResult);
-
-      var mappedPathResult = pathMapping.getResultMappers()
-          .stream()
-          .reduce(nextedPathResult, (acc, resultMapper) -> resultMapper.apply(acc, property), noopCombiner());
-
-      return Stream.of(mappedPathResult);
-    });
+    return PathMappingResult.builder()
+        .pathResults(pathResults)
+        .pathMappingExecution(PathMappingExecution.builder()
+            .used(pathMapping)
+            .wasInformedBy(pathResults.stream()
+                .map(PathResult::getPathExecution)
+                .toList())
+            .build())
+        .build();
   }
 
   private Stream<PathResult> pathResult(ObjectResult objectResult, Path path, Path fullPath) {
@@ -204,14 +190,30 @@ public final class ObjectResultMapper {
     if (path.isLeaf()) {
       var propertyValue = objectResult.getProperty(currentSegment);
 
+      Set<SourceDataElement> sourceDataElements;
+      if (propertyValue instanceof List<?> propertyValues) {
+        sourceDataElements = propertyValues.stream()
+                .map(value -> SourceDataElement.builder()
+                        .subject(objectResult.getObjectReference())
+                        .property(currentSegment)
+                        .value(value)
+                        .build())
+                .collect(Collectors.toUnmodifiableSet());
+      } else {
+        sourceDataElements = Set.of(SourceDataElement.builder()
+                .subject(objectResult.getObjectReference())
+                .property(currentSegment)
+                .value(propertyValue)
+                .build());
+      }
+
       var pathResult = PathResult.builder()
           .value(propertyValue)
-          .sourceProperty(SourceProperty.builder()
-              .subject(objectResult.getObjectReference())
-              .property(currentSegment)
-              .value(propertyValue)
-              .path(fullPath.getSegments())
-              .build())
+          .pathExecution(PathExecution.builder()
+                  .used(path)
+                  .startNode(objectResult.getObjectReference())
+                  .references(sourceDataElements)
+                  .build())
           .build();
 
       return Stream.of(pathResult);
@@ -240,5 +242,32 @@ public final class ObjectResultMapper {
     }
 
     throw new OrchestrateException("Could not map path: " + path);
+  }
+
+  private Stream<PathResult> resultMapPathResult(PathResult pathResult, ObjectResult objectResult, Property property, PathMapping pathMapping) {
+    // TODO: Lazy fetching & multi cardinality
+    var nextedPathResult = pathMapping.getNextPathMappings()
+            .stream()
+            .flatMap(nextPathMapping -> nextPathResults(pathResult, objectResult, property, nextPathMapping))
+            .findFirst()
+            .orElse(pathResult);
+
+    var mappedPathResult = pathMapping.getResultMappers()
+            .stream()
+            .reduce(nextedPathResult, (acc, resultMapper) -> resultMapper.apply(acc, property), noopCombiner());
+
+    return Stream.of(mappedPathResult);
+
+  }
+
+  private Stream<PathResult> nextPathResults(PathResult previousPathResult, ObjectResult objectResult, Property property, PathMapping nextPathMapping) {
+    var ifMatch = nextPathMapping.getIfMatch();
+
+    if (ifMatch != null && ifMatch.test(previousPathResult.getValue())) {
+      return pathMappingResult(objectResult, property, nextPathMapping)
+              .getPathResults().stream();
+    }
+
+    return Stream.of(previousPathResult);
   }
 }

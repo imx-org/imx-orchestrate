@@ -13,8 +13,8 @@ public final class CollectionRequest extends AbstractDataRequest {
 
   private final FilterExpression filter;
 
-  private CollectionRequest(Model model, ObjectType objectType, Set<SelectedProperty> selectedProperties, FilterExpression filter) {
-    super(model, objectType, selectedProperties);
+  private CollectionRequest(ObjectType objectType, Set<SelectedProperty> selectedProperties, FilterExpression filter) {
+    super(objectType, selectedProperties);
     this.filter = filter;
   }
 
@@ -42,7 +42,7 @@ public final class CollectionRequest extends AbstractDataRequest {
     }
 
     public CollectionRequest build() {
-      return new CollectionRequest(model, objectType, unmodifiableSet(selectedProperties), filter);
+      return new CollectionRequest(objectType, unmodifiableSet(selectedProperties), filter);
     }
 
     @Override

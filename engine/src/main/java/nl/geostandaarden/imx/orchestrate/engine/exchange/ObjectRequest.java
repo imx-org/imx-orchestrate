@@ -13,8 +13,8 @@ public final class ObjectRequest extends AbstractDataRequest {
 
   private final Map<String, Object> objectKey;
 
-  private ObjectRequest(Model model, ObjectType objectType, Set<SelectedProperty> selectedProperties, Map<String, Object> objectKey) {
-    super(model, objectType, selectedProperties);
+  private ObjectRequest(ObjectType objectType, Set<SelectedProperty> selectedProperties, Map<String, Object> objectKey) {
+    super(objectType, selectedProperties);
     this.objectKey = objectKey;
   }
 
@@ -42,7 +42,7 @@ public final class ObjectRequest extends AbstractDataRequest {
     }
 
     public ObjectRequest build() {
-      return new ObjectRequest(model, objectType, unmodifiableSet(selectedProperties), objectKey);
+      return new ObjectRequest(objectType, unmodifiableSet(selectedProperties), objectKey);
     }
 
     @Override

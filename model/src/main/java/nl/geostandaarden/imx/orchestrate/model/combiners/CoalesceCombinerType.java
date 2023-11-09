@@ -1,12 +1,9 @@
 package nl.geostandaarden.imx.orchestrate.model.combiners;
 
-import static java.util.Collections.emptySet;
-
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+
 import nl.geostandaarden.imx.orchestrate.model.result.PathResult;
-import nl.geostandaarden.imx.orchestrate.model.result.PropertyResult;
+import nl.geostandaarden.imx.orchestrate.model.result.PropertyMappingResult;
 
 public final class CoalesceCombinerType implements ResultCombinerType {
 
@@ -19,13 +16,12 @@ public final class CoalesceCombinerType implements ResultCombinerType {
   public ResultCombiner create(Map<String, Object> options) {
     return pathResults -> pathResults.stream()
         .filter(PathResult::isNotNull)
-        .map(pathResult -> PropertyResult.builder()
+        .map(pathResult -> PropertyMappingResult.builder()
             .value(pathResult.getValue())
-            .sourceProperties(Optional.ofNullable(pathResult.getSourceProperty())
-                .map(Set::of)
-                .orElse(emptySet()))
+            .sourceDataElements(pathResult.getPathExecution()
+                .getReferences())
             .build())
         .findFirst()
-        .orElse(PropertyResult.empty());
+        .orElse(PropertyMappingResult.empty());
   }
 }

@@ -1,9 +1,12 @@
 package nl.geostandaarden.imx.orchestrate.model.combiners;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import nl.geostandaarden.imx.orchestrate.model.lineage.PathExecution;
 import nl.geostandaarden.imx.orchestrate.model.result.PathResult;
-import nl.geostandaarden.imx.orchestrate.model.result.PropertyResult;
+import nl.geostandaarden.imx.orchestrate.model.result.PropertyMappingResult;
 
 public final class SumCombinerType implements ResultCombinerType {
 
@@ -21,10 +24,12 @@ public final class SumCombinerType implements ResultCombinerType {
           .map(Integer.class::cast)
           .mapToInt(Integer::intValue).sum();
 
-      return PropertyResult.builder()
+      return PropertyMappingResult.builder()
           .value(sumValue)
-          .sourceProperties(pathResults.stream()
-              .map(PathResult::getSourceProperty)
+          .sourceDataElements(pathResults.stream()
+              .map(PathResult::getPathExecution)
+              .map(PathExecution::getReferences)
+              .flatMap(Set::stream)
               .collect(Collectors.toSet()))
           .build();
     };

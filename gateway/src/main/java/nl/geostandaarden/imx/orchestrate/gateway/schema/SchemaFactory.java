@@ -1,16 +1,5 @@
 package nl.geostandaarden.imx.orchestrate.gateway.schema;
 
-import static graphql.language.FieldDefinition.newFieldDefinition;
-import static graphql.language.ObjectTypeDefinition.newObjectTypeDefinition;
-import static graphql.schema.FieldCoordinates.coordinates;
-import static graphql.schema.GraphQLCodeRegistry.newCodeRegistry;
-import static graphql.schema.SchemaTransformer.transformSchema;
-import static graphql.schema.idl.RuntimeWiring.newRuntimeWiring;
-import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.applyCardinality;
-import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.requiredListType;
-import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.requiredType;
-import static org.apache.commons.lang3.StringUtils.uncapitalize;
-
 import graphql.language.InputObjectTypeDefinition;
 import graphql.language.InputValueDefinition;
 import graphql.language.ObjectTypeDefinition;
@@ -21,8 +10,6 @@ import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
-import java.util.List;
-import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateEngine;
@@ -35,15 +22,31 @@ import nl.geostandaarden.imx.orchestrate.model.AbstractRelation;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
+import nl.geostandaarden.imx.orchestrate.model.Path;
+import nl.geostandaarden.imx.orchestrate.model.PathMapping;
 import nl.geostandaarden.imx.orchestrate.model.Property;
+import nl.geostandaarden.imx.orchestrate.model.PropertyMapping;
 import nl.geostandaarden.imx.orchestrate.model.lineage.ObjectLineage;
 import nl.geostandaarden.imx.orchestrate.model.lineage.ObjectReference;
-import nl.geostandaarden.imx.orchestrate.model.lineage.OrchestratedProperty;
-import nl.geostandaarden.imx.orchestrate.model.lineage.Path;
-import nl.geostandaarden.imx.orchestrate.model.lineage.PathMapping;
-import nl.geostandaarden.imx.orchestrate.model.lineage.PropertyMapping;
+import nl.geostandaarden.imx.orchestrate.model.lineage.OrchestratedDataElement;
+import nl.geostandaarden.imx.orchestrate.model.lineage.PathExecution;
+import nl.geostandaarden.imx.orchestrate.model.lineage.PathMappingExecution;
 import nl.geostandaarden.imx.orchestrate.model.lineage.PropertyMappingExecution;
-import nl.geostandaarden.imx.orchestrate.model.lineage.SourceProperty;
+import nl.geostandaarden.imx.orchestrate.model.lineage.SourceDataElement;
+
+import java.util.List;
+import java.util.function.UnaryOperator;
+
+import static graphql.language.FieldDefinition.newFieldDefinition;
+import static graphql.language.ObjectTypeDefinition.newObjectTypeDefinition;
+import static graphql.schema.FieldCoordinates.coordinates;
+import static graphql.schema.GraphQLCodeRegistry.newCodeRegistry;
+import static graphql.schema.SchemaTransformer.transformSchema;
+import static graphql.schema.idl.RuntimeWiring.newRuntimeWiring;
+import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.applyCardinality;
+import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.requiredListType;
+import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.requiredType;
+import static org.apache.commons.lang3.StringUtils.uncapitalize;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SchemaFactory {
@@ -167,13 +170,13 @@ public final class SchemaFactory {
     typeDefinitionRegistry.add(newObjectTypeDefinition()
         .name(lineageRenamer.apply(ObjectLineage.class.getSimpleName()))
         .fieldDefinition(newFieldDefinition()
-            .name(lineageRenamer.apply("orchestratedProperties"))
-            .type(requiredListType(lineageRenamer.apply(OrchestratedProperty.class.getSimpleName())))
+            .name(lineageRenamer.apply("orchestratedDataElements"))
+            .type(requiredListType(lineageRenamer.apply(OrchestratedDataElement.class.getSimpleName())))
             .build())
         .build());
 
     typeDefinitionRegistry.add(newObjectTypeDefinition()
-        .name(lineageRenamer.apply(OrchestratedProperty.class.getSimpleName()))
+        .name(lineageRenamer.apply(OrchestratedDataElement.class.getSimpleName()))
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("subject"))
             .type(requiredType(lineageRenamer.apply(ObjectReference.class.getSimpleName())))
@@ -192,7 +195,7 @@ public final class SchemaFactory {
             .build())
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("isDerivedFrom"))
-            .type(requiredListType(lineageRenamer.apply(SourceProperty.class.getSimpleName())))
+            .type(requiredListType(lineageRenamer.apply(SourceDataElement.class.getSimpleName())))
             .build())
         .build());
 
@@ -200,44 +203,68 @@ public final class SchemaFactory {
         .name(lineageRenamer.apply(PropertyMappingExecution.class.getSimpleName()))
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("used"))
-            .type(requiredType(lineageRenamer.apply(PropertyMapping.class.getSimpleName())))
+            .type(requiredType(PropertyMapping.class.getSimpleName()))
             .build())
-        .build());
-
-    typeDefinitionRegistry.add(newObjectTypeDefinition()
-        .name(lineageRenamer.apply(PropertyMapping.class.getSimpleName()))
         .fieldDefinition(newFieldDefinition()
-            .name(lineageRenamer.apply("pathMapping"))
-            .type(requiredListType(lineageRenamer.apply(PathMapping.class.getSimpleName())))
+            .name(lineageRenamer.apply("wasInformedBy"))
+            .type(requiredListType(lineageRenamer.apply(PathMappingExecution.class.getSimpleName())))
             .build())
         .build());
 
     typeDefinitionRegistry.add(newObjectTypeDefinition()
-        .name(lineageRenamer.apply(PathMapping.class.getSimpleName()))
+        .name(PropertyMapping.class.getSimpleName())
         .fieldDefinition(newFieldDefinition()
-            .name(lineageRenamer.apply("path"))
-            .type(requiredListType(lineageRenamer.apply(Path.class.getSimpleName())))
+            .name("pathMappings")
+            .type(requiredListType(PathMapping.class.getSimpleName()))
             .build())
         .build());
 
     typeDefinitionRegistry.add(newObjectTypeDefinition()
-        .name(lineageRenamer.apply(Path.class.getSimpleName()))
+        .name(PathMapping.class.getSimpleName())
+        .fieldDefinition(newFieldDefinition()
+            .name("path")
+            .type(requiredType(Path.class.getSimpleName()))
+            .build())
+        .build());
+
+    typeDefinitionRegistry.add(newObjectTypeDefinition()
+        .name(Path.class.getSimpleName())
+        .fieldDefinition(newFieldDefinition()
+            .name("segments")
+            .type(requiredListType("String"))
+            .build())
+        .build());
+
+    typeDefinitionRegistry.add(newObjectTypeDefinition()
+        .name(lineageRenamer.apply(PathMappingExecution.class.getSimpleName()))
+        .fieldDefinition(newFieldDefinition()
+            .name(lineageRenamer.apply("used"))
+            .type(requiredType(PathMapping.class.getSimpleName()))
+            .build())
+        .fieldDefinition(newFieldDefinition()
+            .name(lineageRenamer.apply("wasInformedBy"))
+            .type(requiredListType(lineageRenamer.apply(PathExecution.class.getSimpleName())))
+            .build())
+        .build());
+
+    typeDefinitionRegistry.add(newObjectTypeDefinition()
+        .name(lineageRenamer.apply(PathExecution.class.getSimpleName()))
+        .fieldDefinition(newFieldDefinition()
+            .name(lineageRenamer.apply("used"))
+            .type(requiredType(Path.class.getSimpleName()))
+            .build())
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("startNode"))
             .type(requiredType(lineageRenamer.apply(ObjectReference.class.getSimpleName())))
             .build())
         .fieldDefinition(newFieldDefinition()
-            .name(lineageRenamer.apply("segments"))
-            .type(requiredListType("String"))
-            .build())
-        .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("references"))
-            .type(requiredListType(lineageRenamer.apply(SourceProperty.class.getSimpleName())))
+            .type(requiredListType(lineageRenamer.apply(SourceDataElement.class.getSimpleName())))
             .build())
-        .build());
+    .build());
 
     typeDefinitionRegistry.add(newObjectTypeDefinition()
-        .name(lineageRenamer.apply(SourceProperty.class.getSimpleName()))
+        .name(lineageRenamer.apply(SourceDataElement.class.getSimpleName()))
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("subject"))
             .type(requiredType(lineageRenamer.apply(ObjectReference.class.getSimpleName())))
@@ -245,10 +272,6 @@ public final class SchemaFactory {
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("property"))
             .type(requiredType("String"))
-            .build())
-        .fieldDefinition(newFieldDefinition()
-            .name(lineageRenamer.apply("path"))
-            .type(requiredListType("String"))
             .build())
         .fieldDefinition(newFieldDefinition()
             .name(lineageRenamer.apply("value"))
@@ -291,9 +314,9 @@ public final class SchemaFactory {
     var valueFetcher = new PropertyValueFetcher(lineageRenamer);
     var objectKeyFetcher = new ObjectKeyFetcher(lineageRenamer);
 
-    codeRegistryBuilder.dataFetcher(coordinates(lineageRenamer.apply(OrchestratedProperty.class.getSimpleName()),
+    codeRegistryBuilder.dataFetcher(coordinates(lineageRenamer.apply(OrchestratedDataElement.class.getSimpleName()),
             lineageRenamer.apply("value")), valueFetcher)
-        .dataFetcher(coordinates(lineageRenamer.apply(SourceProperty.class.getSimpleName()),
+        .dataFetcher(coordinates(lineageRenamer.apply(SourceDataElement.class.getSimpleName()),
             lineageRenamer.apply("value")), valueFetcher)
         .dataFetcher(coordinates(lineageRenamer.apply(ObjectReference.class.getSimpleName()),
             lineageRenamer.apply("objectKey")), objectKeyFetcher);

@@ -1,18 +1,20 @@
 package nl.geostandaarden.imx.orchestrate.model.lineage;
 
-import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder(toBuilder = true)
-public final class SourceProperty implements PropertyLineage {
+public final class OrchestratedDataElement implements DataElement {
 
   private final ObjectReference subject;
 
   private final String property;
 
-  private final List<String> path;
-
   private final Object value;
+
+  private final PropertyMappingExecution wasGeneratedBy;
+
+  private final Set<SourceDataElement> isDerivedFrom;
 }

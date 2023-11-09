@@ -1,10 +1,13 @@
 package nl.geostandaarden.imx.orchestrate.model.combiners;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import nl.geostandaarden.imx.orchestrate.model.lineage.PathExecution;
 import nl.geostandaarden.imx.orchestrate.model.result.PathResult;
-import nl.geostandaarden.imx.orchestrate.model.result.PropertyResult;
+import nl.geostandaarden.imx.orchestrate.model.result.PropertyMappingResult;
 
 public final class MergeCombinerType implements ResultCombinerType {
 
@@ -30,14 +33,16 @@ public final class MergeCombinerType implements ResultCombinerType {
           })
           .toList();
 
-      var sourceProperties = pathResults.stream()
+      var sourceDataElements = pathResults.stream()
           .filter(PathResult::isNotNull)
-          .map(PathResult::getSourceProperty)
+          .map(PathResult::getPathExecution)
+          .map(PathExecution::getReferences)
+          .flatMap(Set::stream)
           .collect(Collectors.toSet());
 
-      return PropertyResult.builder()
+      return PropertyMappingResult.builder()
           .value(value)
-          .sourceProperties(sourceProperties)
+          .sourceDataElements(sourceDataElements)
           .build();
     };
   }

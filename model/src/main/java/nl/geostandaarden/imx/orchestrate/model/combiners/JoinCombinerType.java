@@ -1,9 +1,12 @@
 package nl.geostandaarden.imx.orchestrate.model.combiners;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import nl.geostandaarden.imx.orchestrate.model.lineage.PathExecution;
 import nl.geostandaarden.imx.orchestrate.model.result.PathResult;
-import nl.geostandaarden.imx.orchestrate.model.result.PropertyResult;
+import nl.geostandaarden.imx.orchestrate.model.result.PropertyMappingResult;
 
 public final class JoinCombinerType implements ResultCombinerType {
 
@@ -21,7 +24,7 @@ public final class JoinCombinerType implements ResultCombinerType {
           .toList();
 
       if (nonEmptyResults.isEmpty()) {
-        return PropertyResult.empty();
+        return PropertyMappingResult.empty();
       }
 
       var value = nonEmptyResults.stream()
@@ -29,13 +32,15 @@ public final class JoinCombinerType implements ResultCombinerType {
           .map(String::valueOf)
           .collect(Collectors.joining());
 
-      var sourceProperties = nonEmptyResults.stream()
-          .map(PathResult::getSourceProperty)
+      var sourceDataElements = nonEmptyResults.stream()
+          .map(PathResult::getPathExecution)
+          .map(PathExecution::getReferences)
+          .flatMap(Set::stream)
           .collect(Collectors.toSet());
 
-      return PropertyResult.builder()
+      return PropertyMappingResult.builder()
           .value(value)
-          .sourceProperties(sourceProperties)
+          .sourceDataElements(sourceDataElements)
           .build();
     };
   }
