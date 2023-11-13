@@ -74,22 +74,24 @@ public final class ObjectResultMapper {
 
           if (property instanceof AbstractRelation) {
             propertyValue = mapRelation(propertyResult.getValue(), selectedProperty.getNestedRequest());
-            lineageValue = propertyValue;
+            lineageValue = getRelationLineageValue(propertyValue);
           }
 
           if (propertyValue != null) {
             properties.put(property.getName(), propertyValue);
 
-            lineageBuilder.orchestratedDataElement(OrchestratedDataElement.builder()
+            var lineageValues = lineageValue instanceof List<?> values ? values : List.of(lineageValue);
+
+            lineageValues.forEach(value -> lineageBuilder.orchestratedDataElement(OrchestratedDataElement.builder()
                 .subject(ObjectReference.builder()
                     .objectType(targetType.getName())
                     .objectKey(objectResult.getKey())
                     .build())
                 .property(property.getName())
-                .value(lineageValue)
+                .value(value)
                 .isDerivedFrom(propertyResult.getSourceDataElements())
                 .wasGeneratedBy(propertyResult.getPropertyMappingExecution())
-                .build());
+                .build()));
           }
         });
 
@@ -98,6 +100,20 @@ public final class ObjectResultMapper {
         .properties(properties)
         .lineage(lineageBuilder.build())
         .build();
+  }
+
+  private Object getRelationLineageValue(Object relationValue) {
+    var values =
+        relationValue instanceof List<?> relationValues ? relationValues : List.of(relationValue);
+
+    return values.stream()
+        .map(value -> {
+          if (value instanceof ObjectResult objectResult) {
+            return objectReferenceFromResult(objectResult);
+          }
+          throw new OrchestrateException(String.format("Expected object result but was %s", relationValue));
+        })
+        .toList();
   }
 
   private Object mapAttribute(Attribute attribute, Object value) {
@@ -190,22 +206,24 @@ public final class ObjectResultMapper {
     if (path.isLeaf()) {
       var propertyValue = objectResult.getProperty(currentSegment);
 
-      Set<SourceDataElement> sourceDataElements;
-      if (propertyValue instanceof List<?> propertyValues) {
-        sourceDataElements = propertyValues.stream()
-                .map(value -> SourceDataElement.builder()
-                        .subject(objectResult.getObjectReference())
-                        .property(currentSegment)
-                        .value(value)
-                        .build())
-                .collect(Collectors.toUnmodifiableSet());
+      List<?> sourceDataValues;
+
+      if (propertyValue == null) {
+        sourceDataValues = List.of();
+      } else if (propertyValue instanceof List<?> propertyValues) {
+        sourceDataValues = propertyValues;
       } else {
-        sourceDataElements = Set.of(SourceDataElement.builder()
-                .subject(objectResult.getObjectReference())
-                .property(currentSegment)
-                .value(propertyValue)
-                .build());
+        sourceDataValues = List.of(propertyValue);
       }
+
+      Set<SourceDataElement> sourceDataElements = sourceDataValues.stream()
+          .map(value -> SourceDataElement.builder()
+              .subject(objectResult.getObjectReference())
+              .property(currentSegment)
+              .value(value instanceof ObjectResult objectResultValue ? objectReferenceFromResult(objectResultValue)
+                  : value)
+              .build())
+          .collect(Collectors.toUnmodifiableSet());
 
       var pathResult = PathResult.builder()
           .value(propertyValue)
@@ -242,6 +260,13 @@ public final class ObjectResultMapper {
     }
 
     throw new OrchestrateException("Could not map path: " + path);
+  }
+
+  private ObjectReference objectReferenceFromResult(ObjectResult objectResult) {
+    return ObjectReference.builder()
+            .objectKey(objectResult.getKey())
+            .objectType(objectResult.getType().getName())
+            .build();
   }
 
   private Stream<PathResult> resultMapPathResult(PathResult pathResult, ObjectResult objectResult, Property property, PathMapping pathMapping) {

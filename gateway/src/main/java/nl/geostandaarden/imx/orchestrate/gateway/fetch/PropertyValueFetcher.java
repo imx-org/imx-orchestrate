@@ -1,9 +1,10 @@
 package nl.geostandaarden.imx.orchestrate.gateway.fetch;
 
-import graphql.schema.DataFetcher;
-import graphql.schema.DataFetchingEnvironment;
 import java.util.Map;
 import java.util.function.UnaryOperator;
+
+import graphql.schema.DataFetcher;
+import graphql.schema.DataFetchingEnvironment;
 import lombok.AllArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
 
@@ -36,7 +37,7 @@ public final class PropertyValueFetcher implements DataFetcher<Map<String, Objec
 
     // TODO: refactor (see issue #1)
     if (value instanceof Map) {
-      return Map.of(fieldRenamer.apply("objectValue"), Map.of(fieldRenamer.apply("objectKey"), value));
+      return Map.of(fieldRenamer.apply("objectValue"), value);
     }
 
     throw new OrchestrateException("Could not map value: " + value.toString());
