@@ -3,7 +3,6 @@ package nl.geostandaarden.imx.orchestrate.model.combiners;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import nl.geostandaarden.imx.orchestrate.model.lineage.PathExecution;
 import nl.geostandaarden.imx.orchestrate.model.result.PathResult;
 import nl.geostandaarden.imx.orchestrate.model.result.PropertyMappingResult;

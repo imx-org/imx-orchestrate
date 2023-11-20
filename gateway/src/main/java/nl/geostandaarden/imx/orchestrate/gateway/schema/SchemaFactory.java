@@ -1,5 +1,18 @@
 package nl.geostandaarden.imx.orchestrate.gateway.schema;
 
+import static graphql.language.FieldDefinition.newFieldDefinition;
+import static graphql.language.ObjectTypeDefinition.newObjectTypeDefinition;
+import static graphql.schema.FieldCoordinates.coordinates;
+import static graphql.schema.GraphQLCodeRegistry.newCodeRegistry;
+import static graphql.schema.SchemaTransformer.transformSchema;
+import static graphql.schema.idl.RuntimeWiring.newRuntimeWiring;
+import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.applyCardinality;
+import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.requiredListType;
+import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.requiredType;
+import static org.apache.commons.lang3.StringUtils.uncapitalize;
+
+import java.util.List;
+import java.util.function.UnaryOperator;
 import graphql.language.InputObjectTypeDefinition;
 import graphql.language.InputValueDefinition;
 import graphql.language.ObjectTypeDefinition;
@@ -33,20 +46,6 @@ import nl.geostandaarden.imx.orchestrate.model.lineage.PathExecution;
 import nl.geostandaarden.imx.orchestrate.model.lineage.PathMappingExecution;
 import nl.geostandaarden.imx.orchestrate.model.lineage.PropertyMappingExecution;
 import nl.geostandaarden.imx.orchestrate.model.lineage.SourceDataElement;
-
-import java.util.List;
-import java.util.function.UnaryOperator;
-
-import static graphql.language.FieldDefinition.newFieldDefinition;
-import static graphql.language.ObjectTypeDefinition.newObjectTypeDefinition;
-import static graphql.schema.FieldCoordinates.coordinates;
-import static graphql.schema.GraphQLCodeRegistry.newCodeRegistry;
-import static graphql.schema.SchemaTransformer.transformSchema;
-import static graphql.schema.idl.RuntimeWiring.newRuntimeWiring;
-import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.applyCardinality;
-import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.requiredListType;
-import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.requiredType;
-import static org.apache.commons.lang3.StringUtils.uncapitalize;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SchemaFactory {

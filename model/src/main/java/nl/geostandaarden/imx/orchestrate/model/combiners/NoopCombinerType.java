@@ -4,7 +4,6 @@ import static java.util.stream.Collectors.toSet;
 
 import java.util.Map;
 import java.util.Set;
-
 import nl.geostandaarden.imx.orchestrate.model.lineage.PathExecution;
 import nl.geostandaarden.imx.orchestrate.model.result.PathResult;
 import nl.geostandaarden.imx.orchestrate.model.result.PropertyMappingResult;

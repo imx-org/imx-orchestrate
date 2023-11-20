@@ -1,7 +1,6 @@
 package nl.geostandaarden.imx.orchestrate.model.combiners;
 
 import java.util.Map;
-
 import nl.geostandaarden.imx.orchestrate.model.result.PathResult;
 import nl.geostandaarden.imx.orchestrate.model.result.PropertyMappingResult;
 

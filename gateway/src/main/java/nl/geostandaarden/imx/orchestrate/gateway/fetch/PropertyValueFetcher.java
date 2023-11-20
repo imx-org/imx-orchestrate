@@ -2,7 +2,6 @@ package nl.geostandaarden.imx.orchestrate.gateway.fetch;
 
 import java.util.Map;
 import java.util.function.UnaryOperator;
-
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import lombok.AllArgsConstructor;
