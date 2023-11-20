@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
+
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,11 +26,10 @@ class GatewayIT {
             id
             surface
             hasLineage {
-              orchestratedProperties {
+              orchestratedDataElements {
                 property
                 isDerivedFrom {
                   property
-                  path
                 }
               }
             }
@@ -68,7 +68,7 @@ class GatewayIT {
         .containsEntry("id", "B0002")
         .containsEntry("surface", 195)
         .extractingByKey("hasLineage", as(InstanceOfAssertFactories.MAP))
-        .extractingByKey("orchestratedProperties", as(InstanceOfAssertFactories.COLLECTION))
+        .extractingByKey("orchestratedDataElements", as(InstanceOfAssertFactories.COLLECTION))
         .hasSize(2);
   }
 }
