@@ -192,7 +192,7 @@ public final class ObjectResultMapper {
   }
   
   private PathMappingResult pathMappingResult(ObjectResult objectResult, Property property, PathMapping pathMapping) {
-    var pathResults = pathResult(objectResult, pathMapping.getPath(), pathMapping.getPath())
+    var pathResults = pathResult(objectResult, property, pathMapping.getPath(), pathMapping.getPath())
         .flatMap(pathResult -> resultMapPathResult(pathResult, objectResult, property, pathMapping))
         .toList();
 
@@ -207,7 +207,16 @@ public final class ObjectResultMapper {
         .build();
   }
 
-  private Stream<PathResult> pathResult(ObjectResult objectResult, Path path, Path fullPath) {
+  private Object mapLineageValue(Object value, Property property) {
+    if (property instanceof Attribute attribute) {
+      return attribute.getType()
+          .mapLineageValue(value);
+    }
+
+    return value;
+  }
+
+  private Stream<PathResult> pathResult(ObjectResult objectResult, Property property, Path path, Path fullPath) {
     var currentSegment = path.getFirstSegment();
 
     if (path.isLeaf()) {
@@ -228,7 +237,7 @@ public final class ObjectResultMapper {
               .subject(objectResult.getObjectReference())
               .property(currentSegment)
               .value(value instanceof ObjectResult objectResultValue ? objectResultValue.getObjectReference()
-                  : value)
+                  : mapLineageValue(value, property))
               .build())
           .collect(Collectors.toUnmodifiableSet());
 
@@ -253,17 +262,17 @@ public final class ObjectResultMapper {
     var remainingPath = path.withoutFirstSegment();
 
     if (nestedResult instanceof ObjectResult nestedObjectResult) {
-      return pathResult(nestedObjectResult, remainingPath, fullPath);
+      return pathResult(nestedObjectResult, property, remainingPath, fullPath);
     }
 
     if (nestedResult instanceof CollectionResult nestedCollectionResult) {
       return nestedCollectionResult.getObjectResults()
           .stream()
-          .flatMap(nestedObjectResult -> pathResult(nestedObjectResult, remainingPath, fullPath));
+          .flatMap(nestedObjectResult -> pathResult(nestedObjectResult, property, remainingPath, fullPath));
     }
 
     if (nestedResult instanceof Map<?, ?> mapResult) {
-      return pathResult(objectResult.withProperties(cast(mapResult)), remainingPath, fullPath);
+      return pathResult(objectResult.withProperties(cast(mapResult)), property, remainingPath, fullPath);
     }
 
     throw new OrchestrateException("Could not map path: " + path);
