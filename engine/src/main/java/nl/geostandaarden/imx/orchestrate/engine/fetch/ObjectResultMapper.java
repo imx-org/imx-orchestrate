@@ -103,17 +103,24 @@ public final class ObjectResultMapper {
   }
 
   private Object getRelationLineageValue(Object relationValue) {
-    var values =
-        relationValue instanceof List<?> relationValues ? relationValues : List.of(relationValue);
+    var values = relationValue instanceof List<?> relationValues ? relationValues : List.of(relationValue);
 
     return values.stream()
-        .map(value -> {
-          if (value instanceof ObjectResult objectResult) {
-            return objectReferenceFromResult(objectResult);
-          }
-          throw new OrchestrateException(String.format("Expected object result but was %s", relationValue));
-        })
+        .map(this::getSubjectReferenceFromRelationValue)
         .toList();
+  }
+
+  private ObjectReference getSubjectReferenceFromRelationValue(Object value) {
+    if (value instanceof ObjectResult objectResult && (objectResult.getLineage() != null)) {
+      return objectResult.getLineage()
+              .getOrchestratedDataElements()
+              .stream()
+              .map(OrchestratedDataElement::getSubject)
+              .findFirst()
+              .orElseThrow(() -> new OrchestrateException(
+                      String.format("Expected data elements in relation value lineage but was %s", value)));
+    }
+    throw new OrchestrateException(String.format("Expected object result but was %s", value));
   }
 
   private Object mapAttribute(Attribute attribute, Object value) {
@@ -220,7 +227,7 @@ public final class ObjectResultMapper {
           .map(value -> SourceDataElement.builder()
               .subject(objectResult.getObjectReference())
               .property(currentSegment)
-              .value(value instanceof ObjectResult objectResultValue ? objectReferenceFromResult(objectResultValue)
+              .value(value instanceof ObjectResult objectResultValue ? objectResultValue.getObjectReference()
                   : value)
               .build())
           .collect(Collectors.toUnmodifiableSet());
@@ -260,13 +267,6 @@ public final class ObjectResultMapper {
     }
 
     throw new OrchestrateException("Could not map path: " + path);
-  }
-
-  private ObjectReference objectReferenceFromResult(ObjectResult objectResult) {
-    return ObjectReference.builder()
-            .objectKey(objectResult.getKey())
-            .objectType(objectResult.getType().getName())
-            .build();
   }
 
   private Stream<PathResult> resultMapPathResult(PathResult pathResult, ObjectResult objectResult, Property property, PathMapping pathMapping) {
