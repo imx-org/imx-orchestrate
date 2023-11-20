@@ -194,7 +194,7 @@ public final class SchemaFactory {
             .type(requiredType(lineageRenamer.apply(PropertyMappingExecution.class.getSimpleName())))
             .build())
         .fieldDefinition(newFieldDefinition()
-            .name(lineageRenamer.apply("isDerivedFrom"))
+            .name(lineageRenamer.apply("wasDerivedFrom"))
             .type(requiredListType(lineageRenamer.apply(SourceDataElement.class.getSimpleName())))
             .build())
         .build());

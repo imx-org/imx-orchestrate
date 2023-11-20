@@ -28,7 +28,7 @@ class GatewayIT {
             hasLineage {
               orchestratedDataElements {
                 property
-                isDerivedFrom {
+                wasDerivedFrom {
                   property
                 }
               }

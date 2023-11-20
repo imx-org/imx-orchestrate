@@ -89,7 +89,7 @@ public final class ObjectResultMapper {
                     .build())
                 .property(property.getName())
                 .value(value)
-                .isDerivedFrom(propertyResult.getSourceDataElements())
+                .wasDerivedFrom(propertyResult.getSourceDataElements())
                 .wasGeneratedBy(propertyResult.getPropertyMappingExecution())
                 .build()));
           }

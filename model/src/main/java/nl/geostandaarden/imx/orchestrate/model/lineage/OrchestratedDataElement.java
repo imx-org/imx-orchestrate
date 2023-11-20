@@ -1,6 +1,7 @@
 package nl.geostandaarden.imx.orchestrate.model.lineage;
 
 import java.util.Set;
+
 import lombok.Builder;
 import lombok.Getter;
 
@@ -16,5 +17,5 @@ public final class OrchestratedDataElement implements DataElement {
 
   private final PropertyMappingExecution wasGeneratedBy;
 
-  private final Set<SourceDataElement> isDerivedFrom;
+  private final Set<SourceDataElement> wasDerivedFrom;
 }
