@@ -10,5 +10,5 @@ import lombok.Singular;
 public final class ObjectLineage {
 
   @Singular
-  private final Set<OrchestratedProperty> orchestratedProperties;
+  private final Set<OrchestratedDataElement> orchestratedDataElements;
 }

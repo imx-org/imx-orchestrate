@@ -2,8 +2,7 @@ package nl.geostandaarden.imx.orchestrate.model.result;
 
 import lombok.Builder;
 import lombok.Getter;
-import nl.geostandaarden.imx.orchestrate.model.lineage.PathMapping;
-import nl.geostandaarden.imx.orchestrate.model.lineage.SourceProperty;
+import nl.geostandaarden.imx.orchestrate.model.lineage.PathExecution;
 
 @Getter
 @Builder(toBuilder = true)
@@ -11,9 +10,7 @@ public class PathResult {
 
   private final Object value;
 
-  private final SourceProperty sourceProperty;
-
-  private final nl.geostandaarden.imx.orchestrate.model.lineage.PathMapping pathMapping;
+  private final PathExecution pathExecution;
 
   public boolean isNull() {
     return value == null;
@@ -29,9 +26,9 @@ public class PathResult {
         .build();
   }
 
-  public PathResult withPathMapping(PathMapping pathMapping) {
+  public PathResult withPathExecution(PathExecution pathExecution) {
     return toBuilder()
-        .pathMapping(pathMapping)
+        .pathExecution(pathExecution)
         .build();
   }
 

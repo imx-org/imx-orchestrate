@@ -33,3 +33,6 @@ objectTypes:
       postalCode:
         type: String
         cardinality: 0..1
+      fullAddress:
+        type: String
+        cardinality: 1

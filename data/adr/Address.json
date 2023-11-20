@@ -17,13 +17,13 @@
   {
     "id": "A0004",
     "houseNumber": 25,
-    "houseNumberAddition": "A",
+    "houseNumberAddition": ["A", "B"],
     "postalCode": "1234AB"
   },
   {
     "id": "A0005",
     "houseNumber": 25,
-    "houseNumberAddition": "B",
+    "houseNumberAddition": ["B"],
     "postalCode": "1234AB"
   }
 ]

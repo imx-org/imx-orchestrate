@@ -3,8 +3,10 @@ package nl.geostandaarden.imx.orchestrate.model.combiners;
 import static java.util.stream.Collectors.toSet;
 
 import java.util.Map;
+import java.util.Set;
+import nl.geostandaarden.imx.orchestrate.model.lineage.PathExecution;
 import nl.geostandaarden.imx.orchestrate.model.result.PathResult;
-import nl.geostandaarden.imx.orchestrate.model.result.PropertyResult;
+import nl.geostandaarden.imx.orchestrate.model.result.PropertyMappingResult;
 
 public final class NoopCombinerType implements ResultCombinerType {
 
@@ -21,12 +23,14 @@ public final class NoopCombinerType implements ResultCombinerType {
           .filter(PathResult::isNotNull)
           .toList();
 
-      return PropertyResult.builder()
+      return PropertyMappingResult.builder()
           .value(nonEmptyResults.stream()
               .map(PathResult::getValue)
               .toList())
-          .sourceProperties(nonEmptyResults.stream()
-              .map(PathResult::getSourceProperty)
+          .sourceDataElements(nonEmptyResults.stream()
+              .map(PathResult::getPathExecution)
+              .map(PathExecution::getReferences)
+              .flatMap(Set::stream)
               .collect(toSet()))
           .build();
     };

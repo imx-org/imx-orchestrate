@@ -121,7 +121,7 @@ class OrchestrateEngineIT {
     StepVerifier.create(resultMono)
         .assertNext(result -> assertThat(result).isNotNull()
             .extracting(ObjectResult::getLineage)
-            .extracting(ObjectLineage::getOrchestratedProperties, as(InstanceOfAssertFactories.COLLECTION))
+            .extracting(ObjectLineage::getOrchestratedDataElements, as(InstanceOfAssertFactories.COLLECTION))
             .hasSize(4))
         .expectComplete()
         .verify();

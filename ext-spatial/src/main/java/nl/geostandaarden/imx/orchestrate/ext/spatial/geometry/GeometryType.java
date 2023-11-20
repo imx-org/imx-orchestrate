@@ -62,6 +62,10 @@ public class GeometryType implements ValueType {
 
   @Override
   public Object mapLineageValue(Object value) {
+    if (value instanceof Map<?, ?>) {
+      return mapSourceValue(value).toString();
+    }
+
     if (value instanceof Geometry geometry) {
       return geometry.toString();
     }

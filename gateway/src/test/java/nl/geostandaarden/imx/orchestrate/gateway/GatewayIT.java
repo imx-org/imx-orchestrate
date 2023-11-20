@@ -25,11 +25,10 @@ class GatewayIT {
             id
             surface
             hasLineage {
-              orchestratedProperties {
+              orchestratedDataElements {
                 property
-                isDerivedFrom {
+                wasDerivedFrom {
                   property
-                  path
                 }
               }
             }
@@ -68,7 +67,7 @@ class GatewayIT {
         .containsEntry("id", "B0002")
         .containsEntry("surface", 195)
         .extractingByKey("hasLineage", as(InstanceOfAssertFactories.MAP))
-        .extractingByKey("orchestratedProperties", as(InstanceOfAssertFactories.COLLECTION))
+        .extractingByKey("orchestratedDataElements", as(InstanceOfAssertFactories.COLLECTION))
         .hasSize(2);
   }
 }
