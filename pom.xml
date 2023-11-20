@@ -27,29 +27,29 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <reactor.version>2022.0.12</reactor.version>
+        <reactor.version>2023.0.0</reactor.version>
         <slf4j.version>2.0.9</slf4j.version>
         <graphql-java.version>21.3</graphql-java.version>
-        <java-dataloader.version>3.2.1</java-dataloader.version>
+        <java-dataloader.version>3.2.2</java-dataloader.version>
         <spring-boot.version>3.1.5</spring-boot.version>
         <spring-graphql.version>1.2.3</spring-graphql.version>
-        <micrometer.version>1.11.5</micrometer.version>
-        <commons-text.version>1.10.0</commons-text.version>
+        <micrometer.version>1.12.0</micrometer.version>
+        <commons-text.version>1.11.0</commons-text.version>
         <jts.version>1.19.0</jts.version>
         <lombok.version>1.18.30</lombok.version>
-        <jackson.version>2.15.3</jackson.version>
-        <cel.version>0.3.21</cel.version>
+        <jackson.version>2.16.0</jackson.version>
+        <cel.version>0.4.0</cel.version>
         <auto-service.version>1.1.1</auto-service.version>
-        <junit.version>5.10.0</junit.version>
+        <junit.version>5.10.1</junit.version>
         <assertj.version>3.24.2</assertj.version>
-        <mockito.version>5.6.0</mockito.version>
+        <mockito.version>5.7.0</mockito.version>
         <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
         <sonar-maven-plugin.version>3.10.0.2594</sonar-maven-plugin.version>
         <sonar.organization>imx-org</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/../report-aggregate/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-        <maven-surefire-plugin.version>3.2.1</maven-surefire-plugin.version>
-        <maven-failsafe-plugin.version>3.2.1</maven-failsafe-plugin.version>
+        <maven-surefire-plugin.version>3.2.2</maven-surefire-plugin.version>
+        <maven-failsafe-plugin.version>3.2.2</maven-failsafe-plugin.version>
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
         <!-- Dummy property to avoid JVM startup error in IDEs -->
