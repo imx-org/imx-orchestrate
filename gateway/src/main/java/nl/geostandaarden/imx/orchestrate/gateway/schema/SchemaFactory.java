@@ -11,8 +11,6 @@ import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.requi
 import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.requiredType;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
 
-import java.util.List;
-import java.util.function.UnaryOperator;
 import graphql.language.InputObjectTypeDefinition;
 import graphql.language.InputValueDefinition;
 import graphql.language.ObjectTypeDefinition;
@@ -23,6 +21,8 @@ import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
+import java.util.List;
+import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateEngine;

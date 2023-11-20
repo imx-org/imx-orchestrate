@@ -5,8 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import lombok.extern.jackson.Jacksonized;
-import nl.geostandaarden.imx.orchestrate.model.matchers.Matcher;
 import nl.geostandaarden.imx.orchestrate.model.mappers.ResultMapper;
+import nl.geostandaarden.imx.orchestrate.model.matchers.Matcher;
 
 @Getter
 @Jacksonized
