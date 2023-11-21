@@ -1,5 +1,7 @@
 package nl.geostandaarden.imx.orchestrate.gateway.fetch;
 
+import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaConstants.HAS_LINEAGE_FIELD;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import graphql.schema.DataFetcher;
@@ -10,7 +12,6 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
 import nl.geostandaarden.imx.orchestrate.engine.fetch.FetchUtils;
-import nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaConstants;
 import nl.geostandaarden.imx.orchestrate.model.lineage.ObjectLineage;
 
 @RequiredArgsConstructor
@@ -24,7 +25,8 @@ public class ObjectLineageFetcher implements DataFetcher<Map<String, Object>> {
   @Override
   public Map<String, Object> get(DataFetchingEnvironment environment) {
     Map<String, Object> source = environment.getSource();
-    var hasLineageValue = source.get(SchemaConstants.HAS_LINEAGE_FIELD);
+    var hasLineageField = nameMapping.getOrDefault(HAS_LINEAGE_FIELD, HAS_LINEAGE_FIELD);
+    var hasLineageValue = source.get(hasLineageField);
 
     if (hasLineageValue instanceof ObjectLineage objectLineage) {
       return renameKeys(FetchUtils.cast(OBJECT_MAPPER.convertValue(objectLineage, Map.class)));
