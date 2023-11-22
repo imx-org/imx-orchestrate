@@ -30,8 +30,8 @@ public final class ModelMapping {
   @Jacksonized
   @Builder(toBuilder = true)
   public ModelMapping(Model targetModel, @Singular Set<Model> sourceModels,
-                      @Singular Set<SourceRelation> sourceRelations, @Singular Map<String, ObjectTypeMapping> objectTypeMappings,
-                      Map<String, String> lineageNameMapping) {
+      @Singular Set<SourceRelation> sourceRelations, @Singular Map<String, ObjectTypeMapping> objectTypeMappings,
+      Map<String, String> lineageNameMapping) {
     // TODO: Remove null-check once parser workaround has been resolved
     if (targetModel != null) {
       this.targetModel = resolveInverseRelations(targetModel);
