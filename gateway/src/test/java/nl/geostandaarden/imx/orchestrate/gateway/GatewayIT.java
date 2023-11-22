@@ -23,7 +23,9 @@ class GatewayIT {
         {
           construction(id: "B0002") {
             id
-            surface
+            dimensions {
+              surface
+            }
             hasLineage {
               orchestratedDataElements {
                 property
@@ -65,9 +67,9 @@ class GatewayIT {
 
     assertThat(adres).isNotNull()
         .containsEntry("id", "B0002")
-        .containsEntry("surface", 195)
+        .containsEntry("dimensions", Map.of("surface", 195))
         .extractingByKey("hasLineage", as(InstanceOfAssertFactories.MAP))
         .extractingByKey("orchestratedDataElements", as(InstanceOfAssertFactories.COLLECTION))
-        .hasSize(2);
+        .hasSize(1);
   }
 }
