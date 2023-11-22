@@ -82,9 +82,23 @@ public final class FetchPlanner {
   private Set<Path> resolveSourcePaths(DataRequest request, ObjectTypeMapping typeMapping, Path basePath) {
     return request.getSelectedProperties()
         .stream()
-        .flatMap(selectedProperty -> typeMapping.getPropertyMapping(selectedProperty.getProperty())
-            .stream()
-            .flatMap(propertyMapping -> resolveSourcePaths(selectedProperty, propertyMapping, basePath)))
+        .flatMap(selectedProperty -> {
+          var propertyMapping = typeMapping.getPropertyMapping(selectedProperty.getProperty());
+
+          if (propertyMapping.isPresent()) {
+            return propertyMapping.stream()
+                .flatMap(mapping -> resolveSourcePaths(selectedProperty, mapping, basePath));
+          }
+
+          if (selectedProperty.getProperty() instanceof Relation relation) {
+            var targetTypeMapping = modelMapping.getObjectTypeMapping(
+                modelMapping.getTargetType(relation.getTarget()));
+            return resolveSourcePaths(selectedProperty.getNestedRequest(), targetTypeMapping, basePath)
+                .stream();
+          }
+
+          return Stream.empty();
+        })
         .collect(toSet());
   }
 
