@@ -5,13 +5,13 @@ objectTypes:
         type: String
         identifier: true
         cardinality: 1
-      surface:
-        type: Integer
-        cardinality: 0..1
       geometry:
         type: Geometry
         cardinality: 0..1
     relations:
+      dimensions:
+        target: Dimensions
+        cardinality: 1
       hasAddress:
         target: Address
         cardinality: 0..*
@@ -36,3 +36,9 @@ objectTypes:
       fullAddress:
         type: String
         cardinality: 1
+
+  Dimensions:
+    attributes:
+      surface:
+        type: Integer
+        cardinality: 0..1

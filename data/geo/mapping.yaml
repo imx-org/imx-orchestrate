@@ -14,9 +14,6 @@ objectTypeMappings:
       id:
         pathMappings:
           path: id
-      surface:
-        pathMappings:
-          path: area
       geometry:
         pathMappings:
           path: geometry
@@ -65,3 +62,10 @@ objectTypeMappings:
           - path: isSubAddressOf/isPartOf
         combiner:
           type: coalesce
+
+  Dimensions:
+    sourceRoot: city:Building
+    propertyMappings:
+      surface:
+        pathMappings:
+          path: area

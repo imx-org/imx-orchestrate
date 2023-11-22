@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
@@ -29,8 +30,8 @@ public final class ModelMapping {
   @Jacksonized
   @Builder(toBuilder = true)
   public ModelMapping(Model targetModel, @Singular Set<Model> sourceModels,
-      @Singular Set<SourceRelation> sourceRelations, @Singular Map<String, ObjectTypeMapping> objectTypeMappings,
-      Map<String, String> lineageNameMapping) {
+                      @Singular Set<SourceRelation> sourceRelations, @Singular Map<String, ObjectTypeMapping> objectTypeMappings,
+                      Map<String, String> lineageNameMapping) {
     // TODO: Remove null-check once parser workaround has been resolved
     if (targetModel != null) {
       this.targetModel = resolveInverseRelations(targetModel);
@@ -76,13 +77,17 @@ public final class ModelMapping {
         .stream()
         .flatMap(objectType -> objectType.getProperties(Relation.class)
             .stream()
-            .map(relation -> {
+            .flatMap(relation -> {
+              if (relation.getInverseName() == null) {
+                return Stream.empty();
+              }
+
               var inverseRelation = InverseRelation.builder()
                   .originRelation(relation)
                   .target(ObjectTypeRef.forType(model.getAlias(), objectType.getName()))
                   .build();
 
-              return Map.entry(relation.getTarget(), inverseRelation);
+              return Stream.of(Map.entry(relation.getTarget(), inverseRelation));
             }))
         .reduce(model, (acc, targetRelation) -> {
           var targetObjectType = acc.getObjectType(targetRelation.getKey())
