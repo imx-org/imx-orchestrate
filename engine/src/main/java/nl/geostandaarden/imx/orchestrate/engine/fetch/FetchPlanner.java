@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toSet;
 import static nl.geostandaarden.imx.orchestrate.model.ModelUtils.extractKey;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -81,8 +82,9 @@ public final class FetchPlanner {
   private Set<Path> resolveSourcePaths(DataRequest request, ObjectTypeMapping typeMapping, Path basePath) {
     return request.getSelectedProperties()
         .stream()
-        .flatMap(selectedProperty -> resolveSourcePaths(selectedProperty,
-            typeMapping.getPropertyMapping(selectedProperty.getProperty()), basePath))
+        .flatMap(selectedProperty -> typeMapping.getPropertyMapping(selectedProperty.getProperty())
+            .stream()
+            .flatMap(propertyMapping -> resolveSourcePaths(selectedProperty, propertyMapping, basePath)))
         .collect(toSet());
   }
 
@@ -271,7 +273,8 @@ public final class FetchPlanner {
 
     var pathMappings = modelMapping.getObjectTypeMapping(targetType)
         .getPropertyMapping(firstEntry.getKey())
-        .getPathMappings();
+        .map(PropertyMapping::getPathMappings)
+        .orElse(List.of());
 
     if (pathMappings.size() > 1) {
       throw new OrchestrateException("Currently only a single path mapping is supported when filtering.");

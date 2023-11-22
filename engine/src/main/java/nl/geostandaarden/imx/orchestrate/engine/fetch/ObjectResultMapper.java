@@ -52,7 +52,7 @@ public final class ObjectResultMapper {
           }
 
           var property = targetType.getProperty(selectedProperty.getName());
-          var propertyMapping = targetMapping.getPropertyMapping(property);
+          var propertyMapping = targetMapping.getPropertyMapping(property).get(); // TODO
           var propertyResult = mapProperty(objectResult, property, propertyMapping);
 
           if (propertyResult == null) {
