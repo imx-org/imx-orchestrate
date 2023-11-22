@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import nl.geostandaarden.imx.orchestrate.engine.source.DataRepository;
 import nl.geostandaarden.imx.orchestrate.ext.spatial.SpatialExtension;
 import nl.geostandaarden.imx.orchestrate.model.ComponentRegistry;
@@ -76,7 +75,9 @@ class OrchestrateEngineIT {
         .objectType("Construction")
         .objectKey(Map.of("id", "B0001"))
         .selectProperty("id")
-        .selectProperty("surface")
+        .selectObjectProperty("dimensions", builder -> builder
+            .selectProperty("surface")
+            .build())
         .selectProperty("geometry")
         .selectCollectionProperty("hasAddress", builder -> builder
             .selectProperty("postalCode")
@@ -119,11 +120,15 @@ class OrchestrateEngineIT {
     var resultMono = engine.fetch(request);
 
     StepVerifier.create(resultMono)
-        .assertNext(result -> assertThat(result).isNotNull()
-            .extracting(ObjectResult::getLineage)
-            .extracting(ObjectLineage::getOrchestratedDataElements, as(InstanceOfAssertFactories.COLLECTION))
-            .hasSize(4))
-        .expectComplete()
-        .verify();
+        .assertNext(result -> {
+          assertThat(result).isNotNull();
+          assertThat(result.getProperties())
+              .containsEntry("id", "B0001")
+              .containsEntry("dimensions", Map.of("surface", 123));
+          assertThat(result.getLineage())
+              .extracting(ObjectLineage::getOrchestratedDataElements, as(InstanceOfAssertFactories.COLLECTION))
+              .hasSize(3);
+        })
+        .verifyComplete();
   }
 }

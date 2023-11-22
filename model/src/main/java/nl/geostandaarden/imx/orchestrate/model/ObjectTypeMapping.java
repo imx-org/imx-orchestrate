@@ -17,12 +17,11 @@ public final class ObjectTypeMapping {
   @Singular
   private final Map<String, PropertyMapping> propertyMappings;
 
-  public PropertyMapping getPropertyMapping(String name) {
-    return Optional.ofNullable(propertyMappings.get(name))
-        .orElseThrow(() -> new ModelException("Attribute mapping not found: " + name));
+  public Optional<PropertyMapping> getPropertyMapping(String name) {
+    return Optional.ofNullable(propertyMappings.get(name));
   }
 
-  public PropertyMapping getPropertyMapping(Property property) {
+  public Optional<PropertyMapping> getPropertyMapping(Property property) {
     return getPropertyMapping(property.getName());
   }
 }

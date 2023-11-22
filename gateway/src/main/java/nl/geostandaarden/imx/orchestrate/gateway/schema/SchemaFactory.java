@@ -157,7 +157,8 @@ public final class SchemaFactory {
 
     var pathMappings = modelMapping.getObjectTypeMapping(objectType)
         .getPropertyMapping(attribute)
-        .getPathMappings();
+        .map(PropertyMapping::getPathMappings)
+        .orElse(List.of());
 
     var firstPath = pathMappings.get(0)
         .getPath();
