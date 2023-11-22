@@ -127,7 +127,7 @@ class OrchestrateEngineIT {
               .containsEntry("dimensions", Map.of("surface", 123));
           assertThat(result.getLineage())
               .extracting(ObjectLineage::getOrchestratedDataElements, as(InstanceOfAssertFactories.COLLECTION))
-              .hasSize(4);
+              .hasSize(3);
         })
         .verifyComplete();
   }

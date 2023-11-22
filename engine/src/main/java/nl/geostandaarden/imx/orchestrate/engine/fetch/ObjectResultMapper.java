@@ -54,8 +54,11 @@ public final class ObjectResultMapper {
           var property = targetType.getProperty(selectedProperty.getName());
           var propertyMapping = targetMapping.getPropertyMapping(property);
 
-          // TODO
+          // TODO: Refactor
           if (!propertyMapping.isPresent()) {
+            var propertyValue = map(objectResult, selectedProperty.getNestedRequest())
+                .getProperties();
+            properties.put(property.getName(), propertyValue);
             return;
           }
 
@@ -118,12 +121,12 @@ public final class ObjectResultMapper {
   private ObjectReference getSubjectReferenceFromRelationValue(Object value) {
     if (value instanceof ObjectResult objectResult && (objectResult.getLineage() != null)) {
       return objectResult.getLineage()
-              .getOrchestratedDataElements()
-              .stream()
-              .map(OrchestratedDataElement::getSubject)
-              .findFirst()
-              .orElseThrow(() -> new OrchestrateException(
-                      String.format("Expected data elements in relation value lineage but was %s", value)));
+          .getOrchestratedDataElements()
+          .stream()
+          .map(OrchestratedDataElement::getSubject)
+          .findFirst()
+          .orElseThrow(() -> new OrchestrateException(
+              String.format("Expected data elements in relation value lineage but was %s", value)));
     }
     throw new OrchestrateException(String.format("Expected object result but was %s", value));
   }
@@ -165,9 +168,9 @@ public final class ObjectResultMapper {
 
   private PropertyMappingResult mapProperty(ObjectResult objectResult, Property property, PropertyMapping propertyMapping) {
     var pathMappingResults = propertyMapping.getPathMappings()
-            .stream()
-            .map(pathMapping -> pathMappingResult(objectResult, property, pathMapping))
-            .toList();
+        .stream()
+        .map(pathMapping -> pathMappingResult(objectResult, property, pathMapping))
+        .toList();
 
     var combiner = propertyMapping.getCombiner();
 
@@ -186,16 +189,16 @@ public final class ObjectResultMapper {
             .map(PathMappingResult::getPathMappingExecution)
             .toList())
         .build();
-    
+
     var pathResults = pathMappingResults.stream()
-            .map(PathMappingResult::getPathResults)
-            .flatMap(List::stream)
-            .toList();
+        .map(PathMappingResult::getPathResults)
+        .flatMap(List::stream)
+        .toList();
 
     return combiner.apply(pathResults)
         .withPropertyMappingExecution(propertyMappingExecution);
   }
-  
+
   private PathMappingResult pathMappingResult(ObjectResult objectResult, Property property, PathMapping pathMapping) {
     var pathResults = pathResult(objectResult, property, pathMapping.getPath(), pathMapping.getPath())
         .flatMap(pathResult -> resultMapPathResult(pathResult, objectResult, property, pathMapping))
@@ -249,10 +252,10 @@ public final class ObjectResultMapper {
       var pathResult = PathResult.builder()
           .value(propertyValue)
           .pathExecution(PathExecution.builder()
-                  .used(path)
-                  .startNode(objectResult.getObjectReference())
-                  .references(sourceDataElements)
-                  .build())
+              .used(path)
+              .startNode(objectResult.getObjectReference())
+              .references(sourceDataElements)
+              .build())
           .build();
 
       return Stream.of(pathResult);
@@ -286,14 +289,14 @@ public final class ObjectResultMapper {
   private Stream<PathResult> resultMapPathResult(PathResult pathResult, ObjectResult objectResult, Property property, PathMapping pathMapping) {
     // TODO: Lazy fetching & multi cardinality
     var nextedPathResult = pathMapping.getNextPathMappings()
-            .stream()
-            .flatMap(nextPathMapping -> nextPathResults(pathResult, objectResult, property, nextPathMapping))
-            .findFirst()
-            .orElse(pathResult);
+        .stream()
+        .flatMap(nextPathMapping -> nextPathResults(pathResult, objectResult, property, nextPathMapping))
+        .findFirst()
+        .orElse(pathResult);
 
     var mappedPathResult = pathMapping.getResultMappers()
-            .stream()
-            .reduce(nextedPathResult, (acc, resultMapper) -> resultMapper.apply(acc, property), noopCombiner());
+        .stream()
+        .reduce(nextedPathResult, (acc, resultMapper) -> resultMapper.apply(acc, property), noopCombiner());
 
     return Stream.of(mappedPathResult);
 
@@ -304,7 +307,7 @@ public final class ObjectResultMapper {
 
     if (ifMatch != null && ifMatch.test(previousPathResult.getValue())) {
       return pathMappingResult(objectResult, property, nextPathMapping)
-              .getPathResults().stream();
+          .getPathResults().stream();
     }
 
     return Stream.of(previousPathResult);
