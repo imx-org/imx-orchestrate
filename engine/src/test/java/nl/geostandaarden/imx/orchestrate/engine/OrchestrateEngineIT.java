@@ -123,7 +123,7 @@ class OrchestrateEngineIT {
         .assertNext(result -> {
           assertThat(result).isNotNull();
           assertThat(result.getProperties())
-              .containsEntry("id", "BU0001")
+              .containsEntry("id", "B0001")
               .containsEntry("dimensions", Map.of("surface", 123));
           assertThat(result.getLineage())
               .extracting(ObjectLineage::getOrchestratedDataElements, as(InstanceOfAssertFactories.COLLECTION))
