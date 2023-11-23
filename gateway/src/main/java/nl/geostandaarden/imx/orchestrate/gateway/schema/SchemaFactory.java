@@ -104,6 +104,12 @@ public final class SchemaFactory {
     var objectTypeDefinition = createObjectTypeDefinition(objectType);
     typeDefinitionRegistry.add(objectTypeDefinition);
 
+    var identityProperties = objectType.getIdentityProperties();
+
+    if (identityProperties.isEmpty()) {
+      return;
+    }
+
     var baseName = uncapitalize(objectTypeDefinition.getName());
     var collectionName = baseName.concat(SchemaConstants.QUERY_COLLECTION_SUFFIX);
 
@@ -143,11 +149,39 @@ public final class SchemaFactory {
       collectionField = collectionField.transform(builder -> builder.inputValueDefinition(filterArgument));
     }
 
+    var objectKeyType = InputObjectTypeDefinition.newInputObjectDefinition()
+        .name(objectType.getName().concat(SchemaConstants.KEY_TYPE_SUFFIX))
+        .inputValueDefinitions(objectType.getIdentityProperties()
+            .stream()
+            .map(Attribute.class::cast)
+            .map(property -> InputValueDefinition.newInputValueDefinition()
+                .name(property.getName())
+                .type(requiredType(property.getType()
+                    .getName()))
+                .build())
+            .toList())
+        .build();
+
+    var batchName = baseName.concat(SchemaConstants.QUERY_BATCH_SUFFIX);
+
+    var batchField = newFieldDefinition()
+        .name(batchName)
+        .type(requiredListType(objectTypeDefinition.getName()))
+        .inputValueDefinition(InputValueDefinition.newInputValueDefinition()
+            .name(SchemaConstants.BATCH_KEYS_ARG)
+            .type(requiredListType(objectKeyType.getName()))
+            .build())
+        .build();
+
+    typeDefinitionRegistry.add(objectKeyType);
+
     queryTypeBuilder.fieldDefinition(objectField)
-        .fieldDefinition(collectionField);
+        .fieldDefinition(collectionField)
+        .fieldDefinition(batchField);
 
     codeRegistryBuilder.dataFetcher(FieldCoordinates.coordinates(SchemaConstants.QUERY_TYPE, baseName), genericDataFetcher)
-        .dataFetcher(FieldCoordinates.coordinates(SchemaConstants.QUERY_TYPE, collectionName), genericDataFetcher);
+        .dataFetcher(FieldCoordinates.coordinates(SchemaConstants.QUERY_TYPE, collectionName), genericDataFetcher)
+        .dataFetcher(FieldCoordinates.coordinates(SchemaConstants.QUERY_TYPE, batchName), genericDataFetcher);
   }
 
   private boolean isFilterable(ObjectType objectType, Attribute attribute) {
@@ -261,7 +295,7 @@ public final class SchemaFactory {
             .name(lineageRenamer.apply("references"))
             .type(requiredListType(lineageRenamer.apply(SourceDataElement.class.getSimpleName())))
             .build())
-    .build());
+        .build());
 
     typeDefinitionRegistry.add(newObjectTypeDefinition()
         .name(lineageRenamer.apply(SourceDataElement.class.getSimpleName()))

@@ -5,6 +5,7 @@ import java.util.Set;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
@@ -40,6 +41,11 @@ public final class OrchestrateEngine {
   }
 
   public Mono<CollectionResult> fetch(CollectionRequest request) {
+    return fetchPlanner.plan(request)
+        .execute();
+  }
+
+  public Mono<CollectionResult> fetch(BatchRequest request) {
     return fetchPlanner.plan(request)
         .execute();
   }
