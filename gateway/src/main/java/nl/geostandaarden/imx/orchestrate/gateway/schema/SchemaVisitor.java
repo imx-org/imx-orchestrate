@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionResult;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.DataResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import reactor.core.publisher.Mono;
 
@@ -67,7 +68,13 @@ public final class SchemaVisitor extends GraphQLTypeVisitorStub {
   }
 
   private Map<String, Object> objectResultToMap(ObjectResult result) {
-    var properties = new HashMap<>(result.getProperties());
+    var properties = result.getProperties()
+        .entrySet()
+        .stream()
+        .collect(HashMap<String, Object>::new, (acc, entry) -> {
+          var value = entry.getValue();
+          acc.put(entry.getKey(), value instanceof DataResult ? mapResult(value) : value);
+        }, HashMap::putAll);
     properties.put(hasLineageFieldName, result.getLineage());
     return properties;
   }
