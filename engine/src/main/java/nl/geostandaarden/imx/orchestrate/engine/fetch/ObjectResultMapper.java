@@ -88,7 +88,16 @@ public final class ObjectResultMapper {
           if (propertyValue != null) {
             properties.put(property.getName(), propertyValue);
 
-            var lineageValues = lineageValue instanceof List<?> values ? values : List.of(lineageValue);
+            List<?> lineageValues;
+            if (lineageValue instanceof List<?> values) {
+              lineageValues = values;
+            } else {
+              if (lineageValue == null) {
+                lineageValues = List.of();
+              } else {
+                lineageValues = List.of(lineageValue);
+              }
+            }
 
             lineageValues.forEach(value -> lineageBuilder.orchestratedDataElement(OrchestratedDataElement.builder()
                 .subject(ObjectReference.builder()

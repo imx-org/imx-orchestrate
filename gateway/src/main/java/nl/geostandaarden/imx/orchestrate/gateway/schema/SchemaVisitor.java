@@ -48,6 +48,10 @@ public final class SchemaVisitor extends GraphQLTypeVisitorStub {
           .toList();
     }
 
+    if (result instanceof ObjectResult objectResult) {
+      return objectResultToMap(objectResult);
+    }
+
     return result;
   }
 

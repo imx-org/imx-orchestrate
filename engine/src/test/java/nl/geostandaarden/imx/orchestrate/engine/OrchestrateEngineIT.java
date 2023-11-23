@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import nl.geostandaarden.imx.orchestrate.engine.source.DataRepository;
 import nl.geostandaarden.imx.orchestrate.ext.spatial.SpatialExtension;
 import nl.geostandaarden.imx.orchestrate.model.ComponentRegistry;
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.locationtech.jts.geom.Geometry;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
@@ -44,6 +46,9 @@ class OrchestrateEngineIT {
   @Mock
   private DataRepository cityRepositoryMock;
 
+  @Mock
+  private DataRepository landRepositoryMock;
+
   private OrchestrateEngine engine;
 
   @BeforeAll
@@ -62,6 +67,7 @@ class OrchestrateEngineIT {
         .modelMapping(MODEL_MAPPING)
         .source("adr", () -> adrRepositoryMock)
         .source("city", () -> cityRepositoryMock)
+        .source("land", () -> landRepositoryMock)
         .extension(SPATIAL_EXTENSION)
         .build();
   }
@@ -82,6 +88,9 @@ class OrchestrateEngineIT {
         .selectCollectionProperty("hasAddress", builder -> builder
             .selectProperty("postalCode")
             .selectProperty("houseNumber")
+            .selectObjectProperty("parcel", relBuilder -> relBuilder
+                .selectProperty("geometry")
+                .build())
             .build())
         .build();
 
@@ -90,7 +99,8 @@ class OrchestrateEngineIT {
           var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
 
           return switch (objectType.getName()) {
-            case "Address" -> Mono.just(Map.of("id", "A0001", "houseNumber", 23, "postalCode", "1234AB"));
+            case "Address" ->
+              Mono.just(Map.of("id", "A0001", "houseNumber", 23, "postalCode", "1234AB", "parcel", "P12345"));
             default -> throw new IllegalStateException();
           };
         });
@@ -117,6 +127,16 @@ class OrchestrateEngineIT {
           };
         });
 
+    when(landRepositoryMock.findOne(any(ObjectRequest.class))).thenAnswer(invocation -> {
+      var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+
+      return switch (objectType.getName()) {
+        case "Parcel" -> Mono.just(Map.of("id", "P12345", "geometry", Map.of("type", "Polygon", "coordinates",
+            List.of(List.of(List.of(0, 0), List.of(10, 0), List.of(10, 10), List.of(0, 10), List.of(0, 0))))));
+        default -> throw new IllegalStateException();
+      };
+    });
+
     var resultMono = engine.fetch(request);
 
     StepVerifier.create(resultMono)
@@ -128,6 +148,11 @@ class OrchestrateEngineIT {
           assertThat(result.getLineage())
               .extracting(ObjectLineage::getOrchestratedDataElements, as(InstanceOfAssertFactories.COLLECTION))
               .hasSize(3);
+
+          var address = (ObjectResult) ((List<?>) result.getProperty("hasAddress")).get(0);
+          var parcel = ((ObjectResult) address.getProperty("parcel"));
+          assertThat(parcel.getProperties()).containsKey("geometry");
+          assertThat(parcel.getProperty("geometry")).isInstanceOf(Geometry.class);
         })
         .verifyComplete();
   }

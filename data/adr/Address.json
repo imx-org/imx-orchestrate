@@ -2,7 +2,8 @@
   {
     "id": "A0001",
     "houseNumber": 23,
-    "postalCode": "1234AB"
+    "postalCode": "1234AB",
+    "parcel": "P12345"
   },
   {
     "id": "A0002",
