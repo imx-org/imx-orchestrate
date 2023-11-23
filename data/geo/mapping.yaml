@@ -67,8 +67,6 @@ objectTypeMappings:
                 prefix: ' '
         combiner:
           type: join
-
-      # TODO: auto-create inverse mappings
       isAddressOf:
         pathMappings:
           - path: isMainAddressOf/isPartOf
@@ -95,3 +93,6 @@ objectTypeMappings:
       geometry:
         pathMappings:
           path: geometry
+      hasAddress:
+        pathMappings:
+          path: hasAddress
