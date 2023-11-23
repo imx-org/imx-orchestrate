@@ -120,7 +120,17 @@ public final class ObjectResultMapper {
   }
 
   private Object getRelationLineageValue(Object relationValue) {
-    var values = relationValue instanceof List<?> relationValues ? relationValues : List.of(relationValue);
+    List<?> values;
+
+    if (relationValue instanceof List<?> relationValues) {
+      values = relationValues;
+    } else {
+      if (relationValue == null) {
+        values = List.of();
+      } else {
+        values = List.of(relationValue);
+      }
+    }
 
     return values.stream()
         .map(this::getSubjectReferenceFromRelationValue)
