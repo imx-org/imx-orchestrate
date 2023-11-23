@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.DataRequest;
@@ -72,6 +73,28 @@ public final class FetchPlanner {
 
     return () -> fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, true, null)
         .execute(input)
+        .map(result -> resultMapper.map(result, request))
+        .collectList()
+        .map(objectResults -> CollectionResult.builder()
+            .objectResults(objectResults)
+            .build());
+  }
+
+  public FetchPlan<CollectionResult> plan(BatchRequest request) {
+    var typeMapping = modelMapping.getObjectTypeMapping(request.getObjectType());
+    var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
+
+    var resultMapper = ObjectResultMapper.builder()
+        .modelMapping(modelMapping)
+        .build();
+
+    var inputs = request.getObjectKeys()
+        .stream()
+        .map(FetchInput::newInput)
+        .toList();
+
+    return () -> fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, false, null)
+        .executeBatch(inputs)
         .map(result -> resultMapper.map(result, request))
         .collectList()
         .map(objectResults -> CollectionResult.builder()

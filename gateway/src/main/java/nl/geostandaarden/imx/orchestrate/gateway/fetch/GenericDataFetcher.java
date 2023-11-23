@@ -45,6 +45,10 @@ public final class GenericDataFetcher implements DataFetcher<Mono<? extends Data
       return engine.fetch(collectionRequest);
     }
 
+    if (request instanceof BatchRequest batchRequest) {
+      return engine.fetch(batchRequest);
+    }
+
     throw new OrchestrateException("Unsupported request: " + request.getClass());
   }
 
