@@ -3,6 +3,7 @@ package nl.geostandaarden.imx.orchestrate.gateway.fetch;
 import static graphql.schema.GraphQLTypeUtil.unwrapAll;
 import static graphql.schema.GraphQLTypeUtil.unwrapNonNull;
 import static java.util.function.Predicate.not;
+import static nl.geostandaarden.imx.orchestrate.engine.fetch.FetchUtils.cast;
 
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
@@ -11,10 +12,13 @@ import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLScalarType;
 import graphql.schema.SelectedField;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateEngine;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.AbstractDataRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.DataRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.DataResult;
@@ -60,6 +64,18 @@ public final class GenericDataFetcher implements DataFetcher<Mono<? extends Data
     if (fieldName.endsWith(SchemaConstants.QUERY_COLLECTION_SUFFIX)) {
       var requestBuilder = CollectionRequest.builder(targetModel)
           .objectType(fieldTypeName);
+
+      return selectProperties(requestBuilder, environment.getSelectionSet())
+          .build();
+    }
+
+    if (fieldName.endsWith(SchemaConstants.QUERY_BATCH_SUFFIX)) {
+      List<Map<String, Object>> objectKeys = cast(environment.getArguments()
+          .get(SchemaConstants.BATCH_KEYS_ARG));
+
+      var requestBuilder = BatchRequest.builder(targetModel)
+          .objectType(fieldTypeName)
+          .objectKeys(objectKeys);
 
       return selectProperties(requestBuilder, environment.getSelectionSet())
           .build();

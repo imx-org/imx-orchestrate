@@ -162,8 +162,10 @@ public final class SchemaFactory {
             .toList())
         .build();
 
+    var batchName = baseName.concat(SchemaConstants.QUERY_BATCH_SUFFIX);
+
     var batchField = newFieldDefinition()
-        .name(baseName.concat(SchemaConstants.QUERY_BATCH_SUFFIX))
+        .name(batchName)
         .type(requiredListType(objectTypeDefinition.getName()))
         .inputValueDefinition(InputValueDefinition.newInputValueDefinition()
             .name(SchemaConstants.BATCH_KEYS_ARG)
@@ -178,7 +180,8 @@ public final class SchemaFactory {
         .fieldDefinition(batchField);
 
     codeRegistryBuilder.dataFetcher(FieldCoordinates.coordinates(SchemaConstants.QUERY_TYPE, baseName), genericDataFetcher)
-        .dataFetcher(FieldCoordinates.coordinates(SchemaConstants.QUERY_TYPE, collectionName), genericDataFetcher);
+        .dataFetcher(FieldCoordinates.coordinates(SchemaConstants.QUERY_TYPE, collectionName), genericDataFetcher)
+        .dataFetcher(FieldCoordinates.coordinates(SchemaConstants.QUERY_TYPE, batchName), genericDataFetcher);
   }
 
   private boolean isFilterable(ObjectType objectType, Attribute attribute) {
