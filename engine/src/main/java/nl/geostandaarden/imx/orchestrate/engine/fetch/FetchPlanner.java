@@ -57,8 +57,7 @@ public final class FetchPlanner {
     return () -> fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, false, null)
         .execute(input)
         .singleOrEmpty()
-        .map(result -> resultMapper.map(result, request))
-        .map(result -> result);
+        .map(result -> resultMapper.map(result, request));
   }
 
   public FetchPlan<CollectionResult> plan(CollectionRequest request) {
