@@ -14,3 +14,7 @@ orchestrate:
       type: file
       options:
         dataPath: ../data/city
+    land:
+      type: file
+      options:
+        dataPath: ../data/land

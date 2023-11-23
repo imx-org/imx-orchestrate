@@ -14,3 +14,6 @@ objectTypes:
       postalCode:
         type: String
         cardinality: 0..1
+      parcel:
+        type: String
+        cardinality: 0..1
