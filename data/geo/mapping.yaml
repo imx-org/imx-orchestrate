@@ -6,6 +6,19 @@ sourceModels:
     location: ../data/adr/model.yaml
   city:
     location: ../data/city/model.yaml
+  land:
+    location: ../data/land/model.yaml
+
+sourceRelations:
+  - sourceType: adr:Address
+    property:
+      name: hasParcel
+      target: land:Parcel
+      cardinality: 0..1
+      inverseName: hasAddress
+      inverseCardinality: 0..*
+      keyMapping:
+        id: parcel
 
 objectTypeMappings:
   Construction:
@@ -54,14 +67,15 @@ objectTypeMappings:
                 prefix: ' '
         combiner:
           type: join
-
-      # TODO: auto-create inverse mappings
       isAddressOf:
         pathMappings:
           - path: isMainAddressOf/isPartOf
           - path: isSubAddressOf/isPartOf
         combiner:
           type: coalesce
+      parcel:
+        pathMappings:
+          path: hasParcel
 
   Dimensions:
     sourceRoot: city:Building
@@ -69,3 +83,16 @@ objectTypeMappings:
       surface:
         pathMappings:
           path: area
+
+  Parcel:
+    sourceRoot: land:Parcel
+    propertyMappings:
+      id:
+        pathMappings:
+          path: id
+      geometry:
+        pathMappings:
+          path: geometry
+      hasAddress:
+        pathMappings:
+          path: hasAddress

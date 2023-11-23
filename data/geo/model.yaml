@@ -36,9 +36,25 @@ objectTypes:
       fullAddress:
         type: String
         cardinality: 1
+    relations:
+      parcel:
+        target: Parcel
+        cardinality: 0..1
+        inverseName: hasAddress
+        inverseCardinality: 0..*
 
   Dimensions:
     attributes:
       surface:
         type: Integer
         cardinality: 0..1
+
+  Parcel:
+    attributes:
+      id:
+        type: String
+        identifier: true
+        cardinality: 1
+      geometry:
+        type: Geometry
+        cardinality: 1
