@@ -34,3 +34,13 @@ objectTypes:
         cardinality: 0..*
         inverseName: isSubAddressOf
         inverseCardinality: 1
+
+  Bridge:
+    attributes:
+      id:
+        type: String
+        identifier: true
+        cardinality: 1
+      geometry:
+        type: Geometry
+        cardinality: 0..1

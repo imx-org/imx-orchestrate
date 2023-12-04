@@ -3,7 +3,7 @@
     "id": "BP0001",
     "isPartOf": [
       {
-        "id": "B0001"
+        "id": "BU0001"
       }
     ],
     "hasMainAddress": {
@@ -14,7 +14,7 @@
     "id": "BP0002",
     "isPartOf": [
       {
-        "id": "B0002"
+        "id": "BU0002"
       }
     ],
     "hasMainAddress": {
@@ -25,10 +25,10 @@
     "id": "BP0003",
     "isPartOf": [
       {
-        "id": "B0002"
+        "id": "BU0002"
       },
       {
-        "id": "B0003"
+        "id": "BU0003"
       }
     ],
     "hasMainAddress": {

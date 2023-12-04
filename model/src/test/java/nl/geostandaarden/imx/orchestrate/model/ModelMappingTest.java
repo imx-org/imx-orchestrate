@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class ModelMappingTest {
@@ -18,7 +19,7 @@ class ModelMappingTest {
     var modelMapping = ModelMapping.builder()
         .targetModel(targetModel)
         .sourceModel(sourceModel)
-        .objectTypeMapping("Area", ObjectTypeMapping.builder()
+        .objectTypeMapping("Area", List.of(ObjectTypeMapping.builder()
             .sourceRoot(ObjectTypeRef.fromString("src:City"))
             .propertyMapping("code", PropertyMapping.builder()
                 .pathMapping(PathMapping.builder()
@@ -30,7 +31,7 @@ class ModelMappingTest {
                     .path(Path.fromString("mayor/name"))
                     .build())
                 .build())
-            .build())
+            .build()))
         .build();
 
     assertThat(modelMapping).isNotNull();

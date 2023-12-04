@@ -41,7 +41,7 @@ public final class ObjectResultMapper {
 
   public ObjectResult map(ObjectResult objectResult, DataRequest request) {
     var targetType = request.getObjectType();
-    var targetMapping = modelMapping.getObjectTypeMapping(targetType);
+    var targetMapping = modelMapping.getObjectTypeMappings(targetType).get(0);
     var properties = new HashMap<String, Object>();
     var lineageBuilder = ObjectLineage.builder();
 
@@ -55,7 +55,7 @@ public final class ObjectResultMapper {
           var propertyMapping = targetMapping.getPropertyMapping(property);
 
           // TODO: Refactor
-          if (!propertyMapping.isPresent()) {
+          if (propertyMapping.isEmpty()) {
             var propertyValue = map(objectResult, selectedProperty.getNestedRequest())
                 .getProperties();
             properties.put(property.getName(), propertyValue);

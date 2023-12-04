@@ -21,7 +21,7 @@ class GatewayIT {
 
   private static final String QUERY = """
         {
-          construction(id: "B0002") {
+          construction(id: "BU0002") {
             id
             dimensions {
               surface
@@ -66,7 +66,7 @@ class GatewayIT {
         .get();
 
     assertThat(adres).isNotNull()
-        .containsEntry("id", "B0002")
+        .containsEntry("id", "BU0002")
         .containsEntry("dimensions", Map.of("surface", 195))
         .extractingByKey("hasLineage", as(InstanceOfAssertFactories.MAP))
         .extractingByKey("orchestratedDataElements", as(InstanceOfAssertFactories.COLLECTION))

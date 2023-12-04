@@ -1,6 +1,6 @@
 [
   {
-    "id": "B0001",
+    "id": "BU0001",
     "area": 382,
     "geometry": {
       "type": "Polygon",
@@ -31,7 +31,7 @@
     }
   },
   {
-    "id": "B0002",
+    "id": "BU0002",
     "area": 195,
     "geometry": {
       "type": "Polygon",
@@ -62,7 +62,7 @@
     }
   },
   {
-    "id": "B0003",
+    "id": "BU0003",
     "area": 254,
     "geometry": {
       "type": "Polygon",
