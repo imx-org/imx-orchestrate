@@ -82,28 +82,30 @@ public final class FetchPlanner {
   private Set<Path> resolveSourcePaths(DataRequest request, ObjectTypeMapping typeMapping, Path basePath) {
     return request.getSelectedProperties()
         .stream()
-        .flatMap(selectedProperty -> {
-          var propertyMapping = typeMapping.getPropertyMapping(selectedProperty.getProperty());
-
-          if (propertyMapping.isPresent()) {
-            return propertyMapping.stream()
-                .flatMap(mapping -> resolveSourcePaths(selectedProperty, mapping, basePath));
-          }
-
-          if (selectedProperty.getProperty() instanceof Relation relation) {
-            var relTargetType = modelMapping.getTargetType(relation.getTarget());
-
-            return modelMapping
-                .getObjectTypeMappings(relTargetType)
-                .stream()
-                .filter(targetTypeMapping -> targetTypeMapping.getSourceRoot()
-                    .equals(typeMapping.getSourceRoot()))
-                .flatMap(targetTypeMapping -> resolveSourcePaths(selectedProperty.getNestedRequest(), targetTypeMapping, basePath).stream());
-          }
-
-          return Stream.empty();
-        })
+        .flatMap(selectedProperty -> resolveSourcePaths(selectedProperty, typeMapping, basePath))
         .collect(toSet());
+  }
+
+  private Stream<Path> resolveSourcePaths(SelectedProperty selectedProperty, ObjectTypeMapping typeMapping, Path basePath) {
+    var propertyMapping = typeMapping.getPropertyMapping(selectedProperty.getProperty());
+
+    if (propertyMapping.isPresent()) {
+      return propertyMapping.stream()
+          .flatMap(mapping -> resolveSourcePaths(selectedProperty, mapping, basePath));
+    }
+
+    if (selectedProperty.getProperty() instanceof Relation relation) {
+      var relTargetType = modelMapping.getTargetType(relation.getTarget());
+
+      return modelMapping
+          .getObjectTypeMappings(relTargetType)
+          .stream()
+          .filter(targetTypeMapping -> targetTypeMapping.getSourceRoot()
+              .equals(typeMapping.getSourceRoot()))
+          .flatMap(targetTypeMapping -> resolveSourcePaths(selectedProperty.getNestedRequest(), targetTypeMapping, basePath).stream());
+    }
+
+    return Stream.empty();
   }
 
   private Stream<Path> resolveSourcePaths(SelectedProperty selectedProperty, PropertyMapping propertyMapping, Path basePath) {
