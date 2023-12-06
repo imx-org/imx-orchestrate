@@ -28,6 +28,16 @@ public final class FetchUtils {
   }
 
   public static Map<String, Object> keyFromResult(ObjectResult objectResult, Map<String, Path> keyMapping) {
+    // TODO: Support various edge cases
+    var keysPresent = keyMapping.values()
+        .stream()
+        .allMatch(key -> objectResult.getProperties()
+            .containsKey(key.getFirstSegment()));
+
+    if (!keysPresent) {
+      return null;
+    }
+
     return keyMapping.entrySet()
         .stream()
         .collect(Collectors.toMap(Map.Entry::getKey, entry -> {

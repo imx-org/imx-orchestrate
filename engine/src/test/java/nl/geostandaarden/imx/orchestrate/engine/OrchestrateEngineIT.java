@@ -1,5 +1,6 @@
 package nl.geostandaarden.imx.orchestrate.engine;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -7,11 +8,11 @@ import static org.mockito.Mockito.when;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import nl.geostandaarden.imx.orchestrate.engine.source.DataRepository;
 import nl.geostandaarden.imx.orchestrate.ext.spatial.SpatialExtension;
 import nl.geostandaarden.imx.orchestrate.model.ComponentRegistry;
@@ -26,7 +27,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.locationtech.jts.geom.Geometry;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
@@ -73,13 +73,13 @@ class OrchestrateEngineIT {
   }
 
   @Test
-  void fetch() {
+  void fetch_returnsBuilding_forBuildingMatch() {
     var targetModel = engine.getModelMapping()
         .getTargetModel();
 
     var request = ObjectRequest.builder(targetModel)
         .objectType("Construction")
-        .objectKey(Map.of("id", "B0001"))
+        .objectKey(Map.of("id", "BU0001"))
         .selectProperty("id")
         .selectObjectProperty("dimensions", builder -> builder
             .selectProperty("surface")
@@ -100,7 +100,7 @@ class OrchestrateEngineIT {
 
           return switch (objectType.getName()) {
             case "Address" ->
-              Mono.just(Map.of("id", "A0001", "houseNumber", 23, "postalCode", "1234AB", "parcel", "P12345"));
+                Mono.just(Map.of("id", "A0001", "houseNumber", 23, "postalCode", "1234AB", "parcel", "P12345"));
             default -> throw new IllegalStateException();
           };
         });
@@ -110,9 +110,10 @@ class OrchestrateEngineIT {
           var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
 
           return switch (objectType.getName()) {
-            case "Building" -> Mono.just(Map.of("id", "B0001", "area", 123, "geometry",
+            case "Building" -> Mono.just(Map.of("id", "BU0001", "area", 123, "geometry",
                 Map.of("type", "Polygon", "coordinates",
                     List.of(List.of(List.of(0, 0), List.of(10, 0), List.of(10, 10), List.of(0, 10), List.of(0, 0))))));
+            case "Bridge" -> Mono.empty();
             default -> throw new IllegalStateException();
           };
         });
@@ -143,17 +144,173 @@ class OrchestrateEngineIT {
         .assertNext(result -> {
           assertThat(result).isNotNull();
           assertThat(result.getProperties())
-              .containsEntry("id", "B0001")
+              .containsEntry("id", "BU0001")
               .containsEntry("dimensions", Map.of("surface", 123));
           assertThat(result.getLineage())
               .extracting(ObjectLineage::getOrchestratedDataElements, as(InstanceOfAssertFactories.COLLECTION))
               .hasSize(3);
-
-          var address = (ObjectResult) ((List<?>) result.getProperty("hasAddress")).get(0);
-          var parcel = ((ObjectResult) address.getProperty("parcel"));
-          assertThat(parcel.getProperties()).containsKey("geometry");
-          assertThat(parcel.getProperty("geometry")).isInstanceOf(Geometry.class);
         })
+        .verifyComplete();
+  }
+
+  @Test
+  void fetch_returnsBridge_forBridgeMatch() {
+    var targetModel = engine.getModelMapping()
+        .getTargetModel();
+
+    var request = ObjectRequest.builder(targetModel)
+        .objectType("Construction")
+        .objectKey(Map.of("id", "BR0001"))
+        .selectProperty("id")
+        .selectObjectProperty("dimensions", builder -> builder
+            .selectProperty("surface")
+            .build())
+        .selectProperty("geometry")
+        .selectCollectionProperty("hasAddress", builder -> builder
+            .selectProperty("postalCode")
+            .selectProperty("houseNumber")
+            .build())
+        .build();
+
+    when(cityRepositoryMock.findOne(any(ObjectRequest.class)))
+        .thenAnswer(invocation -> {
+          var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+
+          return switch (objectType.getName()) {
+            case "Building" -> Mono.empty();
+            case "Bridge" -> Mono.just(Map.of("id", "BR0001", "geometry",
+                Map.of("type", "Point", "coordinates", List.of(0, 0))));
+            default -> throw new IllegalStateException();
+          };
+        });
+
+    var resultMono = engine.fetch(request);
+
+    StepVerifier.create(resultMono)
+        .assertNext(result -> {
+          assertThat(result).isNotNull();
+          assertThat(result.getProperties())
+              .containsEntry("id", "BR0001")
+              .containsKey("geometry")
+              .containsEntry("hasAddress", emptyList())
+              .doesNotContainKey("surface");
+          assertThat(result.getLineage())
+              .extracting(ObjectLineage::getOrchestratedDataElements, as(InstanceOfAssertFactories.COLLECTION))
+              .hasSize(2);
+        })
+        .verifyComplete();
+  }
+
+  @Test
+  void fetch_returnsEmpty_forNoSourceMatch() {
+    var targetModel = engine.getModelMapping()
+        .getTargetModel();
+
+    var request = ObjectRequest.builder(targetModel)
+        .objectType("Construction")
+        .objectKey(Map.of("id", "BU0001"))
+        .selectProperty("id")
+        .selectObjectProperty("dimensions", builder -> builder
+            .selectProperty("surface")
+            .build())
+        .selectProperty("geometry")
+        .build();
+
+    when(cityRepositoryMock.findOne(any(ObjectRequest.class)))
+        .thenReturn(Mono.empty());
+
+    var resultMono = engine.fetch(request);
+
+    StepVerifier.create(resultMono)
+        .verifyComplete();
+  }
+
+  @Test
+  void fetch_picksFirstResult_forMultipleMatches() {
+    var targetModel = engine.getModelMapping()
+        .getTargetModel();
+
+    var request = ObjectRequest.builder(targetModel)
+        .objectType("Construction")
+        .objectKey(Map.of("id", "BU0001"))
+        .selectProperty("id")
+        .selectProperty("geometry")
+        .build();
+
+    when(cityRepositoryMock.findOne(any(ObjectRequest.class)))
+        .thenAnswer(invocation -> {
+          var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+
+          return switch (objectType.getName()) {
+            case "Building" -> Mono.just(Map.of("id", "BU0001", "geometry",
+                    Map.of("type", "Point", "coordinates", List.of(0, 0))))
+                .delayElement(Duration.ofMillis(100));
+            case "Bridge" -> Mono.just(Map.of("id", "BR0001", "geometry",
+                Map.of("type", "Point", "coordinates", List.of(0, 0))));
+            default -> throw new IllegalStateException();
+          };
+        });
+
+    var resultMono = engine.fetch(request);
+
+    StepVerifier.create(resultMono)
+        .assertNext(result -> {
+          assertThat(result).isNotNull();
+          assertThat(result.getProperties())
+              .containsEntry("id", "BU0001");
+        })
+        .verifyComplete();
+  }
+
+  @Test
+  void fetch_returnsEmptyList_forEmptySources() {
+    var targetModel = engine.getModelMapping()
+        .getTargetModel();
+
+    var request = CollectionRequest.builder(targetModel)
+        .objectType("Construction")
+        .selectProperty("id")
+        .selectProperty("geometry")
+        .build();
+
+    when(cityRepositoryMock.find(any(CollectionRequest.class)))
+        .thenReturn(Flux.empty());
+
+    var resultMono = engine.fetch(request);
+
+    StepVerifier.create(resultMono)
+        .assertNext(result -> assertThat(result.getObjectResults()).isEmpty())
+        .verifyComplete();
+  }
+
+  @Test
+  void fetch_returnsMergedList_forMultipleSources() {
+    var targetModel = engine.getModelMapping()
+        .getTargetModel();
+
+    var request = CollectionRequest.builder(targetModel)
+        .objectType("Construction")
+        .selectProperty("id")
+        .selectProperty("geometry")
+        .build();
+
+    when(cityRepositoryMock.find(any(CollectionRequest.class)))
+        .thenAnswer(invocation -> {
+          var objectType = ((CollectionRequest) invocation.getArgument(0)).getObjectType();
+
+          return switch (objectType.getName()) {
+            case "Building" -> Flux.just(Map.of("id", "BU0001", "geometry",
+                Map.of("type", "Point", "coordinates", List.of(0, 0))));
+            case "Bridge" -> Flux.just(Map.of("id", "BR0001", "geometry",
+                Map.of("type", "Point", "coordinates", List.of(0, 0))));
+            default -> throw new IllegalStateException();
+          };
+        });
+
+    var resultMono = engine.fetch(request);
+
+    StepVerifier.create(resultMono)
+        .assertNext(result -> assertThat(result.getObjectResults()).hasSize(2))
         .verifyComplete();
   }
 }

@@ -22,77 +22,85 @@ sourceRelations:
 
 objectTypeMappings:
   Construction:
-    sourceRoot: city:Building
-    propertyMappings:
-      id:
-        pathMappings:
-          path: id
-      geometry:
-        pathMappings:
-          path: geometry
-      hasAddress:
-        pathMappings:
-          - path: consistsOf/hasMainAddress
-          - path: consistsOf/hasSubAddress
-        combiner:
-          type: merge
+    - sourceRoot: city:Building
+      propertyMappings:
+        id:
+          pathMappings:
+            path: id
+        geometry:
+          pathMappings:
+            path: geometry
+        hasAddress:
+          pathMappings:
+            - path: consistsOf/hasMainAddress
+            - path: consistsOf/hasSubAddress
+          combiner:
+            type: merge
+    - sourceRoot: city:Bridge
+      propertyMappings:
+        id:
+          pathMappings:
+            path: id
+        geometry:
+          pathMappings:
+            path: geometry
 
   Address:
-    sourceRoot: adr:Address
-    propertyMappings:
-      id:
-        pathMappings:
-          path: id
-      houseNumber:
-        pathMappings:
-          path: houseNumber
-      houseNumberAddition:
-        pathMappings:
-          path: houseNumberAddition
-      postalCode:
-        pathMappings:
-          path: postalCode
-      fullAddress:
-        pathMappings:
-          - path: postalCode
-          - path: houseNumber
-            map:
-              type: prepend
-              options:
-                prefix: ' '
-          - path: houseNumberAddition
-            map:
-              type: prepend
-              options:
-                prefix: ' '
-        combiner:
-          type: join
-      isAddressOf:
-        pathMappings:
-          - path: isMainAddressOf/isPartOf
-          - path: isSubAddressOf/isPartOf
-        combiner:
-          type: coalesce
-      parcel:
-        pathMappings:
-          path: hasParcel
+    - sourceRoot: adr:Address
+      propertyMappings:
+        id:
+          pathMappings:
+            path: id
+        houseNumber:
+          pathMappings:
+            path: houseNumber
+        houseNumberAddition:
+          pathMappings:
+            path: houseNumberAddition
+        postalCode:
+          pathMappings:
+            path: postalCode
+        fullAddress:
+          pathMappings:
+            - path: postalCode
+            - path: houseNumber
+              map:
+                type: prepend
+                options:
+                  prefix: ' '
+            - path: houseNumberAddition
+              map:
+                type: prepend
+                options:
+                  prefix: ' '
+          combiner:
+            type: join
+        isAddressOf:
+          pathMappings:
+            - path: isMainAddressOf/isPartOf
+            - path: isSubAddressOf/isPartOf
+          combiner:
+            type: coalesce
+        parcel:
+          pathMappings:
+            path: hasParcel
 
   Dimensions:
-    sourceRoot: city:Building
-    propertyMappings:
-      surface:
-        pathMappings:
-          path: area
+    - sourceRoot: city:Building
+      propertyMappings:
+        surface:
+          pathMappings:
+            path: area
 
   Parcel:
-    sourceRoot: land:Parcel
-    propertyMappings:
-      id:
-        pathMappings:
-          path: id
-      geometry:
-        pathMappings:
-          path: geometry
-      hasAddress:
-        pathMappings:
-          path: hasAddress
+    - sourceRoot: land:Parcel
+      propertyMappings:
+        id:
+          pathMappings:
+            path: id
+        geometry:
+          pathMappings:
+            path: geometry
+        hasAddress:
+          pathMappings:
+            path: hasAddress

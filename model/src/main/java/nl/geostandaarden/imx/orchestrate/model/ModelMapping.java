@@ -2,6 +2,7 @@ package nl.geostandaarden.imx.orchestrate.model;
 
 import static java.util.stream.Collectors.toMap;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -23,14 +24,14 @@ public final class ModelMapping {
 
   private final Set<SourceRelation> sourceRelations;
 
-  private final Map<String, ObjectTypeMapping> objectTypeMappings;
+  private final Map<String, List<ObjectTypeMapping>> objectTypeMappings;
 
   private final Map<String, String> lineageNameMapping;
 
   @Jacksonized
   @Builder(toBuilder = true)
   public ModelMapping(Model targetModel, @Singular Set<Model> sourceModels,
-      @Singular Set<SourceRelation> sourceRelations, @Singular Map<String, ObjectTypeMapping> objectTypeMappings,
+      @Singular Set<SourceRelation> sourceRelations, @Singular Map<String, List<ObjectTypeMapping>> objectTypeMappings,
       Map<String, String> lineageNameMapping) {
     // TODO: Remove null-check once parser workaround has been resolved
     if (targetModel != null) {
@@ -150,12 +151,31 @@ public final class ModelMapping {
         .getObjectType(sourceTypeRef.getName());
   }
 
-  public ObjectTypeMapping getObjectTypeMapping(String name) {
+  public List<ObjectTypeMapping> getObjectTypeMappings(String name) {
     return Optional.ofNullable(objectTypeMappings.get(name))
         .orElseThrow(() -> new ModelException("Object type mapping not found: " + name));
   }
 
-  public ObjectTypeMapping getObjectTypeMapping(ObjectType objectType) {
-    return getObjectTypeMapping(objectType.getName());
+  public List<ObjectTypeMapping> getObjectTypeMappings(ObjectType targetType) {
+    return getObjectTypeMappings(targetType.getName());
+  }
+
+  public Optional<ObjectTypeMapping> getObjectTypeMapping(ObjectType targetType, ObjectType sourceRoot) {
+    // TODO: Compare by qualified source root names
+    return getObjectTypeMappings(targetType)
+        .stream()
+        .filter(typeMapping -> typeMapping.getSourceRoot()
+            .getName()
+            .equals(sourceRoot.getName()))
+        .findFirst();
+  }
+
+  public Optional<ObjectTypeMapping> getObjectTypeMapping(ObjectType targetType, ObjectTypeRef sourceRootRef) {
+    return getObjectTypeMappings(targetType)
+        .stream()
+        .filter(typeMapping -> typeMapping.getSourceRoot()
+            .getName()
+            .equals(sourceRootRef.getName()))
+        .findFirst();
   }
 }

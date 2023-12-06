@@ -2,10 +2,12 @@ package nl.geostandaarden.imx.orchestrate.model;
 
 import java.util.regex.Pattern;
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
+@EqualsAndHashCode
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ObjectTypeRef {
 

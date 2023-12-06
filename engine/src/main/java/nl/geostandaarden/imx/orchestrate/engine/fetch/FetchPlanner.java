@@ -37,6 +37,8 @@ import nl.geostandaarden.imx.orchestrate.model.Property;
 import nl.geostandaarden.imx.orchestrate.model.PropertyMapping;
 import nl.geostandaarden.imx.orchestrate.model.Relation;
 import nl.geostandaarden.imx.orchestrate.model.filters.FilterDefinition;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 public final class FetchPlanner {
@@ -45,57 +47,31 @@ public final class FetchPlanner {
 
   private final Map<String, Source> sources;
 
-  public FetchPlan<ObjectResult> plan(ObjectRequest request) {
-    var typeMapping = modelMapping.getObjectTypeMapping(request.getObjectType());
-    var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
-
-    var resultMapper = ObjectResultMapper.builder()
-        .modelMapping(modelMapping)
-        .build();
-
+  public Mono<ObjectResult> plan(ObjectRequest request) {
     var input = FetchInput.newInput(request.getObjectKey());
 
-    return () -> fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, false, null)
-        .execute(input)
-        .singleOrEmpty()
-        .map(result -> resultMapper.map(result, request));
+    return fetch(request, input, false)
+        .take(1)
+        .singleOrEmpty();
   }
 
-  public FetchPlan<CollectionResult> plan(CollectionRequest request) {
-    var typeMapping = modelMapping.getObjectTypeMapping(request.getObjectType());
-    var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
-
-    var resultMapper = ObjectResultMapper.builder()
-        .modelMapping(modelMapping)
-        .build();
-
+  public Mono<CollectionResult> plan(CollectionRequest request) {
     var input = FetchInput.newInput(Map.of());
 
-    return () -> fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, true, null)
-        .execute(input)
-        .map(result -> resultMapper.map(result, request))
+    return fetch(request, input, true)
         .collectList()
         .map(objectResults -> CollectionResult.builder()
             .objectResults(objectResults)
             .build());
   }
 
-  public FetchPlan<CollectionResult> plan(BatchRequest request) {
-    var typeMapping = modelMapping.getObjectTypeMapping(request.getObjectType());
-    var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
-
-    var resultMapper = ObjectResultMapper.builder()
-        .modelMapping(modelMapping)
-        .build();
-
+  public Mono<CollectionResult> plan(BatchRequest request) {
     var inputs = request.getObjectKeys()
         .stream()
         .map(FetchInput::newInput)
         .toList();
 
-    return () -> fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, false, null)
-        .executeBatch(inputs)
-        .map(result -> resultMapper.map(result, request))
+    return fetch(request, inputs)
         .collectList()
         .map(objectResults -> CollectionResult.builder()
             .objectResults(objectResults)
@@ -103,31 +79,37 @@ public final class FetchPlanner {
   }
 
   private Set<Path> resolveSourcePaths(DataRequest request, ObjectTypeMapping typeMapping, Path basePath) {
+    var sourceRoot = modelMapping.getSourceType(typeMapping.getSourceRoot());
+
     return request.getSelectedProperties()
         .stream()
-        .flatMap(selectedProperty -> {
-          var propertyMapping = typeMapping.getPropertyMapping(selectedProperty.getProperty());
-
-          if (propertyMapping.isPresent()) {
-            return propertyMapping.stream()
-                .flatMap(mapping -> resolveSourcePaths(selectedProperty, mapping, basePath));
-          }
-
-          if (selectedProperty.getProperty() instanceof Relation relation) {
-            var targetTypeMapping = modelMapping.getObjectTypeMapping(
-                modelMapping.getTargetType(relation.getTarget()));
-            return resolveSourcePaths(selectedProperty.getNestedRequest(), targetTypeMapping, basePath)
-                .stream();
-          }
-
-          return Stream.empty();
-        })
+        .flatMap(selectedProperty -> resolveSourcePaths(sourceRoot, typeMapping, selectedProperty, basePath))
         .collect(toSet());
   }
 
-  private Stream<Path> resolveSourcePaths(SelectedProperty selectedProperty, PropertyMapping propertyMapping, Path basePath) {
-    var property = selectedProperty.getProperty();
+  private Stream<Path> resolveSourcePaths(ObjectType sourceType, ObjectTypeMapping typeMapping, SelectedProperty selectedProperty, Path basePath) {
+    var propertyMappingOptional = typeMapping.getPropertyMapping(selectedProperty.getProperty());
 
+    if (propertyMappingOptional.isPresent()) {
+      return propertyMappingOptional.stream()
+          .flatMap(propertyMapping -> resolveSourcePaths(sourceType, propertyMapping, selectedProperty, basePath));
+    }
+
+    if (selectedProperty.getProperty() instanceof AbstractRelation relation) {
+      var relTargetType = modelMapping.getTargetType(relation.getTarget());
+
+      return modelMapping
+          .getObjectTypeMappings(relTargetType)
+          .stream()
+          .filter(targetTypeMapping -> targetTypeMapping.getSourceRoot()
+              .equals(typeMapping.getSourceRoot()))
+          .flatMap(targetTypeMapping -> resolveSourcePaths(selectedProperty.getNestedRequest(), targetTypeMapping, basePath).stream());
+    }
+
+    return Stream.empty();
+  }
+
+  private Stream<Path> resolveSourcePaths(ObjectType sourceType, PropertyMapping propertyMapping, SelectedProperty selectedProperty, Path basePath) {
     var sourcePaths = propertyMapping.getPathMappings()
         .stream()
         .flatMap(pathMapping -> {
@@ -140,15 +122,71 @@ public final class FetchPlanner {
               .map(basePath::append);
         });
 
-    if (property instanceof AbstractRelation) {
+    if (selectedProperty.getProperty() instanceof AbstractRelation relation) {
       var nestedRequest = Optional.ofNullable(selectedProperty.getNestedRequest())
-          .orElseThrow(() -> new OrchestrateException("Nested request not present for relation: " + property.getName()));
-      var nestedTypeMapping = modelMapping.getObjectTypeMapping(nestedRequest.getObjectType());
+          .orElseThrow(() -> new OrchestrateException("Nested request not present for relation: " + relation.getName()));
 
-      return sourcePaths.flatMap(sourcePath -> resolveSourcePaths(nestedRequest, nestedTypeMapping, sourcePath).stream());
+      return sourcePaths.flatMap(sourcePath -> {
+        var sourceRelTarget = resolveSourceRelation(sourceType, sourcePath).getTarget();
+
+        var nestedTypeMapping = modelMapping.getObjectTypeMapping(nestedRequest.getObjectType(), sourceRelTarget)
+            .orElseThrow(() -> new OrchestrateException("Type mapping not found for source root: " + sourceRelTarget));
+
+        return resolveSourcePaths(nestedRequest, nestedTypeMapping, Path.fromProperties())
+            .stream()
+            .map(sourcePath::append);
+      });
     }
 
     return sourcePaths;
+  }
+
+  private AbstractRelation resolveSourceRelation(ObjectType objectType, Path sourcePath) {
+    var property = objectType.getProperty(sourcePath.getFirstSegment());
+
+    if (property instanceof AbstractRelation relation) {
+      if (sourcePath.isLeaf()) {
+        return relation;
+      }
+
+      return resolveSourceRelation(modelMapping.getSourceType(relation.getTarget()), sourcePath.withoutFirstSegment());
+    }
+
+    throw new OrchestrateException("Path segment is not a relation: " + sourcePath.getFirstSegment());
+  }
+
+  private Flux<ObjectResult> fetch(DataRequest request, FetchInput input, boolean isCollection) {
+    var typeMappings = modelMapping.getObjectTypeMappings(request.getObjectType());
+
+    return Flux.fromIterable(typeMappings)
+        .flatMapSequential(typeMapping -> {
+          var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
+
+          var resultMapper = ObjectResultMapper.builder()
+              .modelMapping(modelMapping)
+              .build();
+
+          return fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, isCollection, null)
+              .execute(input)
+              .map(result -> resultMapper.map(result, request));
+        });
+  }
+
+  private Flux<ObjectResult> fetch(BatchRequest request, List<FetchInput> inputs) {
+    var typeMappings = modelMapping.getObjectTypeMappings(request.getObjectType());
+
+    return Flux.fromIterable(typeMappings)
+        .flatMapSequential(typeMapping -> {
+          var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
+
+          var resultMapper = ObjectResultMapper.builder()
+              .modelMapping(modelMapping)
+              .build();
+
+          return fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, false, null)
+              .executeBatch(inputs)
+              .map(result -> resultMapper.map(result, request));
+        });
   }
 
   private FetchOperation fetchSourceObject(ObjectTypeRef sourceTypeRef, Set<Path> sourcePaths, boolean isCollection, FilterDefinition filter) {
@@ -308,7 +346,8 @@ public final class FetchPlanner {
         .iterator()
         .next();
 
-    var pathMappings = modelMapping.getObjectTypeMapping(targetType)
+    var pathMappings = modelMapping.getObjectTypeMappings(targetType)
+        .get(0)
         .getPropertyMapping(firstEntry.getKey())
         .map(PropertyMapping::getPathMappings)
         .orElse(List.of());

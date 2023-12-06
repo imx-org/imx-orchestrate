@@ -1,5 +1,6 @@
 package nl.geostandaarden.imx.orchestrate.engine.fetch;
 
+import static java.util.Collections.emptyList;
 import static nl.geostandaarden.imx.orchestrate.engine.fetch.FetchUtils.cast;
 import static nl.geostandaarden.imx.orchestrate.model.ModelUtils.noopCombiner;
 
@@ -17,6 +18,8 @@ import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import nl.geostandaarden.imx.orchestrate.model.AbstractRelation;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
+import nl.geostandaarden.imx.orchestrate.model.ObjectType;
+import nl.geostandaarden.imx.orchestrate.model.ObjectTypeMapping;
 import nl.geostandaarden.imx.orchestrate.model.Path;
 import nl.geostandaarden.imx.orchestrate.model.PathMapping;
 import nl.geostandaarden.imx.orchestrate.model.Property;
@@ -40,8 +43,15 @@ public final class ObjectResultMapper {
   private final ModelMapping modelMapping;
 
   public ObjectResult map(ObjectResult objectResult, DataRequest request) {
+    var sourceType = objectResult.getType();
     var targetType = request.getObjectType();
-    var targetMapping = modelMapping.getObjectTypeMapping(targetType);
+
+    return modelMapping.getObjectTypeMapping(targetType, sourceType)
+        .map(typeMapping -> map(objectResult, request, targetType, typeMapping))
+        .orElseThrow(() -> new OrchestrateException("Type mapping not found for source root: " + sourceType.getName()));
+  }
+
+  public ObjectResult map(ObjectResult objectResult, DataRequest request, ObjectType targetType, ObjectTypeMapping typeMapping) {
     var properties = new HashMap<String, Object>();
     var lineageBuilder = ObjectLineage.builder();
 
@@ -52,13 +62,22 @@ public final class ObjectResultMapper {
           }
 
           var property = targetType.getProperty(selectedProperty.getName());
-          var propertyMapping = targetMapping.getPropertyMapping(property);
+          var propertyMapping = typeMapping.getPropertyMapping(property);
 
-          // TODO: Refactor
-          if (!propertyMapping.isPresent()) {
-            var propertyValue = map(objectResult, selectedProperty.getNestedRequest())
-                .getProperties();
-            properties.put(property.getName(), propertyValue);
+          if (propertyMapping.isEmpty() && property instanceof AbstractRelation relation) {
+            var nestedType = modelMapping.getTargetType(relation.getTarget());
+
+            modelMapping.getObjectTypeMapping(nestedType, objectResult.getType())
+                .ifPresent(nestedTypeMapping -> {
+                  var propertyValue = map(objectResult, selectedProperty.getNestedRequest())
+                      .getProperties();
+                  properties.put(property.getName(), propertyValue);
+                });
+
+            if (!property.getCardinality().isSingular()) {
+              properties.put(property.getName(), emptyList());
+            }
+
             return;
           }
 
