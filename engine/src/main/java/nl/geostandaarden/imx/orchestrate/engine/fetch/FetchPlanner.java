@@ -132,14 +132,16 @@ public final class FetchPlanner {
 
         // TODO: Compare by qualified source root names
         var nestedTypeMapping = modelMapping.getObjectTypeMappings(nestedRequest.getObjectType())
-          .stream()
-          .filter(targetTypeMapping -> targetTypeMapping.getSourceRoot()
-              .getName()
-              .equals(sourceRelTarget.getName()))
-          .findFirst()
-          .orElseThrow(() -> new OrchestrateException("Type mapping not found for source root: " + sourceRelTarget));
+            .stream()
+            .filter(targetTypeMapping -> targetTypeMapping.getSourceRoot()
+                .getName()
+                .equals(sourceRelTarget.getName()))
+            .findFirst()
+            .orElseThrow(() -> new OrchestrateException("Type mapping not found for source root: " + sourceRelTarget));
 
-        return resolveSourcePaths(nestedRequest, nestedTypeMapping, sourcePath).stream();
+        return resolveSourcePaths(nestedRequest, nestedTypeMapping, Path.fromProperties())
+            .stream()
+            .map(sourcePath::append);
       });
     }
 
