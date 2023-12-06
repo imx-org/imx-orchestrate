@@ -190,10 +190,11 @@ public final class SchemaFactory {
     }
 
     var pathMappings = modelMapping.getObjectTypeMappings(objectType)
-        .get(0)
-        .getPropertyMapping(attribute)
-        .map(PropertyMapping::getPathMappings)
-        .orElse(List.of());
+        .stream()
+        .flatMap(typeMapping -> typeMapping.getPropertyMapping(attribute)
+            .stream()
+            .flatMap(propertyMapping -> propertyMapping.getPathMappings().stream()))
+        .toList();
 
     var firstPath = pathMappings.get(0)
         .getPath();
