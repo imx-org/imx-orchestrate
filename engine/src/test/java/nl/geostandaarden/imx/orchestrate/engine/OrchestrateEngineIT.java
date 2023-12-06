@@ -99,7 +99,7 @@ class OrchestrateEngineIT {
 
           return switch (objectType.getName()) {
             case "Address" ->
-              Mono.just(Map.of("id", "A0001", "houseNumber", 23, "postalCode", "1234AB", "parcel", "P12345"));
+                Mono.just(Map.of("id", "A0001", "houseNumber", 23, "postalCode", "1234AB", "parcel", "P12345"));
             default -> throw new IllegalStateException();
           };
         });
@@ -225,7 +225,7 @@ class OrchestrateEngineIT {
   }
 
   @Test
-  void fetch_throwsException_forMultipleMatches() {
+  void fetch_picksFirstResult_forMultipleMatches() {
     var targetModel = engine.getModelMapping()
         .getTargetModel();
 
@@ -237,13 +237,27 @@ class OrchestrateEngineIT {
         .build();
 
     when(cityRepositoryMock.findOne(any(ObjectRequest.class)))
-        .thenReturn(Mono.just(Map.of("id", "BU0001", "geometry",
-            Map.of("type", "Point", "coordinates", List.of(0, 0)))));
+        .thenAnswer(invocation -> {
+          var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+
+          return switch (objectType.getName()) {
+            case "Building" -> Mono.just(Map.of("id", "BU0001", "geometry",
+                Map.of("type", "Point", "coordinates", List.of(0, 0))));
+            case "Bridge" -> Mono.just(Map.of("id", "BR0001", "geometry",
+                Map.of("type", "Point", "coordinates", List.of(0, 0))));
+            default -> throw new IllegalStateException();
+          };
+        });
 
     var resultMono = engine.fetch(request);
 
     StepVerifier.create(resultMono)
-        .verifyError(OrchestrateException.class);
+        .assertNext(result -> {
+          assertThat(result).isNotNull();
+          assertThat(result.getProperties())
+              .containsEntry("id", "BU0001");
+        })
+        .verifyComplete();
   }
 
   @Test

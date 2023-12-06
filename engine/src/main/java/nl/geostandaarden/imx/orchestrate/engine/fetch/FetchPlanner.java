@@ -51,9 +51,8 @@ public final class FetchPlanner {
     var input = FetchInput.newInput(request.getObjectKey());
 
     return fetch(request, input, false)
-        .singleOrEmpty()
-        .onErrorMap(IndexOutOfBoundsException.class, e ->
-            new OrchestrateException("Multiple results were yielded, where a single result was expected.", e));
+        .take(1)
+        .singleOrEmpty();
   }
 
   public Mono<CollectionResult> plan(CollectionRequest request) {
@@ -160,7 +159,7 @@ public final class FetchPlanner {
     var typeMappings = modelMapping.getObjectTypeMappings(request.getObjectType());
 
     return Flux.fromIterable(typeMappings)
-        .flatMap(typeMapping -> {
+        .flatMapSequential(typeMapping -> {
           var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
 
           var resultMapper = ObjectResultMapper.builder()
@@ -177,7 +176,7 @@ public final class FetchPlanner {
     var typeMappings = modelMapping.getObjectTypeMappings(request.getObjectType());
 
     return Flux.fromIterable(typeMappings)
-        .flatMap(typeMapping -> {
+        .flatMapSequential(typeMapping -> {
           var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
 
           var resultMapper = ObjectResultMapper.builder()
