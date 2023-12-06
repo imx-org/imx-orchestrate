@@ -156,7 +156,16 @@ public final class ModelMapping {
         .orElseThrow(() -> new ModelException("Object type mapping not found: " + name));
   }
 
-  public List<ObjectTypeMapping> getObjectTypeMappings(ObjectType objectType) {
-    return getObjectTypeMappings(objectType.getName());
+  public List<ObjectTypeMapping> getObjectTypeMappings(ObjectType targetType) {
+    return getObjectTypeMappings(targetType.getName());
+  }
+
+  public Optional<ObjectTypeMapping> getObjectTypeMapping(ObjectType targetType, ObjectType sourceRoot) {
+    return getObjectTypeMappings(targetType)
+        .stream()
+        .filter(typeMapping -> typeMapping.getSourceRoot()
+            .getName()
+            .equals(sourceRoot.getName()))
+        .findFirst();
   }
 }
