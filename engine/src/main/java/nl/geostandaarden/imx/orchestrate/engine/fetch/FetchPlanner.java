@@ -130,13 +130,7 @@ public final class FetchPlanner {
       return sourcePaths.flatMap(sourcePath -> {
         var sourceRelTarget = resolveSourceRelation(sourceType, sourcePath).getTarget();
 
-        // TODO: Compare by qualified source root names
-        var nestedTypeMapping = modelMapping.getObjectTypeMappings(nestedRequest.getObjectType())
-            .stream()
-            .filter(targetTypeMapping -> targetTypeMapping.getSourceRoot()
-                .getName()
-                .equals(sourceRelTarget.getName()))
-            .findFirst()
+        var nestedTypeMapping = modelMapping.getObjectTypeMapping(nestedRequest.getObjectType(), sourceRelTarget)
             .orElseThrow(() -> new OrchestrateException("Type mapping not found for source root: " + sourceRelTarget));
 
         return resolveSourcePaths(nestedRequest, nestedTypeMapping, Path.fromProperties())

@@ -161,11 +161,21 @@ public final class ModelMapping {
   }
 
   public Optional<ObjectTypeMapping> getObjectTypeMapping(ObjectType targetType, ObjectType sourceRoot) {
+    // TODO: Compare by qualified source root names
     return getObjectTypeMappings(targetType)
         .stream()
         .filter(typeMapping -> typeMapping.getSourceRoot()
             .getName()
             .equals(sourceRoot.getName()))
+        .findFirst();
+  }
+
+  public Optional<ObjectTypeMapping> getObjectTypeMapping(ObjectType targetType, ObjectTypeRef sourceRootRef) {
+    return getObjectTypeMappings(targetType)
+        .stream()
+        .filter(typeMapping -> typeMapping.getSourceRoot()
+            .getName()
+            .equals(sourceRootRef.getName()))
         .findFirst();
   }
 }
