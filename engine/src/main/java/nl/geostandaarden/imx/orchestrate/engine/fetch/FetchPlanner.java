@@ -80,21 +80,23 @@ public final class FetchPlanner {
   }
 
   private Set<Path> resolveSourcePaths(DataRequest request, ObjectTypeMapping typeMapping, Path basePath) {
+    var sourceRoot = modelMapping.getSourceType(typeMapping.getSourceRoot());
+
     return request.getSelectedProperties()
         .stream()
-        .flatMap(selectedProperty -> resolveSourcePaths(selectedProperty, typeMapping, basePath))
+        .flatMap(selectedProperty -> resolveSourcePaths(sourceRoot, typeMapping, selectedProperty, basePath))
         .collect(toSet());
   }
 
-  private Stream<Path> resolveSourcePaths(SelectedProperty selectedProperty, ObjectTypeMapping typeMapping, Path basePath) {
-    var propertyMapping = typeMapping.getPropertyMapping(selectedProperty.getProperty());
+  private Stream<Path> resolveSourcePaths(ObjectType sourceType, ObjectTypeMapping typeMapping, SelectedProperty selectedProperty, Path basePath) {
+    var propertyMappingOptional = typeMapping.getPropertyMapping(selectedProperty.getProperty());
 
-    if (propertyMapping.isPresent()) {
-      return propertyMapping.stream()
-          .flatMap(mapping -> resolveSourcePaths(selectedProperty, mapping, basePath));
+    if (propertyMappingOptional.isPresent()) {
+      return propertyMappingOptional.stream()
+          .flatMap(propertyMapping -> resolveSourcePaths(sourceType, propertyMapping, selectedProperty, basePath));
     }
 
-    if (selectedProperty.getProperty() instanceof Relation relation) {
+    if (selectedProperty.getProperty() instanceof AbstractRelation relation) {
       var relTargetType = modelMapping.getTargetType(relation.getTarget());
 
       return modelMapping
@@ -108,9 +110,7 @@ public final class FetchPlanner {
     return Stream.empty();
   }
 
-  private Stream<Path> resolveSourcePaths(SelectedProperty selectedProperty, PropertyMapping propertyMapping, Path basePath) {
-    var property = selectedProperty.getProperty();
-
+  private Stream<Path> resolveSourcePaths(ObjectType sourceType, PropertyMapping propertyMapping, SelectedProperty selectedProperty, Path basePath) {
     var sourcePaths = propertyMapping.getPathMappings()
         .stream()
         .flatMap(pathMapping -> {
@@ -123,15 +123,41 @@ public final class FetchPlanner {
               .map(basePath::append);
         });
 
-    if (property instanceof AbstractRelation) {
+    if (selectedProperty.getProperty() instanceof AbstractRelation relation) {
       var nestedRequest = Optional.ofNullable(selectedProperty.getNestedRequest())
-          .orElseThrow(() -> new OrchestrateException("Nested request not present for relation: " + property.getName()));
-      var nestedTypeMapping = modelMapping.getObjectTypeMappings(nestedRequest.getObjectType()).get(0);
+          .orElseThrow(() -> new OrchestrateException("Nested request not present for relation: " + relation.getName()));
 
-      return sourcePaths.flatMap(sourcePath -> resolveSourcePaths(nestedRequest, nestedTypeMapping, sourcePath).stream());
+      return sourcePaths.flatMap(sourcePath -> {
+        var sourceRelTarget = resolveSourceRelation(sourceType, sourcePath).getTarget();
+
+        // TODO: Compare by qualified source root names
+        var nestedTypeMapping = modelMapping.getObjectTypeMappings(nestedRequest.getObjectType())
+          .stream()
+          .filter(targetTypeMapping -> targetTypeMapping.getSourceRoot()
+              .getName()
+              .equals(sourceRelTarget.getName()))
+          .findFirst()
+          .orElseThrow(() -> new OrchestrateException("Type mapping not found for source root: " + sourceRelTarget));
+
+        return resolveSourcePaths(nestedRequest, nestedTypeMapping, sourcePath).stream();
+      });
     }
 
     return sourcePaths;
+  }
+
+  private AbstractRelation resolveSourceRelation(ObjectType objectType, Path sourcePath) {
+    var property = objectType.getProperty(sourcePath.getFirstSegment());
+
+    if (property instanceof AbstractRelation relation) {
+      if (sourcePath.isLeaf()) {
+        return relation;
+      }
+
+      return resolveSourceRelation(modelMapping.getSourceType(relation.getTarget()), sourcePath.withoutFirstSegment());
+    }
+
+    throw new OrchestrateException("Path segment is not a relation: " + sourcePath.getFirstSegment());
   }
 
   private Flux<ObjectResult> fetch(DataRequest request, FetchInput input, boolean isCollection) {
