@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
@@ -242,7 +243,8 @@ class OrchestrateEngineIT {
 
           return switch (objectType.getName()) {
             case "Building" -> Mono.just(Map.of("id", "BU0001", "geometry",
-                Map.of("type", "Point", "coordinates", List.of(0, 0))));
+                    Map.of("type", "Point", "coordinates", List.of(0, 0))))
+                .delayElement(Duration.ofMillis(100));
             case "Bridge" -> Mono.just(Map.of("id", "BR0001", "geometry",
                 Map.of("type", "Point", "coordinates", List.of(0, 0))));
             default -> throw new IllegalStateException();
