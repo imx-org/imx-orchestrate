@@ -17,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.DataRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
@@ -37,7 +36,6 @@ import nl.geostandaarden.imx.orchestrate.model.PropertyMapping;
 import nl.geostandaarden.imx.orchestrate.model.Relation;
 import nl.geostandaarden.imx.orchestrate.model.filters.FilterExpression;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 public final class FetchPlanner {
@@ -46,26 +44,66 @@ public final class FetchPlanner {
 
   private final Map<String, Source> sources;
 
-  public Mono<ObjectResult> plan(ObjectRequest request) {
-    return fetch(request)
-        .take(1)
-        .singleOrEmpty();
+  public Flux<ObjectResult> fetch(ObjectRequest request) {
+    var typeMappings = modelMapping.getObjectTypeMappings(request.getObjectType());
+    var input = FetchInput.newInput(request.getObjectKey());
+
+    return Flux.fromIterable(typeMappings)
+        .flatMapSequential(typeMapping -> {
+          var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
+
+          var resultMapper = ObjectResultMapper.builder()
+              .modelMapping(modelMapping)
+              .build();
+
+          return fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, false, null)
+              .execute(input)
+              .map(result -> resultMapper.map(result, request));
+        });
   }
 
-  public Mono<CollectionResult> plan(CollectionRequest request) {
-    return fetch(request)
-        .collectList()
-        .map(objectResults -> CollectionResult.builder()
-            .objectResults(objectResults)
-            .build());
+  public Flux<ObjectResult> fetch(CollectionRequest request) {
+    var typeMappings = modelMapping.getObjectTypeMappings(request.getObjectType());
+
+    return Flux.fromIterable(typeMappings)
+        .flatMapSequential(typeMapping -> {
+          var sourceRoot = typeMapping.getSourceRoot();
+          var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
+
+          var resultMapper = ObjectResultMapper.builder()
+              .modelMapping(modelMapping)
+              .build();
+
+          var filterMapper = Optional.ofNullable(request.getFilter())
+              .map(FilterMapper::just)
+              .orElse(null);
+
+          return fetchSourceObject(sourceRoot, sourcePaths, true, filterMapper)
+              .execute(FetchInput.newInput(Map.of()))
+              .map(result -> resultMapper.map(result, request));
+        });
   }
 
-  public Mono<CollectionResult> plan(BatchRequest request) {
-    return fetch(request)
-        .collectList()
-        .map(objectResults -> CollectionResult.builder()
-            .objectResults(objectResults)
-            .build());
+  public Flux<ObjectResult> fetch(BatchRequest request) {
+    var typeMappings = modelMapping.getObjectTypeMappings(request.getObjectType());
+
+    var inputs = request.getObjectKeys()
+        .stream()
+        .map(FetchInput::newInput)
+        .toList();
+
+    return Flux.fromIterable(typeMappings)
+        .flatMapSequential(typeMapping -> {
+          var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
+
+          var resultMapper = ObjectResultMapper.builder()
+              .modelMapping(modelMapping)
+              .build();
+
+          return fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, false, null)
+              .executeBatch(inputs)
+              .map(result -> resultMapper.map(result, request));
+        });
   }
 
   private Set<Path> resolveSourcePaths(DataRequest request, ObjectTypeMapping typeMapping, Path basePath) {
@@ -143,68 +181,6 @@ public final class FetchPlanner {
     }
 
     throw new OrchestrateException("Path segment is not a relation: " + sourcePath.getFirstSegment());
-  }
-
-  private Flux<ObjectResult> fetch(ObjectRequest request) {
-    var typeMappings = modelMapping.getObjectTypeMappings(request.getObjectType());
-    var input = FetchInput.newInput(request.getObjectKey());
-
-    return Flux.fromIterable(typeMappings)
-        .flatMapSequential(typeMapping -> {
-          var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
-
-          var resultMapper = ObjectResultMapper.builder()
-              .modelMapping(modelMapping)
-              .build();
-
-          return fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, false, null)
-              .execute(input)
-              .map(result -> resultMapper.map(result, request));
-        });
-  }
-
-  private Flux<ObjectResult> fetch(CollectionRequest request) {
-    var typeMappings = modelMapping.getObjectTypeMappings(request.getObjectType());
-
-    return Flux.fromIterable(typeMappings)
-        .flatMapSequential(typeMapping -> {
-          var sourceRoot = typeMapping.getSourceRoot();
-          var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
-
-          var resultMapper = ObjectResultMapper.builder()
-              .modelMapping(modelMapping)
-              .build();
-
-          var filterMapper = Optional.ofNullable(request.getFilter())
-              .map(FilterMapper::just)
-              .orElse(null);
-
-          return fetchSourceObject(sourceRoot, sourcePaths, true, filterMapper)
-              .execute(FetchInput.newInput(Map.of()))
-              .map(result -> resultMapper.map(result, request));
-        });
-  }
-
-  private Flux<ObjectResult> fetch(BatchRequest request) {
-    var typeMappings = modelMapping.getObjectTypeMappings(request.getObjectType());
-
-    var inputs = request.getObjectKeys()
-        .stream()
-        .map(FetchInput::newInput)
-        .toList();
-
-    return Flux.fromIterable(typeMappings)
-        .flatMapSequential(typeMapping -> {
-          var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
-
-          var resultMapper = ObjectResultMapper.builder()
-              .modelMapping(modelMapping)
-              .build();
-
-          return fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, false, null)
-              .executeBatch(inputs)
-              .map(result -> resultMapper.map(result, request));
-        });
   }
 
   private FetchOperation fetchSourceObject(ObjectTypeRef sourceTypeRef, Set<Path> sourcePaths, boolean isCollection, FilterMapper filterMapper) {

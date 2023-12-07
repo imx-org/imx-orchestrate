@@ -36,14 +36,24 @@ public final class OrchestrateEngine {
   }
 
   public Mono<ObjectResult> fetch(ObjectRequest request) {
-    return fetchPlanner.plan(request);
+    return fetchPlanner.fetch(request)
+        .take(1)
+        .singleOrEmpty();
   }
 
   public Mono<CollectionResult> fetch(CollectionRequest request) {
-    return fetchPlanner.plan(request);
+    return fetchPlanner.fetch(request)
+        .collectList()
+        .map(objectResults -> CollectionResult.builder()
+            .objectResults(objectResults)
+            .build());
   }
 
   public Mono<CollectionResult> fetch(BatchRequest request) {
-    return fetchPlanner.plan(request);
+    return fetchPlanner.fetch(request)
+        .collectList()
+        .map(objectResults -> CollectionResult.builder()
+            .objectResults(objectResults)
+            .build());
   }
 }
