@@ -1,10 +1,13 @@
 package nl.geostandaarden.imx.orchestrate.ext.spatial.geometry;
 
 import java.util.Map;
+import java.util.Set;
 import nl.geostandaarden.imx.orchestrate.model.ModelException;
 import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeFactory;
 
 public class GeometryTypeFactory implements ValueTypeFactory<GeometryType> {
+
+  public static final Set<String> FILTER_OPERATOR_TYPES = Set.of("intersects", "touches", "contains", "within");
 
   @Override
   public String getTypeName() {
@@ -20,5 +23,10 @@ public class GeometryTypeFactory implements ValueTypeFactory<GeometryType> {
     }
 
     throw new ModelException("SRID is not an integer.");
+  }
+
+  @Override
+  public Set<String> getSupportedFilterTypes() {
+    return FILTER_OPERATOR_TYPES;
   }
 }

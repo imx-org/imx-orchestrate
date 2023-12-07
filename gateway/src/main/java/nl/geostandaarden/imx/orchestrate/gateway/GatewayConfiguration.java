@@ -22,6 +22,7 @@ import nl.geostandaarden.imx.orchestrate.model.ComponentRegistry;
 import nl.geostandaarden.imx.orchestrate.model.Model;
 import nl.geostandaarden.imx.orchestrate.model.loader.ModelLoader;
 import nl.geostandaarden.imx.orchestrate.model.loader.ModelLoaderRegistry;
+import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeFactory;
 import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeRegistry;
 import nl.geostandaarden.imx.orchestrate.parser.yaml.YamlModelMappingParser;
 import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
@@ -49,7 +50,7 @@ public class GatewayConfiguration {
     resolveModelLoaders().forEach(modelLoaderRegistry::register);
 
     var valueTypeRegistry = new ValueTypeRegistry();
-    extensions.forEach(extension -> extension.registerValueTypes(valueTypeRegistry));
+    extensions.forEach(extension -> valueTypeRegistry.register(extension.getValueTypeFactories().toArray(ValueTypeFactory[]::new)));
 
     var modelMapping = new YamlModelMappingParser(componentRegistry, modelLoaderRegistry, valueTypeRegistry)
         .parse(new FileInputStream(gatewayProperties.getMapping()));

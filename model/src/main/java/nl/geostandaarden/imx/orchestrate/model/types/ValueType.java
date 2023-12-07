@@ -2,7 +2,6 @@ package nl.geostandaarden.imx.orchestrate.model.types;
 
 import java.util.Map;
 import nl.geostandaarden.imx.orchestrate.model.Path;
-import nl.geostandaarden.imx.orchestrate.model.filters.EqualsOperatorType;
 import nl.geostandaarden.imx.orchestrate.model.filters.FilterExpression;
 
 public interface ValueType {
@@ -17,10 +16,9 @@ public interface ValueType {
     return value;
   }
 
-  default FilterExpression createFilterExpression(Path path, Object inputValue) {
+  default FilterExpression createFilterExpression(Path path, Map<String, Object> inputValue) {
     return FilterExpression.builder()
         .path(path)
-        .operator(new EqualsOperatorType().create(Map.of()))
         .value(inputValue)
         .build();
   }

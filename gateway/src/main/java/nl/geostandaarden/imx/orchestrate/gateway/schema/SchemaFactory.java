@@ -23,6 +23,7 @@ import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ import nl.geostandaarden.imx.orchestrate.model.AbstractRelation;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
+import nl.geostandaarden.imx.orchestrate.model.OrchestrateExtension;
 import nl.geostandaarden.imx.orchestrate.model.Path;
 import nl.geostandaarden.imx.orchestrate.model.PathMapping;
 import nl.geostandaarden.imx.orchestrate.model.Property;
@@ -47,6 +49,8 @@ import nl.geostandaarden.imx.orchestrate.model.lineage.PathExecution;
 import nl.geostandaarden.imx.orchestrate.model.lineage.PathMappingExecution;
 import nl.geostandaarden.imx.orchestrate.model.lineage.PropertyMappingExecution;
 import nl.geostandaarden.imx.orchestrate.model.lineage.SourceDataElement;
+import nl.geostandaarden.imx.orchestrate.model.types.ScalarTypes;
+import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeFactory;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SchemaFactory {
@@ -59,6 +63,8 @@ public final class SchemaFactory {
 
   private final ModelMapping modelMapping;
 
+  private final Set<OrchestrateExtension> extensions;
+
   private final GenericDataFetcher genericDataFetcher;
 
   private final ObjectLineageFetcher objectLineageFetcher;
@@ -67,6 +73,7 @@ public final class SchemaFactory {
 
   public static GraphQLSchema create(OrchestrateEngine engine) {
     var modelMapping = engine.getModelMapping();
+    var extensions = engine.getExtensions();
 
     UnaryOperator<String> lineageRenamer =
         fieldName -> modelMapping.getLineageNameMapping().getOrDefault(fieldName, fieldName);
@@ -74,11 +81,14 @@ public final class SchemaFactory {
     var genericDataFetcher = new GenericDataFetcher(engine, lineageRenamer.apply(SchemaConstants.HAS_LINEAGE_FIELD));
     var objectLineageFetcher = new ObjectLineageFetcher(modelMapping.getLineageNameMapping());
 
-    return new SchemaFactory(modelMapping, genericDataFetcher, objectLineageFetcher, lineageRenamer).create();
+    return new SchemaFactory(modelMapping, extensions, genericDataFetcher, objectLineageFetcher, lineageRenamer).create();
   }
 
   private GraphQLSchema create() {
     registerLineageTypes();
+
+    extensions.forEach(extension -> extension.getValueTypeFactories()
+        .forEach(this::registerValueType));
 
     modelMapping.getTargetModel()
         .getObjectTypes()
@@ -94,6 +104,21 @@ public final class SchemaFactory {
         .makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
 
     return transformSchema(schema, new SchemaVisitor(lineageRenamer.apply(SchemaConstants.HAS_LINEAGE_FIELD)));
+  }
+
+  private void registerValueType(ValueTypeFactory<?> valueTypeFactory) {
+    typeDefinitionRegistry.add(InputObjectTypeDefinition.newInputObjectDefinition()
+        .name(valueTypeFactory.getTypeName()
+            .concat(SchemaConstants.FILTER_TYPE_SUFFIX))
+        .inputValueDefinitions(valueTypeFactory.getSupportedFilterTypes()
+            .stream()
+            .map(operatorType -> InputValueDefinition.newInputValueDefinition()
+                .name(operatorType)
+                // TODO: Specific value type
+                .type(new TypeName(ScalarTypes.STRING.getName()))
+                .build())
+            .toList())
+        .build());
   }
 
   private void registerObjectType(ObjectType objectType) {
@@ -130,21 +155,21 @@ public final class SchemaFactory {
         .filter(attribute -> isFilterable(objectType, attribute))
         .map(attribute -> InputValueDefinition.newInputValueDefinition()
             .name(attribute.getName())
-            .type(mapFieldType(attribute, false))
+            .type(mapFilterType(attribute))
             .build())
         .toList();
 
     if (!filterFields.isEmpty()) {
       typeDefinitionRegistry.add(InputObjectTypeDefinition.newInputObjectDefinition()
           .name(objectType.getName()
-              .concat(SchemaConstants.QUERY_FILTER_SUFFIX))
+              .concat(SchemaConstants.FILTER_TYPE_SUFFIX))
           .inputValueDefinitions(filterFields)
           .build());
 
       var filterArgument = InputValueDefinition.newInputValueDefinition()
           .name(SchemaConstants.QUERY_FILTER_ARGUMENT)
           .type(new TypeName(objectType.getName()
-              .concat(SchemaConstants.QUERY_FILTER_SUFFIX)))
+              .concat(SchemaConstants.FILTER_TYPE_SUFFIX)))
           .build();
 
       collectionField = collectionField.transform(builder -> builder.inputValueDefinition(filterArgument));
@@ -405,6 +430,16 @@ public final class SchemaFactory {
     };
 
     return applyCardinality ? applyCardinality(type, attribute.getCardinality()) : type;
+  }
+
+  private Type<?> mapFilterType(Attribute attribute) {
+    var filterTypeName = attribute.getType()
+        .getName()
+        .concat(SchemaConstants.FILTER_TYPE_SUFFIX);
+
+    var hasFilterType = typeDefinitionRegistry.getType(filterTypeName, InputObjectTypeDefinition.class).isPresent();
+
+    return hasFilterType ? new TypeName(filterTypeName) : mapFieldType(attribute);
   }
 
   private List<InputValueDefinition> createIdentityArguments(ObjectType objectType) {

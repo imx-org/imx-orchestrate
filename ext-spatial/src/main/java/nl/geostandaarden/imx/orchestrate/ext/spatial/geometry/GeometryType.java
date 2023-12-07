@@ -8,10 +8,10 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import nl.geostandaarden.imx.orchestrate.ext.spatial.SpatialException;
-import nl.geostandaarden.imx.orchestrate.ext.spatial.filters.IntersectsOperatorType;
 import nl.geostandaarden.imx.orchestrate.model.ModelException;
 import nl.geostandaarden.imx.orchestrate.model.Path;
 import nl.geostandaarden.imx.orchestrate.model.filters.FilterExpression;
+import nl.geostandaarden.imx.orchestrate.model.filters.FilterOperator;
 import nl.geostandaarden.imx.orchestrate.model.types.ValueType;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -75,24 +75,40 @@ public class GeometryType implements ValueType {
   }
 
   @Override
-  public FilterExpression createFilterExpression(Path path, Object inputValue) {
+  public FilterExpression createFilterExpression(Path path, Map<String, Object> inputValue) {
     var wktReader = new WKTReader(new GeometryFactory(new PrecisionModel(), srid));
     Geometry geometry;
 
-    if (inputValue instanceof String strValue) {
-      try {
-        geometry = wktReader.read(strValue);
-      } catch (ParseException e) {
-        throw new SpatialException("Failed parsing geometry", e);
-      }
-
-      return FilterExpression.builder()
-          .path(path)
-          .operator(new IntersectsOperatorType().create(Map.of()))
-          .value(geometry)
-          .build();
+    if (inputValue.size() > 1) {
+      throw new ModelException("Combining multiple spatial operators is not supported.");
     }
 
-    throw new ModelException("Filter expects a string value.");
+    var firstEntry = inputValue.entrySet()
+        .iterator()
+        .next();
+
+    if (!(firstEntry.getValue() instanceof String)) {
+      throw new ModelException("Spatial filter value is not a string.");
+    }
+
+    try {
+      geometry = wktReader.read(firstEntry.getValue().toString());
+    } catch (ParseException e) {
+      throw new SpatialException("Failed parsing geometry", e);
+    }
+
+    if (!GeometryTypeFactory.FILTER_OPERATOR_TYPES.contains(firstEntry.getKey())) {
+      throw new ModelException("Spatial operator is unknown: " + firstEntry.getKey());
+    }
+
+    var operator = FilterOperator.builder()
+        .type(firstEntry.getKey())
+        .build();
+
+    return FilterExpression.builder()
+        .path(path)
+        .operator(operator)
+        .value(geometry)
+        .build();
   }
 }

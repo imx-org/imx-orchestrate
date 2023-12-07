@@ -155,7 +155,7 @@ public final class GenericDataFetcher implements DataFetcher<Mono<? extends Data
 
     if (property instanceof Attribute attribute) {
       return attribute.getType()
-          .createFilterExpression(Path.fromProperties(property), arguments.get(propertyName));
+          .createFilterExpression(Path.fromProperties(property), cast(arguments.get(propertyName)));
     }
 
     throw new OrchestrateException("Currently only attributes can be filtered.");

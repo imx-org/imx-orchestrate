@@ -1,18 +1,13 @@
 package nl.geostandaarden.imx.orchestrate.source.graphql.mapper;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import graphql.ExecutionInput;
-import java.util.Map;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
-import nl.geostandaarden.imx.orchestrate.engine.source.SourceException;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.Model;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 import nl.geostandaarden.imx.orchestrate.model.ObjectTypeRef;
 import nl.geostandaarden.imx.orchestrate.model.Path;
 import nl.geostandaarden.imx.orchestrate.model.Relation;
-import nl.geostandaarden.imx.orchestrate.model.filters.EqualsOperatorType;
 import nl.geostandaarden.imx.orchestrate.model.filters.FilterExpression;
 import nl.geostandaarden.imx.orchestrate.model.types.ScalarTypes;
 import nl.geostandaarden.imx.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
@@ -64,7 +59,6 @@ class CollectionGraphQlMapperTest {
   void convert_returnsExpectedResult_withFilter() {
     var filterExpression = FilterExpression.builder()
         .value("Kerkstraat")
-        .operator(new EqualsOperatorType().create(Map.of()))
         .path(Path.fromString("adres/straat"))
         .build();
 
@@ -94,28 +88,6 @@ class CollectionGraphQlMapperTest {
         }""";
 
     GraphQlAssert.assertThat(result.getQuery()).graphQlEquals(expected);
-  }
-
-  @Test
-  void convert_throwsException_forUnknownOperator() {
-    var filterExpression = FilterExpression.builder()
-        .value("Kerkstraat")
-        .operator(() -> "unknown-operator")
-        .path(Path.fromString("adres/straat"))
-        .build();
-
-    var request = CollectionRequest.builder(createModel())
-        .objectType("Nummeraanduiding")
-        .selectProperty("naam")
-        .selectObjectProperty("adres", builder -> builder
-            .selectProperty("straat")
-            .selectProperty("huisnummer")
-            .build())
-        .filter(filterExpression)
-        .build();
-
-    assertThatThrownBy(() -> collectionGraphQlMapper.convert(request)).isInstanceOf(SourceException.class)
-        .hasMessageContaining("Unknown filter operator 'unknown-operator'");
   }
 
   private Model createModel() {

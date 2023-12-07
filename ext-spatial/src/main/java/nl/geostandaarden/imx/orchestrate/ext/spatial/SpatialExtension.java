@@ -1,20 +1,14 @@
 package nl.geostandaarden.imx.orchestrate.ext.spatial;
 
-import nl.geostandaarden.imx.orchestrate.ext.spatial.filters.IntersectsOperatorType;
+import java.util.Set;
 import nl.geostandaarden.imx.orchestrate.ext.spatial.geometry.GeometryTypeFactory;
-import nl.geostandaarden.imx.orchestrate.model.ComponentRegistry;
 import nl.geostandaarden.imx.orchestrate.model.OrchestrateExtension;
-import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeRegistry;
+import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeFactory;
 
 public final class SpatialExtension implements OrchestrateExtension {
 
   @Override
-  public void registerComponents(ComponentRegistry componentRegistry) {
-    componentRegistry.register(new IntersectsOperatorType());
-  }
-
-  @Override
-  public void registerValueTypes(ValueTypeRegistry valueTypeRegistry) {
-    valueTypeRegistry.register(new GeometryTypeFactory());
+  public Set<ValueTypeFactory<?>> getValueTypeFactories() {
+    return Set.of(new GeometryTypeFactory());
   }
 }

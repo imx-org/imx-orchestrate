@@ -10,7 +10,11 @@ public final class FilterExpression {
 
   private final Path path;
 
-  private final FilterOperator operator;
+  @Builder.Default
+  private final FilterOperator operator = FilterOperator.builder()
+      .type("equals")
+      .alias("=")
+      .build();
 
   private final Object value;
 
