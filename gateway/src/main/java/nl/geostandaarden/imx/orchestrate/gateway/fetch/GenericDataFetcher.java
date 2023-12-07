@@ -24,6 +24,10 @@ import nl.geostandaarden.imx.orchestrate.engine.exchange.DataRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.DataResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
 import nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaConstants;
+import nl.geostandaarden.imx.orchestrate.model.Attribute;
+import nl.geostandaarden.imx.orchestrate.model.ObjectType;
+import nl.geostandaarden.imx.orchestrate.model.Path;
+import nl.geostandaarden.imx.orchestrate.model.filters.FilterExpression;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
@@ -68,6 +72,13 @@ public final class GenericDataFetcher implements DataFetcher<Mono<? extends Data
     if (fieldName.endsWith(SchemaConstants.QUERY_COLLECTION_SUFFIX)) {
       var requestBuilder = CollectionRequest.builder(targetModel)
           .objectType(fieldTypeName);
+
+      Map<String, Object> filterValue = environment.getArgument(SchemaConstants.QUERY_FILTER_ARGUMENT);
+
+      if (filterValue != null) {
+        var filter = createFilterExpression(targetModel.getObjectType(fieldTypeName), filterValue);
+        requestBuilder.filter(filter);
+      }
 
       return selectProperties(requestBuilder, environment.getSelectionSet())
           .build();
@@ -128,5 +139,25 @@ public final class GenericDataFetcher implements DataFetcher<Mono<? extends Data
         });
 
     return requestBuilder;
+  }
+
+  private FilterExpression createFilterExpression(ObjectType targetType, Map<String, Object> arguments) {
+    if (arguments.size() > 1) {
+      throw new OrchestrateException("Currently only a single filter property is supported.");
+    }
+
+    var firstEntry = arguments.entrySet()
+        .iterator()
+        .next();
+
+    var propertyName = firstEntry.getKey();
+    var property = targetType.getProperty(propertyName);
+
+    if (property instanceof Attribute attribute) {
+      return attribute.getType()
+          .createFilterExpression(Path.fromProperties(property), arguments.get(propertyName));
+    }
+
+    throw new OrchestrateException("Currently only attributes can be filtered.");
   }
 }

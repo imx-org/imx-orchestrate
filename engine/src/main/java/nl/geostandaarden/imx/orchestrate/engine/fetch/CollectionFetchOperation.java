@@ -4,9 +4,8 @@ import java.util.List;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
-import nl.geostandaarden.imx.orchestrate.model.filters.FilterDefinition;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
@@ -14,12 +13,12 @@ import reactor.core.publisher.Flux;
 @SuperBuilder(toBuilder = true)
 public final class CollectionFetchOperation extends AbstractFetchOperation {
 
-  private final FilterDefinition filter;
+  private final FilterMapper filterMapper;
 
   public Flux<ObjectResult> fetch(FetchInput input) {
     var collectionRequest = CollectionRequest.builder(model)
         .objectType(objectType.getName())
-        .filter(filter != null ? filter.createExpression(input.getData()) : null)
+        .filter(filterMapper != null ? filterMapper.apply(input) : null)
         .selectedProperties(selectedProperties)
         .build();
 

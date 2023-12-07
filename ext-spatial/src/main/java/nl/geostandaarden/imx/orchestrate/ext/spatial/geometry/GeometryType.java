@@ -9,8 +9,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import nl.geostandaarden.imx.orchestrate.ext.spatial.SpatialException;
 import nl.geostandaarden.imx.orchestrate.ext.spatial.filters.IntersectsOperatorType;
+import nl.geostandaarden.imx.orchestrate.model.ModelException;
 import nl.geostandaarden.imx.orchestrate.model.Path;
-import nl.geostandaarden.imx.orchestrate.model.filters.FilterDefinition;
+import nl.geostandaarden.imx.orchestrate.model.filters.FilterExpression;
 import nl.geostandaarden.imx.orchestrate.model.types.ValueType;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -74,26 +75,24 @@ public class GeometryType implements ValueType {
   }
 
   @Override
-  public FilterDefinition createFilterDefinition(Path path, Object inputValue) {
-    var firstEntry = ((Map<String, Object>) inputValue).entrySet()
-        .iterator()
-        .next();
-
-    var wkt = (String) ((Map<String, Object>) firstEntry.getValue()).get("fromWKT");
+  public FilterExpression createFilterExpression(Path path, Object inputValue) {
     var wktReader = new WKTReader(new GeometryFactory(new PrecisionModel(), srid));
-
     Geometry geometry;
 
-    try {
-      geometry = wktReader.read(wkt);
-    } catch (ParseException e) {
-      throw new SpatialException("Failed parsing geometry", e);
+    if (inputValue instanceof String strValue) {
+      try {
+        geometry = wktReader.read(strValue);
+      } catch (ParseException e) {
+        throw new SpatialException("Failed parsing geometry", e);
+      }
+
+      return FilterExpression.builder()
+          .path(path)
+          .operator(new IntersectsOperatorType().create(Map.of()))
+          .value(geometry)
+          .build();
     }
 
-    return FilterDefinition.builder()
-        .path(path)
-        .operator(new IntersectsOperatorType().create(Map.of()))
-        .value(geometry)
-        .build();
+    throw new ModelException("Filter expects a string value.");
   }
 }

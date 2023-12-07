@@ -14,7 +14,7 @@ public final class SchemaConstants {
 
   public static final String QUERY_FILTER_SUFFIX = "Filter";
 
-  public static final String QUERY_FILTER_ARGUMENTS = "filter";
+  public static final String QUERY_FILTER_ARGUMENT = "filter";
 
   public static final String KEY_TYPE_SUFFIX = "Key";
 

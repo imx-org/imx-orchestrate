@@ -21,6 +21,7 @@ import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
@@ -141,7 +142,7 @@ public final class SchemaFactory {
           .build());
 
       var filterArgument = InputValueDefinition.newInputValueDefinition()
-          .name(SchemaConstants.QUERY_FILTER_ARGUMENTS)
+          .name(SchemaConstants.QUERY_FILTER_ARGUMENT)
           .type(new TypeName(objectType.getName()
               .concat(SchemaConstants.QUERY_FILTER_SUFFIX)))
           .build();
@@ -189,17 +190,13 @@ public final class SchemaFactory {
       return false;
     }
 
-    var pathMappings = modelMapping.getObjectTypeMappings(objectType)
+    return modelMapping.getObjectTypeMappings(objectType)
         .stream()
-        .flatMap(typeMapping -> typeMapping.getPropertyMapping(attribute)
-            .stream()
-            .flatMap(propertyMapping -> propertyMapping.getPathMappings().stream()))
-        .toList();
-
-    var firstPath = pathMappings.get(0)
-        .getPath();
-
-    return pathMappings.size() == 1 && firstPath.isLeaf();
+        .map(typeMapping -> typeMapping.getPropertyMapping(attribute)
+            .map(PropertyMapping::getPathMappings)
+            .orElse(Collections.emptyList()))
+        .allMatch(pathMappings -> pathMappings.size() == 1
+            && pathMappings.get(0).getPath().isLeaf());
   }
 
   private void registerLineageTypes() {
