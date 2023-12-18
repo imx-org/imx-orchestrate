@@ -1,0 +1,103 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://imx.geostandaarden.nl/schema/model-mapping
+title: IMX model mapping schema
+type: object
+additionalProperties: false
+required:
+  - targetModel
+  - sourceModels
+  - objectTypeMappings
+properties:
+  targetModel:
+    type:
+      $ref: '#/$defs/Model'
+  sourceModels:
+    minProperties: 1
+    additionalProperties:
+      type:
+        $ref: '#/$defs/Model'
+  objectTypeMappings:
+    minProperties: 1
+    additionalProperties:
+      type: array
+      items:
+        type:
+          $ref: '#/$defs/ObjectTypeMapping'
+$defs:
+  Model:
+    type: object
+    additionalProperties: false
+    required:
+      - location
+    properties:
+      loader:
+        type: string
+        default: yaml
+      location:
+        type: string
+  ObjectTypeMapping:
+    type: object
+    additionalProperties: false
+    required:
+      - sourceRoot
+      - propertyMappings
+    properties:
+      sourceRoot:
+        type: string
+      propertyMappings:
+        minProperties: 1
+        additionalProperties:
+          type:
+            $ref: '#/$defs/PropertyMapping'
+  PropertyMapping:
+    type: object
+    additionalProperties: false
+    required:
+      - pathMappings
+    properties:
+      pathMappings:
+        oneOf:
+          - type:
+              $ref: '#/$defs/PathMapping'
+          - type: array
+            items:
+              type:
+                $ref: '#/$defs/PathMapping'
+      combiner:
+        type: string
+        default: merge
+  PathMapping:
+    type: object
+    additionalProperties: false
+    required:
+      - path
+    properties:
+      path:
+        type: string
+      map:
+        type:
+          $ref: '#/$defs/ResultMapper'
+      ifMatch:
+        type:
+          $ref: '#/$defs/Matcher'
+      andThen:
+        type:
+          $ref: '#/$defs/PathMapping'
+  ResultMapper:
+    type: string
+    additionalProperties: false
+    required:
+      - type
+    properties:
+      type:
+        type: string
+      options:
+        type: object
+  Matcher:
+    type: string
+    additionalProperties: false
+    required:
+      - type
+    properties:
+      type:
+        type: string

@@ -1,3 +1,3 @@
 * [Home](/)
-* [Testing](testing.md)
-* [Comparison](comparison.md)
+* [Getting started](getting-started.md)
+* [Development](development.md)

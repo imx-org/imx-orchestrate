@@ -1,6 +1,6 @@
-# Testing
+# Development
 
-## Execution
+## Run tests
 
 To run all tests locally, the following Maven commands can be used:
 
@@ -9,7 +9,7 @@ mvn test              # for unit tests
 mvn integration-test  # for integration tests
 ```
 
-## Conventions
+# Coding conventions
 
 This project uses Surefire & Failsafe Maven plugins to execute tests. Therefore, the following conventions must be followed:
 
