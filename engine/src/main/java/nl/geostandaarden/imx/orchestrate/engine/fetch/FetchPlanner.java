@@ -35,6 +35,7 @@ import nl.geostandaarden.imx.orchestrate.model.Property;
 import nl.geostandaarden.imx.orchestrate.model.PropertyMapping;
 import nl.geostandaarden.imx.orchestrate.model.Relation;
 import nl.geostandaarden.imx.orchestrate.model.filters.FilterExpression;
+import nl.geostandaarden.imx.orchestrate.model.filters.FilterOperator;
 import reactor.core.publisher.Flux;
 
 @RequiredArgsConstructor
@@ -236,7 +237,9 @@ public final class FetchPlanner {
               if (targetProperty instanceof Attribute targetAttribute) {
                 FilterMapper relFilterMapper = input -> FilterExpression.builder()
                     .path(Path.fromProperties(targetProperty))
-                    .operator(filterMapping.getOperator())
+                    .operator(FilterOperator.builder()
+                        .type(filterMapping.getOperator())
+                        .build())
                     .value(targetAttribute.getType()
                         .mapSourceValue(input.getData().get(sourcePath.getFirstSegment())))
                     .build();
