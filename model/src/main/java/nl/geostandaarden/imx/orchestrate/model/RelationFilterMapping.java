@@ -4,7 +4,6 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.jackson.Jacksonized;
-import nl.geostandaarden.imx.orchestrate.model.filters.FilterOperator;
 
 @Getter
 @Jacksonized
@@ -15,7 +14,7 @@ public final class RelationFilterMapping {
 
   private final Map<String, Path> keyMapping;
 
-  private final FilterOperator operator;
+  private final String operator;
 
   private final Path sourcePath;
 }

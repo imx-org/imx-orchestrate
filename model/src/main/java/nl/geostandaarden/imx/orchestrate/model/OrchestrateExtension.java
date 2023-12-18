@@ -1,12 +1,16 @@
 package nl.geostandaarden.imx.orchestrate.model;
 
-import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeRegistry;
+import static java.util.Collections.emptySet;
+
+import java.util.Set;
+import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeFactory;
 
 public interface OrchestrateExtension {
 
   default void registerComponents(ComponentRegistry componentRegistry) {
   }
 
-  default void registerValueTypes(ValueTypeRegistry valueTypeRegistry) {
+  default Set<ValueTypeFactory<?>> getValueTypeFactories() {
+    return emptySet();
   }
 }

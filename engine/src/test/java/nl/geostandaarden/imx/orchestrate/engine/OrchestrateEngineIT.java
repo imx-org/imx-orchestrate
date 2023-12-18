@@ -19,6 +19,7 @@ import nl.geostandaarden.imx.orchestrate.model.ComponentRegistry;
 import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
 import nl.geostandaarden.imx.orchestrate.model.lineage.ObjectLineage;
 import nl.geostandaarden.imx.orchestrate.model.loader.ModelLoaderRegistry;
+import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeFactory;
 import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeRegistry;
 import nl.geostandaarden.imx.orchestrate.parser.yaml.YamlModelLoader;
 import nl.geostandaarden.imx.orchestrate.parser.yaml.YamlModelMappingParser;
@@ -56,7 +57,7 @@ class OrchestrateEngineIT {
     var modelLoaderRegistry = new ModelLoaderRegistry()
         .register(new YamlModelLoader());
     var valueTypeRegistry = new ValueTypeRegistry();
-    SPATIAL_EXTENSION.registerValueTypes(valueTypeRegistry);
+    valueTypeRegistry.register(SPATIAL_EXTENSION.getValueTypeFactories().toArray(ValueTypeFactory[]::new));
     var mappingParser = new YamlModelMappingParser(new ComponentRegistry(), modelLoaderRegistry, valueTypeRegistry);
     MODEL_MAPPING = mappingParser.parse(new FileInputStream("../data/geo/mapping.yaml"));
   }
