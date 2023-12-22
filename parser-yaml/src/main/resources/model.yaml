@@ -1,0 +1,61 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://imx.geostandaarden.nl/schema/model
+title: IMX model schema
+type: object
+additionalProperties: false
+required:
+  - objectTypes
+properties:
+  objectTypes:
+    type: object
+    additionalProperties:
+      type:
+        $ref: '#/$defs/ObjectType'
+$defs:
+  ObjectType:
+    type: object
+    additionalProperties: false
+    properties:
+      attributes:
+        type: object
+        additionalProperties:
+          type:
+            $ref: '#/$defs/Attribute'
+      relations:
+        type: object
+        additionalProperties:
+          type:
+            $ref: '#/$defs/Relation'
+  Attribute:
+    type: object
+    additionalProperties: false
+    required:
+      - type
+    properties:
+      type:
+        type: string
+      identifier:
+        type: boolean
+        default: false
+      cardinality:
+        type: string
+        default: 0..1
+  Relation:
+    type: object
+    additionalProperties: false
+    required:
+      - target
+    properties:
+      target:
+        type: string
+      identifier:
+        type: boolean
+        default: false
+      cardinality:
+        type: string
+        default: 0..1
+      inverseName:
+        type: string
+      inverseCardinality:
+        type: string
+        default: 0..*

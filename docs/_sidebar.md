@@ -1,3 +1,4 @@
 * [Home](/)
-* [Testing](testing.md)
-* [Comparison](comparison.md)
+* [Getting started](getting-started.md)
+* [Query service](query-service.md)
+* [Development](development.md)
