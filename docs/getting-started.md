@@ -17,8 +17,8 @@ Add the following dependency to your POM file (`pom.xml`):
 
 Create a `/config` folder, containing the model and model mapping YAML documents. Models and model mappings can be provided as YAML documents, following
 the following schemas:
-- [Model schema](/parser-yaml/src/main/resources/model.yaml)
-- [Model mapping schema](/parser-yaml/src/main/resources/model-mapping.yaml)
+- [Model schema](https://github.com/imx-org/imx-orchestrate/blob/main/parser-yaml/src/main/resources/model.yaml)
+- [Model mapping schema](https://github.com/imx-org/imx-orchestrate/blob/main/parser-yaml/src/main/resources/model-mapping.yaml)
 
 The model mapping language is described here: https://geonovum.github.io/IMX-ModelMapping/
 
