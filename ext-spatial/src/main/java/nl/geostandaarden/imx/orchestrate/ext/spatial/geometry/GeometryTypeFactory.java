@@ -7,7 +7,8 @@ import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeFactory;
 
 public class GeometryTypeFactory implements ValueTypeFactory<GeometryType> {
 
-  public static final Set<String> FILTER_OPERATOR_TYPES = Set.of("intersects", "touches", "contains", "within");
+  public static final Set<String> FILTER_OPERATOR_TYPES = Set.of("equals", "intersects", "touches", "contains",
+      "within", "overlaps", "crosses", "disjoint");
 
   @Override
   public String getTypeName() {

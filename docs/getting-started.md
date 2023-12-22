@@ -20,6 +20,8 @@ the following schemas:
 - [Model schema](/parser-yaml/src/main/resources/model.yaml)
 - [Model mapping schema](/parser-yaml/src/main/resources/model-mapping.yaml)
 
+The model mapping language is described here: https://geonovum.github.io/IMX-ModelMapping/
+
 In this example, we'll be using the `file` source adapter to get up & running quickly. However, there are other source adapters available:
 - [GraphQL](https://github.com/imx-org/imx-orchestrate/tree/main/source-graphql)
 - [OGC API Features](https://github.com/imx-org/imx-orchestrate-ogcapi)
