@@ -10,10 +10,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.DataRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
 import nl.geostandaarden.imx.orchestrate.engine.source.DataRepository;
+import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 import nl.geostandaarden.imx.orchestrate.model.filters.FilterExpression;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -43,6 +45,21 @@ class FileRepository implements DataRepository {
         .toList();
 
     return Flux.fromIterable(objectList);
+  }
+
+  @Override
+  public Flux<Map<String, Object>> findBatch(BatchRequest batchRequest) {
+    return Flux.fromIterable(batchRequest.getObjectKeys())
+        .flatMap(objectKey -> findOne(ObjectRequest.builder(batchRequest.getModel())
+            .objectType(batchRequest.getObjectType().getName())
+            .selectedProperties(batchRequest.getSelectedProperties())
+            .objectKey(objectKey)
+            .build()));
+  }
+
+  @Override
+  public boolean supportsBatchLoading(ObjectType objectType) {
+    return true;
   }
 
   private Predicate<ObjectNode> createFilter(FilterExpression filterExpression) {
