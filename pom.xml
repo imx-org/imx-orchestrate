@@ -32,7 +32,7 @@
         <graphql-java.version>21.3</graphql-java.version>
         <java-dataloader.version>3.2.2</java-dataloader.version>
         <spring-boot.version>3.1.5</spring-boot.version>
-        <spring-graphql.version>1.2.4</spring-graphql.version>
+        <spring-graphql.version>1.2.5</spring-graphql.version>
         <micrometer.version>1.12.1</micrometer.version>
         <commons-text.version>1.11.0</commons-text.version>
         <jts.version>1.19.0</jts.version>
