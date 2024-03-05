@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
@@ -287,15 +286,16 @@ public final class FetchPlanner {
               }
             }
 
-            var identityPaths = targetType.getIdentityProperties()
-                .stream()
-                .map(Path::fromProperties)
-                .collect(Collectors.toSet());
+            // TODO: Disabled for now, since result mapper handles this incorrectly
+            // var identityPaths = targetType.getIdentityProperties()
+            //     .stream()
+            //     .map(Path::fromProperties)
+            //     .collect(Collectors.toSet());
 
             // If only identity is selected, no next operation is needed
-            if (identityPaths.equals(nestedSourcePaths)) {
-              return;
-            }
+            // if (identityPaths.equals(nestedSourcePaths)) {
+            //   return;
+            // }
 
             nextOperations.add(NextOperation.builder()
                 .property(relation)
