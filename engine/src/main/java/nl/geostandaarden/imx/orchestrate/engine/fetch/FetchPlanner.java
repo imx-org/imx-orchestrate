@@ -286,7 +286,7 @@ public final class FetchPlanner {
               }
             }
 
-            // TODO: Disabled for now, since result mapper does handles this incorrectly
+            // TODO: Disabled for now, since result mapper handles this incorrectly
             // var identityPaths = targetType.getIdentityProperties()
             //     .stream()
             //     .map(Path::fromProperties)
