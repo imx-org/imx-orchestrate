@@ -3,6 +3,7 @@ package nl.geostandaarden.imx.orchestrate.engine;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.LIST;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import nl.geostandaarden.imx.orchestrate.engine.source.DataRepository;
 import nl.geostandaarden.imx.orchestrate.ext.spatial.SpatialExtension;
 import nl.geostandaarden.imx.orchestrate.model.ComponentRegistry;
@@ -28,6 +30,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.locationtech.jts.geom.Point;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
@@ -312,6 +315,155 @@ class OrchestrateEngineIT {
 
     StepVerifier.create(resultMono)
         .assertNext(result -> assertThat(result.getObjectResults()).hasSize(2))
+        .verifyComplete();
+  }
+
+  @Test
+  void fetch_returnsAddressWithNestedBuilding_forDeepRelation() {
+    var targetModel = engine.getModelMapping()
+        .getTargetModel();
+
+    var request = ObjectRequest.builder(targetModel)
+        .objectType("Address")
+        .objectKey(Map.of("id", "A0001"))
+        .selectProperty("id")
+        .selectCollectionProperty("isAddressOf", builder -> builder
+            .selectProperty("id")
+            .selectProperty("geometry")
+            .build())
+        .build();
+
+    when(adrRepositoryMock.findOne(any(ObjectRequest.class)))
+        .thenAnswer(invocation -> {
+          var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+
+          return switch (objectType.getName()) {
+            case "Address" -> Mono.just(Map.of("id", "A0001"));
+            default -> throw new IllegalStateException();
+          };
+        });
+
+    when(cityRepositoryMock.findOne(any(ObjectRequest.class)))
+        .thenAnswer(invocation -> {
+          var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+
+          return switch (objectType.getName()) {
+            case "Building" -> Mono.just(Map.of("id", "BU0001", "geometry", Map.of("type", "Point", "coordinates", List.of(0, 0))));
+            default -> throw new IllegalStateException();
+          };
+        });
+
+    when(cityRepositoryMock.find(any(CollectionRequest.class)))
+        .thenAnswer(invocation -> {
+          var collectionRequest = ((CollectionRequest) invocation.getArgument(0));
+          var objectType = collectionRequest.getObjectType();
+          var filter = collectionRequest.getFilter();
+
+          if (!"BuildingPart".equals(objectType.getName()) || filter == null) {
+            throw new IllegalStateException();
+          }
+
+          if ("hasSubAddress".equals(filter.getPath().getFirstSegment())) {
+            return Flux.empty();
+          }
+
+          if ("hasMainAddress".equals(filter.getPath().getFirstSegment())) {
+            return Flux.just(Map.of("id", "BP0001", "isPartOf", List.of(Map.of("id", "BU0001"))));
+          }
+
+          throw new IllegalStateException();
+        });
+
+    var resultMono = engine.fetch(request);
+
+    StepVerifier.create(resultMono)
+        .assertNext(result -> {
+          assertThat(result).isNotNull();
+          assertThat(result.getProperties())
+              .containsEntry("id", "A0001")
+              .extractingByKey("isAddressOf", LIST)
+              .singleElement()
+              .isInstanceOfSatisfying(ObjectResult.class, nestedResult -> {
+                assertThat(nestedResult).isNotNull();
+                assertThat(nestedResult.getProperties())
+                    .containsEntry("id", "BU0001")
+                    .hasEntrySatisfying("geometry", geometry -> assertThat(geometry)
+                        .isInstanceOf(Point.class));
+              });
+        })
+        .verifyComplete();
+  }
+
+  @Test
+  void fetch_returnsAddressWithNestedBuilding_forDeepRelationWithOnlyKeySelected() {
+    var targetModel = engine.getModelMapping()
+        .getTargetModel();
+
+    var request = ObjectRequest.builder(targetModel)
+        .objectType("Address")
+        .objectKey(Map.of("id", "A0001"))
+        .selectProperty("id")
+        .selectCollectionProperty("isAddressOf", builder -> builder
+            .selectProperty("id")
+            .build())
+        .build();
+
+    when(adrRepositoryMock.findOne(any(ObjectRequest.class)))
+        .thenAnswer(invocation -> {
+          var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+
+          return switch (objectType.getName()) {
+            case "Address" -> Mono.just(Map.of("id", "A0001"));
+            default -> throw new IllegalStateException();
+          };
+        });
+
+    when(cityRepositoryMock.findOne(any(ObjectRequest.class)))
+        .thenAnswer(invocation -> {
+          var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+
+          return switch (objectType.getName()) {
+            case "Building" -> Mono.just(Map.of("id", "BU0001"));
+            default -> throw new IllegalStateException();
+          };
+        });
+
+    when(cityRepositoryMock.find(any(CollectionRequest.class)))
+        .thenAnswer(invocation -> {
+          var collectionRequest = ((CollectionRequest) invocation.getArgument(0));
+          var objectType = collectionRequest.getObjectType();
+          var filter = collectionRequest.getFilter();
+
+          if (!"BuildingPart".equals(objectType.getName()) || filter == null) {
+            throw new IllegalStateException();
+          }
+
+          if ("hasSubAddress".equals(filter.getPath().getFirstSegment())) {
+            return Flux.empty();
+          }
+
+          if ("hasMainAddress".equals(filter.getPath().getFirstSegment())) {
+            return Flux.just(Map.of("id", "BP0001", "isPartOf", List.of(Map.of("id", "BU0001"))));
+          }
+
+          throw new IllegalStateException();
+        });
+
+    var resultMono = engine.fetch(request);
+
+    StepVerifier.create(resultMono)
+        .assertNext(result -> {
+          assertThat(result).isNotNull();
+          assertThat(result.getProperties())
+              .containsEntry("id", "A0001")
+              .extractingByKey("isAddressOf", LIST)
+              .singleElement()
+              .isInstanceOfSatisfying(ObjectResult.class, nestedResult -> {
+                assertThat(nestedResult).isNotNull();
+                assertThat(nestedResult.getProperties())
+                    .containsEntry("id", "BU0001");
+              });
+        })
         .verifyComplete();
   }
 }

@@ -16,7 +16,7 @@ objectTypes:
         target: Address
         cardinality: 0..*
         inverseName: isAddressOf
-        inverseCardinality: 1
+        inverseCardinality: 1..*
 
   Address:
     attributes:

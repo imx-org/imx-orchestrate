@@ -51,7 +51,7 @@ public final class ObjectResultMapper {
         .orElseThrow(() -> new OrchestrateException("Type mapping not found for source root: " + sourceType.getName()));
   }
 
-  public ObjectResult map(ObjectResult objectResult, DataRequest request, ObjectType targetType, ObjectTypeMapping typeMapping) {
+  private ObjectResult map(ObjectResult objectResult, DataRequest request, ObjectType targetType, ObjectTypeMapping typeMapping) {
     var properties = new HashMap<String, Object>();
     var lineageBuilder = ObjectLineage.builder();
 
@@ -181,6 +181,13 @@ public final class ObjectResultMapper {
   private Object mapRelation(Object value, DataRequest request) {
     if (value instanceof ObjectResult nestedObjectResult) {
       return map(nestedObjectResult, request);
+    }
+
+    if (value instanceof CollectionResult nestedCollectionResult) {
+      return nestedCollectionResult.getObjectResults()
+          .stream()
+          .map(result -> map(result, request))
+          .toList();
     }
 
     if (value instanceof List<?> nestedResultList) {
