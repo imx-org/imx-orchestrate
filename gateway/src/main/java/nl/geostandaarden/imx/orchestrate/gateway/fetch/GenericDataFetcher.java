@@ -1,5 +1,6 @@
 package nl.geostandaarden.imx.orchestrate.gateway.fetch;
 
+import static graphql.schema.GraphQLTypeUtil.isScalar;
 import static graphql.schema.GraphQLTypeUtil.unwrapAll;
 import static graphql.schema.GraphQLTypeUtil.unwrapNonNull;
 import static java.util.function.Predicate.not;
@@ -121,7 +122,7 @@ public final class GenericDataFetcher implements DataFetcher<Mono<? extends Data
             return;
           }
 
-          if (fieldType instanceof GraphQLList) {
+          if (fieldType instanceof GraphQLList && !isScalar(unwrapAll(fieldType)) ) {
             requestBuilder.selectCollectionProperty(fieldName, nestedRequestBuilder -> {
               selectProperties(nestedRequestBuilder, selectedField.getSelectionSet());
               return nestedRequestBuilder.build();
