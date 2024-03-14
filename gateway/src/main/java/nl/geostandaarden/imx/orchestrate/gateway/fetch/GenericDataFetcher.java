@@ -11,7 +11,6 @@ import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLObjectType;
-import graphql.schema.GraphQLScalarType;
 import graphql.schema.SelectedField;
 import java.util.List;
 import java.util.Map;
@@ -122,7 +121,7 @@ public final class GenericDataFetcher implements DataFetcher<Mono<? extends Data
             return;
           }
 
-          if (fieldType instanceof GraphQLList && !isScalar(unwrapAll(fieldType)) ) {
+          if (fieldType instanceof GraphQLList && !isScalar(unwrapAll(fieldType))) {
             requestBuilder.selectCollectionProperty(fieldName, nestedRequestBuilder -> {
               selectProperties(nestedRequestBuilder, selectedField.getSelectionSet());
               return nestedRequestBuilder.build();
@@ -131,12 +130,7 @@ public final class GenericDataFetcher implements DataFetcher<Mono<? extends Data
             return;
           }
 
-          if (fieldType instanceof GraphQLScalarType) {
-            requestBuilder.selectProperty(fieldName);
-            return;
-          }
-
-          throw new UnsupportedOperationException();
+          requestBuilder.selectProperty(fieldName);
         });
 
     return requestBuilder;
