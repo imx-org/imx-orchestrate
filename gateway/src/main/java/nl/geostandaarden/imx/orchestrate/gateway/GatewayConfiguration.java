@@ -16,10 +16,10 @@ import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateEngine;
 import nl.geostandaarden.imx.orchestrate.engine.source.Source;
 import nl.geostandaarden.imx.orchestrate.engine.source.SourceType;
-import nl.geostandaarden.imx.orchestrate.ext.spatial.SpatialExtension;
 import nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaFactory;
 import nl.geostandaarden.imx.orchestrate.model.ComponentRegistry;
 import nl.geostandaarden.imx.orchestrate.model.Model;
+import nl.geostandaarden.imx.orchestrate.model.OrchestrateExtension;
 import nl.geostandaarden.imx.orchestrate.model.loader.ModelLoader;
 import nl.geostandaarden.imx.orchestrate.model.loader.ModelLoaderRegistry;
 import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeFactory;
@@ -41,7 +41,7 @@ public class GatewayConfiguration {
 
   @Bean
   public GraphQlSource graphQlSource() throws IOException {
-    var extensions = Set.of(new SpatialExtension());
+    var extensions = resolveExtensions();
 
     var componentRegistry = new ComponentRegistry();
     extensions.forEach(extension -> extension.registerComponents(componentRegistry));
@@ -82,6 +82,13 @@ public class GatewayConfiguration {
         return graphQL.getGraphQLSchema();
       }
     };
+  }
+
+  private Set<OrchestrateExtension> resolveExtensions() {
+    return ServiceLoader.load(OrchestrateExtension.class)
+        .stream()
+        .map(ServiceLoader.Provider::get)
+        .collect(toUnmodifiableSet());
   }
 
   private Set<ModelLoader> resolveModelLoaders() {
