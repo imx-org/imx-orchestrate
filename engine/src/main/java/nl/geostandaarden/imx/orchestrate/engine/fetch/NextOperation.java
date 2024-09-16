@@ -76,7 +76,7 @@ public class NextOperation {
   private Publisher<ObjectResult> fetchCollection(ObjectResult objectResult) {
     var input = FetchInput.newInput(objectResult.getProperties());
 
-    if (!property.getCardinality().isSingular()) {
+    if (!property.getMultiplicity().isSingular()) {
       return delegateOperation.execute(input)
           .collectList()
           .map(objectResults -> objectResult.toBuilder()

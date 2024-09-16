@@ -14,9 +14,9 @@ sourceRelations:
     property:
       name: hasParcel
       target: land:Parcel
-      cardinality: 0..1
+      multiplicity: 0..1
       inverseName: hasAddress
-      inverseCardinality: 0..*
+      inverseMultiplicity: 0..*
       keyMapping:
         id: parcel
 

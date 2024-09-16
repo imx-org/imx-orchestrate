@@ -17,7 +17,7 @@ public final class InverseRelation extends AbstractRelation {
   }
 
   @Override
-  public Cardinality getCardinality() {
-    return originRelation.getInverseCardinality();
+  public Multiplicity getMultiplicity() {
+    return originRelation.getInverseMultiplicity();
   }
 }

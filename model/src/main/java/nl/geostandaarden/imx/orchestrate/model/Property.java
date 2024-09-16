@@ -6,5 +6,5 @@ public interface Property {
 
   boolean isIdentifier();
 
-  Cardinality getCardinality();
+  Multiplicity getMultiplicity();
 }

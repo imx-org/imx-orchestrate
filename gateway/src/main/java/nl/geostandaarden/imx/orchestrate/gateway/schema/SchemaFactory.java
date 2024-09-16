@@ -6,7 +6,7 @@ import static graphql.schema.FieldCoordinates.coordinates;
 import static graphql.schema.GraphQLCodeRegistry.newCodeRegistry;
 import static graphql.schema.SchemaTransformer.transformSchema;
 import static graphql.schema.idl.RuntimeWiring.newRuntimeWiring;
-import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.applyCardinality;
+import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.applyMultiplicity;
 import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.requiredListType;
 import static nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaUtils.requiredType;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
@@ -411,13 +411,13 @@ public final class SchemaFactory {
 
     if (property instanceof AbstractRelation relation) {
       var target = relation.getTarget();
-      return applyCardinality(new TypeName(target.getName()), relation.getCardinality());
+      return applyMultiplicity(new TypeName(target.getName()), relation.getMultiplicity());
     }
 
     throw new OrchestrateException("Could not map field type");
   }
 
-  private Type<?> mapFieldType(Attribute attribute, boolean applyCardinality) {
+  private Type<?> mapFieldType(Attribute attribute, boolean applyMultiplicity) {
     var typeName = attribute.getType()
         .getName();
 
@@ -429,7 +429,7 @@ public final class SchemaFactory {
       default -> new TypeName(typeName);
     };
 
-    return applyCardinality ? applyCardinality(type, attribute.getCardinality()) : type;
+    return applyMultiplicity ? applyMultiplicity(type, attribute.getMultiplicity()) : type;
   }
 
   private Type<?> mapFilterType(Attribute attribute) {

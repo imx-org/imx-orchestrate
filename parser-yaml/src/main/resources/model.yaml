@@ -37,7 +37,7 @@ $defs:
       identifier:
         type: boolean
         default: false
-      cardinality:
+      multiplicity:
         type: string
         default: 0..1
   Relation:
@@ -51,11 +51,11 @@ $defs:
       identifier:
         type: boolean
         default: false
-      cardinality:
+      multiplicity:
         type: string
         default: 0..1
       inverseName:
         type: string
-      inverseCardinality:
+      inverseMultiplicity:
         type: string
         default: 0..*
