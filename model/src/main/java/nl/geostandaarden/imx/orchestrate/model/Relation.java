@@ -18,7 +18,7 @@ public final class Relation extends AbstractRelation {
   private final String inverseName;
 
   @Builder.Default
-  private final Cardinality inverseCardinality = Cardinality.MULTI;
+  private final Multiplicity inverseMultiplicity = Multiplicity.MULTI;
 
   private final Map<String, Path> keyMapping;
 

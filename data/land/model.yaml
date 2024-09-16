@@ -4,7 +4,7 @@ objectTypes:
       id:
         type: String
         identifier: true
-        cardinality: 1
+        multiplicity: 1
       geometry:
         type: Geometry
-        cardinality: 1
+        multiplicity: 1

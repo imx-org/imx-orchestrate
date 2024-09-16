@@ -4,12 +4,12 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.IOException;
 import java.io.InputStream;
-import nl.geostandaarden.imx.orchestrate.model.Cardinality;
+import nl.geostandaarden.imx.orchestrate.model.Multiplicity;
 import nl.geostandaarden.imx.orchestrate.model.Model;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeRegistry;
 import nl.geostandaarden.imx.orchestrate.model.types.ValueType;
-import nl.geostandaarden.imx.orchestrate.parser.yaml.deserializers.CardinalityDeserializer;
+import nl.geostandaarden.imx.orchestrate.parser.yaml.deserializers.MultiplicityDeserializer;
 import nl.geostandaarden.imx.orchestrate.parser.yaml.deserializers.ModelDeserializer;
 import nl.geostandaarden.imx.orchestrate.parser.yaml.deserializers.ObjectTypeDeserializer;
 import nl.geostandaarden.imx.orchestrate.parser.yaml.deserializers.ValueTypeDeserializer;
@@ -35,7 +35,7 @@ public final class YamlModelParser {
         .addDeserializer(Model.class, new ModelDeserializer())
         .addDeserializer(ObjectType.class, new ObjectTypeDeserializer())
         .addDeserializer(ValueType.class, new ValueTypeDeserializer(valueTypeRegistry))
-        .addDeserializer(Cardinality.class, new CardinalityDeserializer());
+        .addDeserializer(Multiplicity.class, new MultiplicityDeserializer());
 
     yamlMapper.registerModule(module);
   }

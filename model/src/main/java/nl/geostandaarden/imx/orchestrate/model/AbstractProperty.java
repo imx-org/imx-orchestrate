@@ -15,5 +15,5 @@ public abstract class AbstractProperty implements Property {
   protected final boolean identifier;
 
   @Builder.Default
-  protected final Cardinality cardinality = Cardinality.OPTIONAL;
+  protected final Multiplicity multiplicity = Multiplicity.OPTIONAL;
 }

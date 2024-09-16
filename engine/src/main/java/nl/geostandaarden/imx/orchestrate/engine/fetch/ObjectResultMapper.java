@@ -74,7 +74,7 @@ public final class ObjectResultMapper {
                   properties.put(property.getName(), propertyValue);
                 });
 
-            if (!property.getCardinality().isSingular()) {
+            if (!property.getMultiplicity().isSingular()) {
               properties.put(property.getName(), emptyList());
             }
 
@@ -220,10 +220,10 @@ public final class ObjectResultMapper {
     var combiner = propertyMapping.getCombiner();
 
     if (combiner == null) {
-      var hasMultiCardinality = !property.getCardinality()
+      var hasMultiMultiplicity = !property.getMultiplicity()
           .isSingular();
 
-      combiner = hasMultiCardinality
+      combiner = hasMultiMultiplicity
           ? new NoopCombinerType().create(Map.of())
           : new CoalesceCombinerType().create(Map.of());
     }
@@ -332,7 +332,7 @@ public final class ObjectResultMapper {
   }
 
   private Stream<PathResult> resultMapPathResult(PathResult pathResult, ObjectResult objectResult, Property property, PathMapping pathMapping) {
-    // TODO: Lazy fetching & multi cardinality
+    // TODO: Lazy fetching & multi multiplicity
     var nextedPathResult = pathMapping.getNextPathMappings()
         .stream()
         .flatMap(nextPathMapping -> nextPathResults(pathResult, objectResult, property, nextPathMapping))

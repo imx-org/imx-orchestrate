@@ -271,7 +271,7 @@ public final class FetchPlanner {
               var targetModel = modelMapping.getSourceModel(targetTypeRef.getModelAlias());
 
               // TODO: Refactor
-              if (property.getCardinality().isSingular()) {
+              if (property.getMultiplicity().isSingular()) {
                 selectedProperties.add(SelectedProperty.forProperty(property, ObjectRequest.builder(targetModel)
                     .objectType(targetTypeRef)
                     .objectKey(Map.of())
