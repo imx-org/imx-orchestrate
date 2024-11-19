@@ -76,7 +76,7 @@ public final class ModelMapping {
   private Model resolveInverseRelations(Model model) {
     return model.getObjectTypes()
         .stream()
-        .flatMap(objectType -> objectType.getProperties(Relation.class)
+        .flatMap(objectType -> model.getProperties(objectType, Relation.class)
             .stream()
             .flatMap(relation -> {
               if (relation.getInverseName() == null) {
@@ -103,7 +103,7 @@ public final class ModelMapping {
         .collect(toMap(Model::getAlias, Function.identity()));
 
     models.forEach(model -> model.getObjectTypes()
-        .forEach(objectType -> objectType.getProperties(Relation.class)
+        .forEach(objectType -> model.getProperties(objectType, Relation.class)
             .stream()
             .filter(relation -> relation.getInverseName() != null)
             .forEach(relation -> {

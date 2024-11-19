@@ -17,35 +17,19 @@ public final class ObjectType {
 
   private final String name;
 
-  private final List<Property> properties;
+  private final List<String> supertypes;
 
-  private final List<Property> identityProperties;
+  private final List<Property> properties;
 
   private final Map<String, Property> propertyMap;
 
   @Builder(toBuilder = true)
-  private ObjectType(String name, @Singular List<Property> properties) {
+  private ObjectType(String name, @Singular List<String> supertypes, @Singular List<Property> properties) {
     this.name = name;
+    this.supertypes = Collections.unmodifiableList(supertypes);
     this.properties = Collections.unmodifiableList(properties);
     propertyMap = properties.stream()
         .collect(Collectors.toUnmodifiableMap(Property::getName, Function.identity()));
-    identityProperties = properties.stream()
-        .filter(Property::isIdentifier)
-        .toList();
-  }
-
-  public <T extends Property> List<T> getProperties(Class<T> propertyClass) {
-    return properties.stream()
-        .filter(propertyClass::isInstance)
-        .map(propertyClass::cast)
-        .toList();
-  }
-
-  public <T extends Property> List<T> getIdentityProperties(Class<T> propertyClass) {
-    return identityProperties.stream()
-        .filter(propertyClass::isInstance)
-        .map(propertyClass::cast)
-        .toList();
   }
 
   public Property getProperty(String name) {

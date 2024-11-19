@@ -127,10 +127,12 @@ public final class SchemaFactory {
       return;
     }
 
+    var model = modelMapping.getTargetModel();
+
     var objectTypeDefinition = createObjectTypeDefinition(objectType);
     typeDefinitionRegistry.add(objectTypeDefinition);
 
-    var identityProperties = objectType.getIdentityProperties();
+    var identityProperties = model.getIdentityProperties(objectType);
 
     if (identityProperties.isEmpty()) {
       return;
@@ -150,7 +152,7 @@ public final class SchemaFactory {
         .type(requiredListType(objectTypeDefinition.getName()))
         .build();
 
-    var filterFields = objectType.getProperties(Attribute.class)
+    var filterFields = model.getProperties(objectType, Attribute.class)
         .stream()
         .filter(attribute -> isFilterable(objectType, attribute))
         .map(attribute -> InputValueDefinition.newInputValueDefinition()
@@ -177,7 +179,7 @@ public final class SchemaFactory {
 
     var objectKeyType = InputObjectTypeDefinition.newInputObjectDefinition()
         .name(objectType.getName().concat(SchemaConstants.KEY_TYPE_SUFFIX))
-        .inputValueDefinitions(objectType.getIdentityProperties()
+        .inputValueDefinitions(model.getIdentityProperties(objectType)
             .stream()
             .map(Attribute.class::cast)
             .map(property -> InputValueDefinition.newInputValueDefinition()
@@ -384,7 +386,8 @@ public final class SchemaFactory {
     var objectTypeDefinitionBuilder = newObjectTypeDefinition()
         .name(objectType.getName());
 
-    objectType.getProperties()
+    modelMapping.getTargetModel()
+        .getProperties(objectType)
         .stream()
         .map(property -> newFieldDefinition()
             .name(property.getName())
@@ -443,7 +446,8 @@ public final class SchemaFactory {
   }
 
   private List<InputValueDefinition> createIdentityArguments(ObjectType objectType) {
-    return objectType.getIdentityProperties(Attribute.class)
+    return modelMapping.getTargetModel()
+        .getIdentityProperties(objectType, Attribute.class)
         .stream()
         .map(attribute -> InputValueDefinition.newInputValueDefinition()
             .name(attribute.getName())

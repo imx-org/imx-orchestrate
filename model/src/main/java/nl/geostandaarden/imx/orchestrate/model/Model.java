@@ -39,6 +39,36 @@ public final class Model {
     return getObjectType(typeRef.getName());
   }
 
+  public List<Property> getProperties(ObjectType objectType) {
+    var supertypeProperties = objectType.getSupertypes()
+        .stream()
+        .map(this::getObjectType)
+        .flatMap(supertype -> getProperties(supertype).stream());
+
+    return Stream.concat(supertypeProperties, objectType.getProperties().stream()).toList();
+  }
+
+  public <T extends Property> List<T> getProperties(ObjectType objectType, Class<T> propertyClass) {
+    return getProperties(objectType).stream()
+        .filter(propertyClass::isInstance)
+        .map(propertyClass::cast)
+        .toList();
+  }
+
+  public List<Property> getIdentityProperties(ObjectType objectType) {
+    return getProperties(objectType)
+        .stream()
+        .filter(Property::isIdentifier)
+        .toList();
+  }
+
+  public <T extends Property> List<T> getIdentityProperties(ObjectType objectType, Class<T> propertyClass) {
+    return getProperties(objectType).stream()
+            .filter(propertyClass::isInstance)
+            .map(propertyClass::cast)
+            .toList();
+  }
+
   public Model replaceObjectType(ObjectType newObjectType) {
     var remainingTypes = objectTypeMap.values()
         .stream()
