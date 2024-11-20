@@ -24,91 +24,87 @@ import org.locationtech.jts.io.geojson.GeoJsonReader;
 @RequiredArgsConstructor
 public class GeometryType implements ValueType {
 
-  public static final String TYPE_NAME = "Geometry";
+    public static final String TYPE_NAME = "Geometry";
 
-  public static final int DEFAULT_SRID = 4326;
+    public static final int DEFAULT_SRID = 4326;
 
-  private final ObjectMapper objectMapper = new JsonMapper();
+    private final ObjectMapper objectMapper = new JsonMapper();
 
-  private final GeoJsonReader geoJsonReader = new GeoJsonReader();
+    private final GeoJsonReader geoJsonReader = new GeoJsonReader();
 
-  @Getter
-  private final int srid;
+    @Getter
+    private final int srid;
 
-  public GeometryType() {
-    this(DEFAULT_SRID);
-  }
-
-  @Override
-  public String getName() {
-    return TYPE_NAME;
-  }
-
-  @Override
-  public Object mapSourceValue(Object sourceValue) {
-    if (sourceValue instanceof Map<?, ?>) {
-      try {
-        var jsonStr = objectMapper.writeValueAsString(sourceValue);
-        var geometry = geoJsonReader.read(jsonStr);
-        geometry.setSRID(srid);
-
-        return geometry;
-      } catch (JsonProcessingException | ParseException e) {
-        throw new SpatialException("Failed mapping geometry value.", e);
-      }
+    public GeometryType() {
+        this(DEFAULT_SRID);
     }
 
-    throw new SpatialException("Failed mapping geometry value.");
-  }
-
-  @Override
-  public Object mapLineageValue(Object value) {
-    if (value instanceof Map<?, ?>) {
-      return mapSourceValue(value).toString();
+    @Override
+    public String getName() {
+        return TYPE_NAME;
     }
 
-    if (value instanceof Geometry geometry) {
-      return geometry.toString();
+    @Override
+    public Object mapSourceValue(Object sourceValue) {
+        if (sourceValue instanceof Map<?, ?>) {
+            try {
+                var jsonStr = objectMapper.writeValueAsString(sourceValue);
+                var geometry = geoJsonReader.read(jsonStr);
+                geometry.setSRID(srid);
+
+                return geometry;
+            } catch (JsonProcessingException | ParseException e) {
+                throw new SpatialException("Failed mapping geometry value.", e);
+            }
+        }
+
+        throw new SpatialException("Failed mapping geometry value.");
     }
 
-    throw new SpatialException("Failed mapping lineage value.");
-  }
+    @Override
+    public Object mapLineageValue(Object value) {
+        if (value instanceof Map<?, ?>) {
+            return mapSourceValue(value).toString();
+        }
 
-  @Override
-  public FilterExpression createFilterExpression(Path path, Map<String, Object> inputValue) {
-    var wktReader = new WKTReader(new GeometryFactory(new PrecisionModel(), srid));
-    Geometry geometry;
+        if (value instanceof Geometry geometry) {
+            return geometry.toString();
+        }
 
-    if (inputValue.size() > 1) {
-      throw new ModelException("Combining multiple spatial operators is not supported.");
+        throw new SpatialException("Failed mapping lineage value.");
     }
 
-    var firstEntry = inputValue.entrySet()
-        .iterator()
-        .next();
+    @Override
+    public FilterExpression createFilterExpression(Path path, Map<String, Object> inputValue) {
+        var wktReader = new WKTReader(new GeometryFactory(new PrecisionModel(), srid));
+        Geometry geometry;
 
-    if (!(firstEntry.getValue() instanceof String)) {
-      throw new ModelException("Spatial filter value is not a string.");
+        if (inputValue.size() > 1) {
+            throw new ModelException("Combining multiple spatial operators is not supported.");
+        }
+
+        var firstEntry = inputValue.entrySet().iterator().next();
+
+        if (!(firstEntry.getValue() instanceof String)) {
+            throw new ModelException("Spatial filter value is not a string.");
+        }
+
+        try {
+            geometry = wktReader.read(firstEntry.getValue().toString());
+        } catch (ParseException e) {
+            throw new SpatialException("Failed parsing geometry", e);
+        }
+
+        if (!GeometryTypeFactory.FILTER_OPERATOR_TYPES.contains(firstEntry.getKey())) {
+            throw new ModelException("Spatial operator is unknown: " + firstEntry.getKey());
+        }
+
+        var operator = FilterOperator.builder().type(firstEntry.getKey()).build();
+
+        return FilterExpression.builder()
+                .path(path)
+                .operator(operator)
+                .value(geometry)
+                .build();
     }
-
-    try {
-      geometry = wktReader.read(firstEntry.getValue().toString());
-    } catch (ParseException e) {
-      throw new SpatialException("Failed parsing geometry", e);
-    }
-
-    if (!GeometryTypeFactory.FILTER_OPERATOR_TYPES.contains(firstEntry.getKey())) {
-      throw new ModelException("Spatial operator is unknown: " + firstEntry.getKey());
-    }
-
-    var operator = FilterOperator.builder()
-        .type(firstEntry.getKey())
-        .build();
-
-    return FilterExpression.builder()
-        .path(path)
-        .operator(operator)
-        .value(geometry)
-        .build();
-  }
 }

@@ -10,8 +10,8 @@ import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 @Builder(toBuilder = true)
 public class CollectionResult implements DataResult {
 
-  private final ObjectType type;
+    private final ObjectType type;
 
-  @Singular
-  private final List<ObjectResult> objectResults;
+    @Singular
+    private final List<ObjectResult> objectResults;
 }

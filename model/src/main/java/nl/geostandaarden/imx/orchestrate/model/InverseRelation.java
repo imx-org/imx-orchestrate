@@ -9,15 +9,15 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 public final class InverseRelation extends AbstractRelation {
 
-  private final Relation originRelation;
+    private final Relation originRelation;
 
-  @Override
-  public String getName() {
-    return originRelation.getInverseName();
-  }
+    @Override
+    public String getName() {
+        return originRelation.getInverseName();
+    }
 
-  @Override
-  public Multiplicity getMultiplicity() {
-    return originRelation.getInverseMultiplicity();
-  }
+    @Override
+    public Multiplicity getMultiplicity() {
+        return originRelation.getInverseMultiplicity();
+    }
 }

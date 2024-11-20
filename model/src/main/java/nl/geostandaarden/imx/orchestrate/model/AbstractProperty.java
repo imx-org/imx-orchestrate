@@ -10,10 +10,10 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 public abstract class AbstractProperty implements Property {
 
-  protected final String name;
+    protected final String name;
 
-  protected final boolean identifier;
+    protected final boolean identifier;
 
-  @Builder.Default
-  protected final Multiplicity multiplicity = Multiplicity.OPTIONAL;
+    @Builder.Default
+    protected final Multiplicity multiplicity = Multiplicity.OPTIONAL;
 }

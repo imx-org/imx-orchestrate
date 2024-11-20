@@ -2,9 +2,9 @@ package nl.geostandaarden.imx.orchestrate.model;
 
 public interface Property {
 
-  String getName();
+    String getName();
 
-  boolean isIdentifier();
+    boolean isIdentifier();
 
-  Multiplicity getMultiplicity();
+    Multiplicity getMultiplicity();
 }

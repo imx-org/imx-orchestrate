@@ -19,7 +19,7 @@ class GraphQlSourceTypeTest {
 
     @Test
     void create_returnsNewSource_withRequiredConfig() {
-        Map<String, Object> config = Map.of("url",  "http://localhost:8080");
+        Map<String, Object> config = Map.of("url", "http://localhost:8080");
 
         var result = new GraphQlSourceType().create(null, config);
 
@@ -29,10 +29,15 @@ class GraphQlSourceTypeTest {
 
     @Test
     void create_returnsNewSource_withAllConfig() {
-        Map<String, Object> config = Map.of("url",  "http://localhost:8080",
-                "bearerToken", "1234567890",
-                "collectionSuffix", "Collection",
-                "batchSuffix", "Batch");
+        Map<String, Object> config = Map.of(
+                "url",
+                "http://localhost:8080",
+                "bearerToken",
+                "1234567890",
+                "collectionSuffix",
+                "Collection",
+                "batchSuffix",
+                "Batch");
 
         var result = new GraphQlSourceType().create(null, config);
 
@@ -45,7 +50,8 @@ class GraphQlSourceTypeTest {
         Map<String, Object> config = Map.of();
         var sourceType = new GraphQlSourceType();
 
-        assertThatThrownBy(() -> sourceType.create(null, config)).isInstanceOf(SourceException.class)
+        assertThatThrownBy(() -> sourceType.create(null, config))
+                .isInstanceOf(SourceException.class)
                 .hasMessageContaining("Config 'url' is missing.");
     }
 }

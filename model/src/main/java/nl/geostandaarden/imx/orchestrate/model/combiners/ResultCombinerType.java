@@ -4,7 +4,7 @@ import java.util.Map;
 
 public interface ResultCombinerType {
 
-  String getName();
+    String getName();
 
-  ResultCombiner create(Map<String, Object> options);
+    ResultCombiner create(Map<String, Object> options);
 }

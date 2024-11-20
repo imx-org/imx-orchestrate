@@ -5,12 +5,11 @@ import lombok.Builder;
 import lombok.Getter;
 import nl.geostandaarden.imx.orchestrate.model.PathMapping;
 
-
 @Getter
 @Builder(toBuilder = true)
 public class PathMappingExecution {
 
-  private final PathMapping used;
+    private final PathMapping used;
 
-  private final List<PathExecution> wasInformedBy;
+    private final List<PathExecution> wasInformedBy;
 }

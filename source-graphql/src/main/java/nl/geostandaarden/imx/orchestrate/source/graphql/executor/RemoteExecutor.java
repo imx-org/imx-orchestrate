@@ -4,7 +4,6 @@ import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.ExecutionResultImpl;
 import java.util.Map;
-
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,35 +18,34 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class RemoteExecutor implements Executor {
 
-  private static final String DATA = "data";
+    private static final String DATA = "data";
 
-  private final WebClient webClient;
+    private final WebClient webClient;
 
-  public static RemoteExecutor create(GraphQlOrchestrateConfig config) {
-    return new RemoteExecutor(GraphQlWebClient.create(config));
-  }
-
-  @Override
-  public Mono<ExecutionResult> execute(ExecutionInput input) {
-    var mapTypeRef = new ParameterizedTypeReference<Map<String, Object>>() {};
-    var body = Map.of("query", input.getQuery(), "variables", input.getVariables());
-
-    if (log.isDebugEnabled()) {
-      log.debug("Sending request: \n\n{}\n", input.getQuery());
+    public static RemoteExecutor create(GraphQlOrchestrateConfig config) {
+        return new RemoteExecutor(GraphQlWebClient.create(config));
     }
 
-    return this.webClient.post()
-        .contentType(MediaType.APPLICATION_JSON)
-        .accept(MediaType.APPLICATION_JSON)
-        .body(BodyInserters.fromValue(body))
-        .retrieve()
-        .bodyToMono(mapTypeRef)
-        .map(RemoteExecutor::mapToResult);
-  }
+    @Override
+    public Mono<ExecutionResult> execute(ExecutionInput input) {
+        var mapTypeRef = new ParameterizedTypeReference<Map<String, Object>>() {};
+        var body = Map.of("query", input.getQuery(), "variables", input.getVariables());
 
-  private static ExecutionResult mapToResult(Map<String, Object> body) {
-    return ExecutionResultImpl.newExecutionResult()
-        .data(body.get(DATA))
-        .build();
-  }
+        if (log.isDebugEnabled()) {
+            log.debug("Sending request: \n\n{}\n", input.getQuery());
+        }
+
+        return this.webClient
+                .post()
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromValue(body))
+                .retrieve()
+                .bodyToMono(mapTypeRef)
+                .map(RemoteExecutor::mapToResult);
+    }
+
+    private static ExecutionResult mapToResult(Map<String, Object> body) {
+        return ExecutionResultImpl.newExecutionResult().data(body.get(DATA)).build();
+    }
 }

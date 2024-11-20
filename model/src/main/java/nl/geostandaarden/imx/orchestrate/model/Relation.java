@@ -15,13 +15,13 @@ import lombok.extern.jackson.Jacksonized;
 @SuperBuilder(toBuilder = true)
 public final class Relation extends AbstractRelation {
 
-  private final String inverseName;
+    private final String inverseName;
 
-  @Builder.Default
-  private final Multiplicity inverseMultiplicity = Multiplicity.MULTI;
+    @Builder.Default
+    private final Multiplicity inverseMultiplicity = Multiplicity.MULTI;
 
-  private final Map<String, Path> keyMapping;
+    private final Map<String, Path> keyMapping;
 
-  @Singular
-  private final List<RelationFilterMapping> filterMappings;
+    @Singular
+    private final List<RelationFilterMapping> filterMappings;
 }

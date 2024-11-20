@@ -6,9 +6,9 @@ import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 
 public interface DataRequest {
 
-  Model getModel();
+    Model getModel();
 
-  ObjectType getObjectType();
+    ObjectType getObjectType();
 
-  Set<SelectedProperty> getSelectedProperties();
+    Set<SelectedProperty> getSelectedProperties();
 }

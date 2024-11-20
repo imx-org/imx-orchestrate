@@ -14,26 +14,25 @@ import nl.geostandaarden.imx.orchestrate.parser.yaml.YamlModelMappingParserExcep
 
 public final class MultiplicityDeserializer extends StdDeserializer<Multiplicity> {
 
-  @Serial
-  private static final long serialVersionUID = -1800785545802888335L;
+    @Serial
+    private static final long serialVersionUID = -1800785545802888335L;
 
-  public MultiplicityDeserializer() {
-    super(Multiplicity.class);
-  }
-
-  @Override
-  public Multiplicity deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-    var multiplicityNode = parser.getCodec()
-        .readTree(parser);
-
-    if (multiplicityNode instanceof TextNode textNode) {
-      return Multiplicity.fromString(textNode.textValue());
+    public MultiplicityDeserializer() {
+        super(Multiplicity.class);
     }
 
-    if (multiplicityNode instanceof IntNode intNode) {
-      return Multiplicity.fromString(intNode.asText());
-    }
+    @Override
+    public Multiplicity deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+        var multiplicityNode = parser.getCodec().readTree(parser);
 
-    throw new YamlModelMappingParserException(String.format(INVALID_TEXT_OR_INT_NODE, "multiplicity"));
-  }
+        if (multiplicityNode instanceof TextNode textNode) {
+            return Multiplicity.fromString(textNode.textValue());
+        }
+
+        if (multiplicityNode instanceof IntNode intNode) {
+            return Multiplicity.fromString(intNode.asText());
+        }
+
+        throw new YamlModelMappingParserException(String.format(INVALID_TEXT_OR_INT_NODE, "multiplicity"));
+    }
 }

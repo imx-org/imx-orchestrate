@@ -9,15 +9,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ModelUtils {
 
-  public static Map<String, Object> extractKey(ObjectType objectType, Map<String, Object> properties) {
-    return objectType.getIdentityProperties()
-        .stream()
-        .collect(Collectors.toMap(Property::getName, property -> properties.get(property.getName())));
-  }
+    public static Map<String, Object> extractKey(ObjectType objectType, Map<String, Object> properties) {
+        return objectType.getIdentityProperties().stream()
+                .collect(Collectors.toMap(Property::getName, property -> properties.get(property.getName())));
+    }
 
-  public static <T> BinaryOperator<T> noopCombiner() {
-    return (a, b) -> {
-      throw new IllegalStateException("Combiner should never be called.");
-    };
-  }
+    public static <T> BinaryOperator<T> noopCombiner() {
+        return (a, b) -> {
+            throw new IllegalStateException("Combiner should never be called.");
+        };
+    }
 }

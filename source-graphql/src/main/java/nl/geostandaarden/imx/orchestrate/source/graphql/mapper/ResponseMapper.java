@@ -15,54 +15,60 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class ResponseMapper {
 
-  private final GraphQlOrchestrateConfig config;
+    private final GraphQlOrchestrateConfig config;
 
-  public Mono<Map<String, Object>> processFindOneResult(Mono<ExecutionResult> executionResult) {
-    return executionResult.map(result -> Optional.ofNullable((Map<String, Object>) result.getData())
-            .orElse(Map.of()))
-        .map(ResponseMapper::unwrapRefs);
-  }
+    public Mono<Map<String, Object>> processFindOneResult(Mono<ExecutionResult> executionResult) {
+        return executionResult
+                .map(result -> Optional.ofNullable((Map<String, Object>) result.getData())
+                        .orElse(Map.of()))
+                .map(ResponseMapper::unwrapRefs);
+    }
 
-  public Flux<Map<String, Object>> processFindResult(Mono<ExecutionResult> executionResult, String objectName) {
-    return executionResult.map(e -> getCollectionResult(e, objectName))
-        .flatMapMany(Flux::fromIterable)
-        .map(ResponseMapper::unwrapRefs);
-  }
+    public Flux<Map<String, Object>> processFindResult(Mono<ExecutionResult> executionResult, String objectName) {
+        return executionResult
+                .map(e -> getCollectionResult(e, objectName))
+                .flatMapMany(Flux::fromIterable)
+                .map(ResponseMapper::unwrapRefs);
+    }
 
-  public Flux<Map<String, Object>> processBatchResult(Mono<ExecutionResult> executionResult, String objectName) {
-    return executionResult.map(e -> getBatchResult(e, objectName))
-        .flatMapMany(Flux::fromIterable)
-        .map(ResponseMapper::unwrapRefs);
-  }
+    public Flux<Map<String, Object>> processBatchResult(Mono<ExecutionResult> executionResult, String objectName) {
+        return executionResult
+                .map(e -> getBatchResult(e, objectName))
+                .flatMapMany(Flux::fromIterable)
+                .map(ResponseMapper::unwrapRefs);
+    }
 
-  private List<Map<String, Object>> getCollectionResult(ExecutionResult executionResult, String objectName) {
-    var data = executionResult.getData();
-    var result = ((Map<String, Map<String, List<Map<String, Object>>>>) data)
-        .get(uncapitalize(objectName) + config.getCollectionSuffix());
-    return result.get(MapperConstants.NODES);
-  }
+    private List<Map<String, Object>> getCollectionResult(ExecutionResult executionResult, String objectName) {
+        var data = executionResult.getData();
+        var result = ((Map<String, Map<String, List<Map<String, Object>>>>) data)
+                .get(uncapitalize(objectName) + config.getCollectionSuffix());
+        return result.get(MapperConstants.NODES);
+    }
 
-  private List<Map<String, Object>> getBatchResult(ExecutionResult executionResult, String objectName) {
-    var data = executionResult.getData();
-    return ((Map<String, List<Map<String, Object>>>) data).get(uncapitalize(objectName) + config.getBatchSuffix());
-  }
-  private static Map<String, Object> unwrapRefs(Map<String, Object> item) {
-    return item.entrySet()
-        .stream()
-        .collect(HashMap::new, (acc, e) -> {
-          var value = e.getValue();
+    private List<Map<String, Object>> getBatchResult(ExecutionResult executionResult, String objectName) {
+        var data = executionResult.getData();
+        return ((Map<String, List<Map<String, Object>>>) data).get(uncapitalize(objectName) + config.getBatchSuffix());
+    }
 
-          if (value instanceof Map<?, ?> mapValue) {
-            if (mapValue.containsKey("ref")) {
-              value = mapValue.get("ref");
-            }
+    private static Map<String, Object> unwrapRefs(Map<String, Object> item) {
+        return item.entrySet().stream()
+                .collect(
+                        HashMap::new,
+                        (acc, e) -> {
+                            var value = e.getValue();
 
-            if (mapValue.containsKey("refs")) {
-              value = mapValue.get("refs");
-            }
-          }
+                            if (value instanceof Map<?, ?> mapValue) {
+                                if (mapValue.containsKey("ref")) {
+                                    value = mapValue.get("ref");
+                                }
 
-          acc.put(e.getKey(), value);
-        }, HashMap::putAll);
-  }
+                                if (mapValue.containsKey("refs")) {
+                                    value = mapValue.get("refs");
+                                }
+                            }
+
+                            acc.put(e.getKey(), value);
+                        },
+                        HashMap::putAll);
+    }
 }

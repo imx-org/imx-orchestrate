@@ -12,11 +12,9 @@ import lombok.ToString;
 @Builder(toBuilder = true)
 public final class FetchInput {
 
-  private final Map<String, Object> data;
+    private final Map<String, Object> data;
 
-  public static FetchInput newInput(Map<String, Object> data) {
-    return builder()
-        .data(data)
-        .build();
-  }
+    public static FetchInput newInput(Map<String, Object> data) {
+        return builder().data(data).build();
+    }
 }

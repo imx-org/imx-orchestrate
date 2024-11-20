@@ -13,21 +13,20 @@ import nl.geostandaarden.imx.orchestrate.model.matchers.Matcher;
 
 public final class MatcherDeserializer extends StdDeserializer<Matcher> {
 
-  @Serial
-  private static final long serialVersionUID = 7898902256110027311L;
+    @Serial
+    private static final long serialVersionUID = 7898902256110027311L;
 
-  private final transient ComponentRegistry componentRegistry;
+    private final transient ComponentRegistry componentRegistry;
 
-  public MatcherDeserializer(ComponentRegistry componentRegistry) {
-    super(Matcher.class);
-    this.componentRegistry = componentRegistry;
-  }
+    public MatcherDeserializer(ComponentRegistry componentRegistry) {
+        super(Matcher.class);
+        this.componentRegistry = componentRegistry;
+    }
 
-  @Override
-  public Matcher deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-    var node = parser.getCodec()
-        .readTree(parser);
+    @Override
+    public Matcher deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+        var node = parser.getCodec().readTree(parser);
 
-    return componentRegistry.createMatcher(parseType(node), parseOptions(node));
-  }
+        return componentRegistry.createMatcher(parseType(node), parseOptions(node));
+    }
 }

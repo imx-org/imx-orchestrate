@@ -7,6 +7,6 @@ import nl.geostandaarden.imx.orchestrate.parser.yaml.deserializers.SourceModelDe
 
 public abstract class ModelMappingMixin {
 
-  @JsonDeserialize(using = SourceModelDeserializer.class)
-  private Set<Model> sourceModels;
+    @JsonDeserialize(using = SourceModelDeserializer.class)
+    private Set<Model> sourceModels;
 }

@@ -22,92 +22,85 @@ import reactor.core.publisher.Mono;
 
 class FileRepository implements DataRepository {
 
-  private final Map<String, Map<Map<String, Object>, ObjectNode>> objectMap = new LinkedHashMap<>();
+    private final Map<String, Map<Map<String, Object>, ObjectNode>> objectMap = new LinkedHashMap<>();
 
-  @Override
-  public Mono<Map<String, Object>> findOne(ObjectRequest objectRequest) {
-    var objectProperties = getObjectNodes(objectRequest)
-        .map(typeObjects -> typeObjects.get(objectRequest.getObjectKey()))
-        .map(objectNode -> getObjectProperties(objectNode, objectRequest.getSelectedProperties()))
-        .orElse(null);
+    @Override
+    public Mono<Map<String, Object>> findOne(ObjectRequest objectRequest) {
+        var objectProperties = getObjectNodes(objectRequest)
+                .map(typeObjects -> typeObjects.get(objectRequest.getObjectKey()))
+                .map(objectNode -> getObjectProperties(objectNode, objectRequest.getSelectedProperties()))
+                .orElse(null);
 
-    return Mono.justOrEmpty(objectProperties);
-  }
-
-  @Override
-  public Flux<Map<String, Object>> find(CollectionRequest collectionRequest) {
-    var objectList = getObjectNodes(collectionRequest)
-        .map(Map::values)
-        .orElse(emptyList())
-        .stream()
-        .filter(createFilter(collectionRequest.getFilter()))
-        .map(objectNode -> getObjectProperties(objectNode, collectionRequest.getSelectedProperties()))
-        .toList();
-
-    return Flux.fromIterable(objectList);
-  }
-
-  @Override
-  public Flux<Map<String, Object>> findBatch(BatchRequest batchRequest) {
-    return Flux.fromIterable(batchRequest.getObjectKeys())
-        .flatMap(objectKey -> findOne(ObjectRequest.builder(batchRequest.getModel())
-            .objectType(batchRequest.getObjectType().getName())
-            .selectedProperties(batchRequest.getSelectedProperties())
-            .objectKey(objectKey)
-            .build()));
-  }
-
-  @Override
-  public boolean supportsBatchLoading(ObjectType objectType) {
-    return true;
-  }
-
-  private Predicate<ObjectNode> createFilter(FilterExpression filterExpression) {
-    if (filterExpression == null) {
-      return objectNode -> true;
+        return Mono.justOrEmpty(objectProperties);
     }
 
-    var valueClassName = filterExpression.getValue()
-        .getClass()
-        .getName();
+    @Override
+    public Flux<Map<String, Object>> find(CollectionRequest collectionRequest) {
+        var objectList = getObjectNodes(collectionRequest).map(Map::values).orElse(emptyList()).stream()
+                .filter(createFilter(collectionRequest.getFilter()))
+                .map(objectNode -> getObjectProperties(objectNode, collectionRequest.getSelectedProperties()))
+                .toList();
 
-    // TODO: Handle special type-mapping
-    if (valueClassName.startsWith("org.locationtech.jts.geom")) {
-      return objectNode -> false;
+        return Flux.fromIterable(objectList);
     }
 
-    var jsonValue = new ObjectMapper()
-        .valueToTree(filterExpression.getValue());
+    @Override
+    public Flux<Map<String, Object>> findBatch(BatchRequest batchRequest) {
+        return Flux.fromIterable(batchRequest.getObjectKeys())
+                .flatMap(objectKey -> findOne(ObjectRequest.builder(batchRequest.getModel())
+                        .objectType(batchRequest.getObjectType().getName())
+                        .selectedProperties(batchRequest.getSelectedProperties())
+                        .objectKey(objectKey)
+                        .build()));
+    }
 
-    var jsonPointer = JsonPointer.compile("/".concat(filterExpression.getPath().toString()));
+    @Override
+    public boolean supportsBatchLoading(ObjectType objectType) {
+        return true;
+    }
 
-    return objectNode -> {
-      var propertyNode = objectNode.at(jsonPointer);
-
-      if (propertyNode.isArray()) {
-        var arrayElements = propertyNode.elements();
-
-        while (arrayElements.hasNext()) {
-          if (jsonValue.equals(arrayElements.next())) {
-            return true;
-          }
+    private Predicate<ObjectNode> createFilter(FilterExpression filterExpression) {
+        if (filterExpression == null) {
+            return objectNode -> true;
         }
 
-        return false;
-      }
+        var valueClassName = filterExpression.getValue().getClass().getName();
 
-      return propertyNode.equals(jsonValue);
-    };
-  }
+        // TODO: Handle special type-mapping
+        if (valueClassName.startsWith("org.locationtech.jts.geom")) {
+            return objectNode -> false;
+        }
 
-  public void add(String typeName, Map<String, Object> objectKey, ObjectNode objectNode) {
-    objectMap.putIfAbsent(typeName, new LinkedHashMap<>());
-    objectMap.get(typeName)
-        .put(objectKey, objectNode);
-  }
+        var jsonValue = new ObjectMapper().valueToTree(filterExpression.getValue());
 
-  private Optional<Map<Map<String, Object>, ObjectNode>> getObjectNodes(DataRequest dataRequest) {
-    return Optional.ofNullable(objectMap.get(dataRequest.getObjectType()
-        .getName()));
-  }
+        var jsonPointer =
+                JsonPointer.compile("/".concat(filterExpression.getPath().toString()));
+
+        return objectNode -> {
+            var propertyNode = objectNode.at(jsonPointer);
+
+            if (propertyNode.isArray()) {
+                var arrayElements = propertyNode.elements();
+
+                while (arrayElements.hasNext()) {
+                    if (jsonValue.equals(arrayElements.next())) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            return propertyNode.equals(jsonValue);
+        };
+    }
+
+    public void add(String typeName, Map<String, Object> objectKey, ObjectNode objectNode) {
+        objectMap.putIfAbsent(typeName, new LinkedHashMap<>());
+        objectMap.get(typeName).put(objectKey, objectNode);
+    }
+
+    private Optional<Map<Map<String, Object>, ObjectNode>> getObjectNodes(DataRequest dataRequest) {
+        return Optional.ofNullable(objectMap.get(dataRequest.getObjectType().getName()));
+    }
 }

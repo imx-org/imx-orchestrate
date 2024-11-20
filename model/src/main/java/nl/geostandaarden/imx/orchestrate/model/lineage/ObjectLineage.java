@@ -9,6 +9,6 @@ import lombok.Singular;
 @Builder(toBuilder = true)
 public final class ObjectLineage {
 
-  @Singular
-  private final Set<OrchestratedDataElement> orchestratedDataElements;
+    @Singular
+    private final Set<OrchestratedDataElement> orchestratedDataElements;
 }

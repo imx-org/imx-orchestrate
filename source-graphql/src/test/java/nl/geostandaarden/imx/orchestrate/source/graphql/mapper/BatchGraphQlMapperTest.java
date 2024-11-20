@@ -18,33 +18,33 @@ import org.junit.jupiter.api.Test;
 
 class BatchGraphQlMapperTest {
 
-  private BatchGraphQlMapper batchGraphQlMapper;
+    private BatchGraphQlMapper batchGraphQlMapper;
 
-  @BeforeEach
-  void init() {
-    var config = GraphQlOrchestrateConfig.builder()
-        .collectionSuffix("Collectie")
-        .batchSuffix("Batch")
-        .build();
-    batchGraphQlMapper = new BatchGraphQlMapper(config);
-  }
+    @BeforeEach
+    void init() {
+        var config = GraphQlOrchestrateConfig.builder()
+                .collectionSuffix("Collectie")
+                .batchSuffix("Batch")
+                .build();
+        batchGraphQlMapper = new BatchGraphQlMapper(config);
+    }
 
-  @Test
-  void convert_returnsExpectedResult_forRequest() {
-    var request = BatchRequest.builder(createModel())
-        .objectKey(Map.of("identificatie", "12345"))
-        .objectKey(Map.of("identificatie", "34567"))
-        .objectType("Nummeraanduiding")
-        .selectProperty("naam")
-        .selectObjectProperty("adres", builder -> builder
-            .selectProperty("straat")
-            .selectProperty("huisnummer")
-            .build())
-        .build();
+    @Test
+    void convert_returnsExpectedResult_forRequest() {
+        var request = BatchRequest.builder(createModel())
+                .objectKey(Map.of("identificatie", "12345"))
+                .objectKey(Map.of("identificatie", "34567"))
+                .objectType("Nummeraanduiding")
+                .selectProperty("naam")
+                .selectObjectProperty("adres", builder -> builder.selectProperty("straat")
+                        .selectProperty("huisnummer")
+                        .build())
+                .build();
 
-    ExecutionInput result = batchGraphQlMapper.convert(request);
+        ExecutionInput result = batchGraphQlMapper.convert(request);
 
-    var expected = """
+        var expected =
+                """
         query Query {
           nummeraanduidingBatch(identificatie: ["12345", "34567"]) {
             naam
@@ -55,49 +55,48 @@ class BatchGraphQlMapperTest {
           }
         }""";
 
-    GraphQlAssert.assertThat(result.getQuery()).graphQlEquals(expected);
-  }
+        GraphQlAssert.assertThat(result.getQuery()).graphQlEquals(expected);
+    }
 
-  @Test
-  void convert_throwsException_forRequest_withMoreThanOneKeyProperty() {
-    var request = BatchRequest.builder(createModel())
-        .objectKey(Map.of("identificatie", "12345"))
-        .objectKey(Map.of("id", "34567"))
-        .objectType("Nummeraanduiding")
-        .selectProperty("naam")
-        .selectObjectProperty("adres", builder -> builder
-            .selectProperty("straat")
-            .selectProperty("huisnummer")
-            .build())
-        .build();
+    @Test
+    void convert_throwsException_forRequest_withMoreThanOneKeyProperty() {
+        var request = BatchRequest.builder(createModel())
+                .objectKey(Map.of("identificatie", "12345"))
+                .objectKey(Map.of("id", "34567"))
+                .objectType("Nummeraanduiding")
+                .selectProperty("naam")
+                .selectObjectProperty("adres", builder -> builder.selectProperty("straat")
+                        .selectProperty("huisnummer")
+                        .build())
+                .build();
 
-    assertThrows(SourceException.class, () -> batchGraphQlMapper.convert(request));
-  }
+        assertThrows(SourceException.class, () -> batchGraphQlMapper.convert(request));
+    }
 
-  private Model createModel() {
-    return Model.builder()
-        .objectType(ObjectType.builder()
-            .name("Nummeraanduiding")
-            .property(Attribute.builder()
-                .name("naam")
-                .type(ScalarTypes.STRING)
-                .build())
-            .property(Relation.builder()
-                .name("adres")
-                .target(ObjectTypeRef.forType("Adres"))
-                .build())
-            .build())
-        .objectType(ObjectType.builder()
-            .name("Adres")
-            .property(Attribute.builder()
-                .name("straat")
-                .type(ScalarTypes.STRING)
-                .build())
-            .property(Attribute.builder()
-                .name("huisnummer")
-                .type(ScalarTypes.INTEGER)
-                .build())
-            .build())
-        .build();
-  }
+    private Model createModel() {
+        return Model.builder()
+                .objectType(ObjectType.builder()
+                        .name("Nummeraanduiding")
+                        .property(Attribute.builder()
+                                .name("naam")
+                                .type(ScalarTypes.STRING)
+                                .build())
+                        .property(Relation.builder()
+                                .name("adres")
+                                .target(ObjectTypeRef.forType("Adres"))
+                                .build())
+                        .build())
+                .objectType(ObjectType.builder()
+                        .name("Adres")
+                        .property(Attribute.builder()
+                                .name("straat")
+                                .type(ScalarTypes.STRING)
+                                .build())
+                        .property(Attribute.builder()
+                                .name("huisnummer")
+                                .type(ScalarTypes.INTEGER)
+                                .build())
+                        .build())
+                .build();
+    }
 }

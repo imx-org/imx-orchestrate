@@ -14,64 +14,63 @@ import reactor.test.StepVerifier;
 
 class FileSourceTest {
 
-  private static final Model MODEL = createModel();
+    private static final Model MODEL = createModel();
 
-  @Test
-  void constructor_PopulatesRepository_ForValidFolder() {
-    var folderPath = Paths.get("src/test/resources/source1");
-    var fileSource = new FileSource(MODEL, folderPath);
-    assertThat(fileSource).isNotNull();
+    @Test
+    void constructor_PopulatesRepository_ForValidFolder() {
+        var folderPath = Paths.get("src/test/resources/source1");
+        var fileSource = new FileSource(MODEL, folderPath);
+        assertThat(fileSource).isNotNull();
 
-    var objectFlux = fileSource.getDataRepository()
-        .find(CollectionRequest.builder(MODEL)
-            .objectType("Building")
-            .selectProperty("id")
-            .selectProperty("name")
-            .build());
+        var objectFlux = fileSource
+                .getDataRepository()
+                .find(CollectionRequest.builder(MODEL)
+                        .objectType("Building")
+                        .selectProperty("id")
+                        .selectProperty("name")
+                        .build());
 
-    StepVerifier.create(objectFlux)
-        .expectNextCount(3)
-        .verifyComplete();
-  }
+        StepVerifier.create(objectFlux).expectNextCount(3).verifyComplete();
+    }
 
-  @ParameterizedTest
-  @ValueSource(strings = {"src/test/resources/source", "src/test/resources/source1/Address.json"})
-  void constructor_ThrowsException_ForNonExistingOrFilePath(String path) {
-    var folderPath = Paths.get(path);
-    assertThatThrownBy(() -> new FileSource(MODEL, folderPath)).hasMessage("File path does not exist or is not a " +
-        "directory.");
-  }
+    @ParameterizedTest
+    @ValueSource(strings = {"src/test/resources/source", "src/test/resources/source1/Address.json"})
+    void constructor_ThrowsException_ForNonExistingOrFilePath(String path) {
+        var folderPath = Paths.get(path);
+        assertThatThrownBy(() -> new FileSource(MODEL, folderPath))
+                .hasMessage("File path does not exist or is not a " + "directory.");
+    }
 
-  private static Model createModel() {
-    return Model.builder()
-        .objectType(ObjectType.builder()
-            .name("Building")
-            .property(Attribute.builder()
-                .identifier(true)
-                .name("id")
-                .type(ScalarTypes.STRING)
-                .build())
-            .property(Attribute.builder()
-                .name("name")
-                .type(ScalarTypes.STRING)
-                .build())
-            .property(Relation.builder()
-                .name("address")
-                .target(ObjectTypeRef.forType("Address"))
-                .build())
-            .build())
-        .objectType(ObjectType.builder()
-            .name("Address")
-            .property(Attribute.builder()
-                .identifier(true)
-                .name("id")
-                .type(ScalarTypes.STRING)
-                .build())
-            .property(Attribute.builder()
-                .name("name")
-                .type(ScalarTypes.STRING)
-                .build())
-            .build())
-        .build();
-  }
+    private static Model createModel() {
+        return Model.builder()
+                .objectType(ObjectType.builder()
+                        .name("Building")
+                        .property(Attribute.builder()
+                                .identifier(true)
+                                .name("id")
+                                .type(ScalarTypes.STRING)
+                                .build())
+                        .property(Attribute.builder()
+                                .name("name")
+                                .type(ScalarTypes.STRING)
+                                .build())
+                        .property(Relation.builder()
+                                .name("address")
+                                .target(ObjectTypeRef.forType("Address"))
+                                .build())
+                        .build())
+                .objectType(ObjectType.builder()
+                        .name("Address")
+                        .property(Attribute.builder()
+                                .identifier(true)
+                                .name("id")
+                                .type(ScalarTypes.STRING)
+                                .build())
+                        .property(Attribute.builder()
+                                .name("name")
+                                .type(ScalarTypes.STRING)
+                                .build())
+                        .build())
+                .build();
+    }
 }

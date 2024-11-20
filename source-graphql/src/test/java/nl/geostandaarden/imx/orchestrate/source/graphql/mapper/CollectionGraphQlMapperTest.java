@@ -16,30 +16,30 @@ import org.junit.jupiter.api.Test;
 
 class CollectionGraphQlMapperTest {
 
-  private CollectionGraphQlMapper collectionGraphQlMapper;
+    private CollectionGraphQlMapper collectionGraphQlMapper;
 
-  @BeforeEach
-  void init() {
-    var config = GraphQlOrchestrateConfig.builder()
-        .collectionSuffix("Collection")
-        .build();
-    collectionGraphQlMapper = new CollectionGraphQlMapper(config);
-  }
+    @BeforeEach
+    void init() {
+        var config = GraphQlOrchestrateConfig.builder()
+                .collectionSuffix("Collection")
+                .build();
+        collectionGraphQlMapper = new CollectionGraphQlMapper(config);
+    }
 
-  @Test
-  void convert_returnsExpectedResult_withoutFilter() {
-    var request = CollectionRequest.builder(createModel())
-        .objectType("Nummeraanduiding")
-        .selectProperty("naam")
-        .selectObjectProperty("adres", builder -> builder
-            .selectProperty("straat")
-            .selectProperty("huisnummer")
-            .build())
-        .build();
+    @Test
+    void convert_returnsExpectedResult_withoutFilter() {
+        var request = CollectionRequest.builder(createModel())
+                .objectType("Nummeraanduiding")
+                .selectProperty("naam")
+                .selectObjectProperty("adres", builder -> builder.selectProperty("straat")
+                        .selectProperty("huisnummer")
+                        .build())
+                .build();
 
-    ExecutionInput result = collectionGraphQlMapper.convert(request);
+        ExecutionInput result = collectionGraphQlMapper.convert(request);
 
-    var expected = """
+        var expected =
+                """
         query Query {
           nummeraanduidingCollection {
             nodes {
@@ -52,29 +52,29 @@ class CollectionGraphQlMapperTest {
           }
         }""";
 
-    GraphQlAssert.assertThat(result.getQuery()).graphQlEquals(expected);
-  }
+        GraphQlAssert.assertThat(result.getQuery()).graphQlEquals(expected);
+    }
 
-  @Test
-  void convert_returnsExpectedResult_withFilter() {
-    var filterExpression = FilterExpression.builder()
-        .value("Kerkstraat")
-        .path(Path.fromString("adres/straat"))
-        .build();
+    @Test
+    void convert_returnsExpectedResult_withFilter() {
+        var filterExpression = FilterExpression.builder()
+                .value("Kerkstraat")
+                .path(Path.fromString("adres/straat"))
+                .build();
 
-    var request = CollectionRequest.builder(createModel())
-        .objectType("Nummeraanduiding")
-        .selectProperty("naam")
-        .selectObjectProperty("adres", builder -> builder
-            .selectProperty("straat")
-            .selectProperty("huisnummer")
-            .build())
-        .filter(filterExpression)
-        .build();
+        var request = CollectionRequest.builder(createModel())
+                .objectType("Nummeraanduiding")
+                .selectProperty("naam")
+                .selectObjectProperty("adres", builder -> builder.selectProperty("straat")
+                        .selectProperty("huisnummer")
+                        .build())
+                .filter(filterExpression)
+                .build();
 
-    ExecutionInput result = collectionGraphQlMapper.convert(request);
+        ExecutionInput result = collectionGraphQlMapper.convert(request);
 
-    var expected = """
+        var expected =
+                """
         query Query {
           nummeraanduidingCollection(filter: {adres: { straat: { eq: "Kerkstraat" }}}) {
             nodes {
@@ -87,33 +87,33 @@ class CollectionGraphQlMapperTest {
           }
         }""";
 
-    GraphQlAssert.assertThat(result.getQuery()).graphQlEquals(expected);
-  }
+        GraphQlAssert.assertThat(result.getQuery()).graphQlEquals(expected);
+    }
 
-  private Model createModel() {
-    return Model.builder()
-        .objectType(ObjectType.builder()
-            .name("Nummeraanduiding")
-            .property(Attribute.builder()
-                .name("naam")
-                .type(ScalarTypes.STRING)
-                .build())
-            .property(Relation.builder()
-                .name("adres")
-                .target(ObjectTypeRef.forType("Adres"))
-                .build())
-            .build())
-        .objectType(ObjectType.builder()
-            .name("Adres")
-            .property(Attribute.builder()
-                .name("straat")
-                .type(ScalarTypes.STRING)
-                .build())
-            .property(Attribute.builder()
-                .name("huisnummer")
-                .type(ScalarTypes.INTEGER)
-                .build())
-            .build())
-        .build();
-  }
+    private Model createModel() {
+        return Model.builder()
+                .objectType(ObjectType.builder()
+                        .name("Nummeraanduiding")
+                        .property(Attribute.builder()
+                                .name("naam")
+                                .type(ScalarTypes.STRING)
+                                .build())
+                        .property(Relation.builder()
+                                .name("adres")
+                                .target(ObjectTypeRef.forType("Adres"))
+                                .build())
+                        .build())
+                .objectType(ObjectType.builder()
+                        .name("Adres")
+                        .property(Attribute.builder()
+                                .name("straat")
+                                .type(ScalarTypes.STRING)
+                                .build())
+                        .property(Attribute.builder()
+                                .name("huisnummer")
+                                .type(ScalarTypes.INTEGER)
+                                .build())
+                        .build())
+                .build();
+    }
 }

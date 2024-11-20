@@ -5,7 +5,7 @@ import nl.geostandaarden.imx.orchestrate.model.filters.FilterExpression;
 
 interface FilterMapper extends Function<FetchInput, FilterExpression> {
 
-  static FilterMapper just(FilterExpression filterExpression) {
-    return input -> filterExpression;
-  }
+    static FilterMapper just(FilterExpression filterExpression) {
+        return input -> filterExpression;
+    }
 }

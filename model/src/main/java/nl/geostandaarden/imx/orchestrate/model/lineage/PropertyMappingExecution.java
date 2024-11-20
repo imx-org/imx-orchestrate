@@ -9,7 +9,7 @@ import nl.geostandaarden.imx.orchestrate.model.PropertyMapping;
 @Builder(toBuilder = true)
 public class PropertyMappingExecution {
 
-  private final PropertyMapping used;
+    private final PropertyMapping used;
 
-  private final List<PathMappingExecution> wasInformedBy;
+    private final List<PathMappingExecution> wasInformedBy;
 }

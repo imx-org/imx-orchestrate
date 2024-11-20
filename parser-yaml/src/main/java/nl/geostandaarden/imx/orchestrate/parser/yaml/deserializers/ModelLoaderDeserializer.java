@@ -16,46 +16,43 @@ import nl.geostandaarden.imx.orchestrate.parser.yaml.YamlModelMappingParserExcep
 
 public class ModelLoaderDeserializer extends StdDeserializer<Model> {
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  @Serial
-  private static final long serialVersionUID = 2089408371000624220L;
+    @Serial
+    private static final long serialVersionUID = 2089408371000624220L;
 
-  private final transient ModelLoaderRegistry modelLoaderRegistry;
+    private final transient ModelLoaderRegistry modelLoaderRegistry;
 
-  private final transient ValueTypeRegistry valueTypeRegistry;
+    private final transient ValueTypeRegistry valueTypeRegistry;
 
-  public ModelLoaderDeserializer(ModelLoaderRegistry modelLoaderRegistry, ValueTypeRegistry valueTypeRegistry) {
-    super(Model.class);
-    this.modelLoaderRegistry = modelLoaderRegistry;
-    this.valueTypeRegistry = valueTypeRegistry;
-  }
-
-  @Override
-  public Model deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-    var node = parser.getCodec()
-        .readTree(parser);
-
-    if (node instanceof ObjectNode modelNode) {
-      return resolveModel(modelNode);
+    public ModelLoaderDeserializer(ModelLoaderRegistry modelLoaderRegistry, ValueTypeRegistry valueTypeRegistry) {
+        super(Model.class);
+        this.modelLoaderRegistry = modelLoaderRegistry;
+        this.valueTypeRegistry = valueTypeRegistry;
     }
 
-    throw new YamlModelMappingParserException("Node describing model is not an object node.");
-  }
+    @Override
+    public Model deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+        var node = parser.getCodec().readTree(parser);
 
-  private Model resolveModel(ObjectNode modelNode) {
-    if (!modelNode.has("location")) {
-      throw new YamlModelMappingParserException("Expected property `location` is missing.");
+        if (node instanceof ObjectNode modelNode) {
+            return resolveModel(modelNode);
+        }
+
+        throw new YamlModelMappingParserException("Node describing model is not an object node.");
     }
 
-    var loader = Optional.ofNullable(modelNode.get("loader"))
-        .map(JsonNode::textValue)
-        .orElse("yaml");
+    private Model resolveModel(ObjectNode modelNode) {
+        if (!modelNode.has("location")) {
+            throw new YamlModelMappingParserException("Expected property `location` is missing.");
+        }
 
-    var location = modelNode.get("location")
-        .textValue();
+        var loader = Optional.ofNullable(modelNode.get("loader"))
+                .map(JsonNode::textValue)
+                .orElse("yaml");
 
-    return modelLoaderRegistry.getModelLoader(loader)
-        .load(location, valueTypeRegistry);
-  }
+        var location = modelNode.get("location").textValue();
+
+        return modelLoaderRegistry.getModelLoader(loader).load(location, valueTypeRegistry);
+    }
 }

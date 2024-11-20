@@ -7,10 +7,9 @@ import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeFactory;
 
 public interface OrchestrateExtension {
 
-  default void registerComponents(ComponentRegistry componentRegistry) {
-  }
+    default void registerComponents(ComponentRegistry componentRegistry) {}
 
-  default Set<ValueTypeFactory<?>> getValueTypeFactories() {
-    return emptySet();
-  }
+    default Set<ValueTypeFactory<?>> getValueTypeFactories() {
+        return emptySet();
+    }
 }

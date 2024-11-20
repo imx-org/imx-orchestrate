@@ -4,5 +4,5 @@ import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 
 public interface DataResult {
 
-  ObjectType getType();
+    ObjectType getType();
 }

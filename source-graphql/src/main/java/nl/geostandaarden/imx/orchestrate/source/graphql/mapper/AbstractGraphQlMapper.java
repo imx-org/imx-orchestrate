@@ -11,29 +11,25 @@ import nl.geostandaarden.imx.orchestrate.engine.source.SourceException;
 
 abstract class AbstractGraphQlMapper<T extends DataRequest> {
 
-  abstract ExecutionInput convert(T request);
+    abstract ExecutionInput convert(T request);
 
-  protected SelectionSet createSelectionSet(Set<SelectedProperty> selectedProperties) {
-    if (selectedProperties.isEmpty()) {
-      throw new SourceException("SelectionSet cannot be empty.");
+    protected SelectionSet createSelectionSet(Set<SelectedProperty> selectedProperties) {
+        if (selectedProperties.isEmpty()) {
+            throw new SourceException("SelectionSet cannot be empty.");
+        }
+
+        var fields = selectedProperties.stream().map(this::getField).toList();
+
+        return new SelectionSet(fields);
     }
 
-    var fields = selectedProperties.stream()
-        .map(this::getField)
-        .toList();
+    private Field getField(SelectedProperty property) {
+        SelectionSet selectionSet = null;
 
-    return new SelectionSet(fields);
-  }
+        if (property.getNestedRequest() != null) {
+            selectionSet = createSelectionSet(property.getNestedRequest().getSelectedProperties());
+        }
 
-  private Field getField(SelectedProperty property) {
-    SelectionSet selectionSet = null;
-
-    if (property.getNestedRequest() != null) {
-      selectionSet = createSelectionSet(property.getNestedRequest()
-          .getSelectedProperties());
+        return new Field(property.getProperty().getName(), List.of(), selectionSet);
     }
-
-    return new Field(property.getProperty()
-        .getName(), List.of(), selectionSet);
-  }
 }

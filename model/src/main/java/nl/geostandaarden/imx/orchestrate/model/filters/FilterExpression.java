@@ -8,22 +8,20 @@ import nl.geostandaarden.imx.orchestrate.model.Path;
 @Builder(toBuilder = true)
 public final class FilterExpression {
 
-  private final Path path;
+    private final Path path;
 
-  @Builder.Default
-  private final FilterOperator operator = FilterOperator.builder()
-      .type("equals")
-      .alias("=")
-      .build();
+    @Builder.Default
+    private final FilterOperator operator =
+            FilterOperator.builder().type("equals").alias("=").build();
 
-  private final Object value;
+    private final Object value;
 
-  @Override
-  public String toString() {
-    return path.toString()
-        .concat(" ")
-        .concat(operator.toString())
-        .concat(" ")
-        .concat(value.toString());
-  }
+    @Override
+    public String toString() {
+        return path.toString()
+                .concat(" ")
+                .concat(operator.toString())
+                .concat(" ")
+                .concat(value.toString());
+    }
 }

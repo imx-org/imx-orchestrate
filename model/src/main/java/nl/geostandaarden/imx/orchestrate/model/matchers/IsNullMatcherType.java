@@ -5,13 +5,13 @@ import java.util.Objects;
 
 public final class IsNullMatcherType implements MatcherType {
 
-  @Override
-  public String getName() {
-    return "isNull";
-  }
+    @Override
+    public String getName() {
+        return "isNull";
+    }
 
-  @Override
-  public Matcher create(Map<String, Object> options) {
-    return Objects::isNull;
-  }
+    @Override
+    public Matcher create(Map<String, Object> options) {
+        return Objects::isNull;
+    }
 }

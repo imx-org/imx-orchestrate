@@ -19,7 +19,8 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class GatewayIT {
 
-  private static final String QUERY = """
+    private static final String QUERY =
+            """
         {
           construction(id: "BU0002") {
             id
@@ -38,38 +39,40 @@ class GatewayIT {
         }
       """;
 
-  @Autowired
-  private ApplicationContext applicationContext;
+    @Autowired
+    private ApplicationContext applicationContext;
 
-  private GraphQlTester graphQlTester;
+    private GraphQlTester graphQlTester;
 
-  @BeforeEach
-  void setUp() {
-    graphQlTester = HttpGraphQlTester.create(WebTestClient.bindToApplicationContext(applicationContext)
-        .configureClient()
-        .baseUrl("/graphql")
-        .build());
-  }
+    @BeforeEach
+    void setUp() {
+        graphQlTester = HttpGraphQlTester.create(WebTestClient.bindToApplicationContext(applicationContext)
+                .configureClient()
+                .baseUrl("/graphql")
+                .build());
+    }
 
-  @Test
-  void contextLoads_forDefaultProperties() {
-    assertThat(applicationContext).isNotNull();
-  }
+    @Test
+    void contextLoads_forDefaultProperties() {
+        assertThat(applicationContext).isNotNull();
+    }
 
-  @Test
-  @SuppressWarnings("unchecked")
-  void queryReturnsResponse_forGraphQLMediaType() {
-    Map<String, Object> adres = (Map<String, Object>) graphQlTester.document(QUERY)
-        .execute()
-        .path("construction")
-        .entity(Map.class)
-        .get();
+    @Test
+    @SuppressWarnings("unchecked")
+    void queryReturnsResponse_forGraphQLMediaType() {
+        Map<String, Object> adres = (Map<String, Object>) graphQlTester
+                .document(QUERY)
+                .execute()
+                .path("construction")
+                .entity(Map.class)
+                .get();
 
-    assertThat(adres).isNotNull()
-        .containsEntry("id", "BU0002")
-        .containsEntry("dimensions", Map.of("surface", 195))
-        .extractingByKey("hasLineage", as(InstanceOfAssertFactories.MAP))
-        .extractingByKey("orchestratedDataElements", as(InstanceOfAssertFactories.COLLECTION))
-        .hasSize(1);
-  }
+        assertThat(adres)
+                .isNotNull()
+                .containsEntry("id", "BU0002")
+                .containsEntry("dimensions", Map.of("surface", 195))
+                .extractingByKey("hasLineage", as(InstanceOfAssertFactories.MAP))
+                .extractingByKey("orchestratedDataElements", as(InstanceOfAssertFactories.COLLECTION))
+                .hasSize(1);
+    }
 }

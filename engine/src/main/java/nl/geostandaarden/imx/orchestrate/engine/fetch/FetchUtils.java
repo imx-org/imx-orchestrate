@@ -14,48 +14,44 @@ import nl.geostandaarden.imx.orchestrate.model.Path;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class FetchUtils {
 
-  @SuppressWarnings("unchecked")
-  public static <T> T cast(Object value) {
-    return (T) value;
-  }
-
-  public static <T> T cast(Object value, Class<T> clazz) {
-    if (!clazz.isInstance(value)) {
-      throw new OrchestrateException("Could not cast value to class: " + clazz.getSimpleName());
+    @SuppressWarnings("unchecked")
+    public static <T> T cast(Object value) {
+        return (T) value;
     }
 
-    return clazz.cast(value);
-  }
+    public static <T> T cast(Object value, Class<T> clazz) {
+        if (!clazz.isInstance(value)) {
+            throw new OrchestrateException("Could not cast value to class: " + clazz.getSimpleName());
+        }
 
-  public static Map<String, Object> keyFromResult(ObjectResult objectResult, Map<String, Path> keyMapping) {
-    // TODO: Support various edge cases
-    var keysPresent = keyMapping.values()
-        .stream()
-        .allMatch(key -> objectResult.getProperties()
-            .containsKey(key.getFirstSegment()));
-
-    if (!keysPresent) {
-      return null;
+        return clazz.cast(value);
     }
 
-    return keyMapping.entrySet()
-        .stream()
-        .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
-          var keyPath = entry.getValue();
+    public static Map<String, Object> keyFromResult(ObjectResult objectResult, Map<String, Path> keyMapping) {
+        // TODO: Support various edge cases
+        var keysPresent = keyMapping.values().stream()
+                .allMatch(key -> objectResult.getProperties().containsKey(key.getFirstSegment()));
 
-          if (!keyPath.isLeaf()) {
-            throw new ModelException("Only leaf paths are (currently) supported: " + keyPath);
-          }
+        if (!keysPresent) {
+            return null;
+        }
 
-          var objectType = objectResult.getType();
-          var propertyName = keyPath.getFirstSegment();
+        return keyMapping.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> {
+            var keyPath = entry.getValue();
 
-          if (!(objectType.getProperty(propertyName) instanceof Attribute)) {
-            throw new ModelException("Only attribute keys are (currently) supported: " + propertyName);
-          }
+            if (!keyPath.isLeaf()) {
+                throw new ModelException("Only leaf paths are (currently) supported: " + keyPath);
+            }
 
-          return Optional.ofNullable(objectResult.getProperty(propertyName))
-              .orElseThrow(() -> new ModelException("Key properties may never be null."));
+            var objectType = objectResult.getType();
+            var propertyName = keyPath.getFirstSegment();
+
+            if (!(objectType.getProperty(propertyName) instanceof Attribute)) {
+                throw new ModelException("Only attribute keys are (currently) supported: " + propertyName);
+            }
+
+            return Optional.ofNullable(objectResult.getProperty(propertyName))
+                    .orElseThrow(() -> new ModelException("Key properties may never be null."));
         }));
-  }
+    }
 }

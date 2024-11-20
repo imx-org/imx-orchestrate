@@ -13,29 +13,27 @@ import reactor.core.publisher.Flux;
 @SuperBuilder(toBuilder = true)
 public final class CollectionFetchOperation extends AbstractFetchOperation {
 
-  private final FilterMapper filterMapper;
+    private final FilterMapper filterMapper;
 
-  public Flux<ObjectResult> fetch(FetchInput input) {
-    var collectionRequest = CollectionRequest.builder(model)
-        .objectType(objectType.getName())
-        .filter(filterMapper != null ? filterMapper.apply(input) : null)
-        .selectedProperties(selectedProperties)
-        .build();
+    public Flux<ObjectResult> fetch(FetchInput input) {
+        var collectionRequest = CollectionRequest.builder(model)
+                .objectType(objectType.getName())
+                .filter(filterMapper != null ? filterMapper.apply(input) : null)
+                .selectedProperties(selectedProperties)
+                .build();
 
-    if (log.isDebugEnabled()) {
-      log.debug(collectionRequest.toString());
+        if (log.isDebugEnabled()) {
+            log.debug(collectionRequest.toString());
+        }
+
+        return source.getDataRepository().find(collectionRequest).map(properties -> ObjectResult.builder()
+                .type(objectType)
+                .properties(properties)
+                .build());
     }
 
-    return source.getDataRepository()
-        .find(collectionRequest)
-        .map(properties -> ObjectResult.builder()
-            .type(objectType)
-            .properties(properties)
-            .build());
-  }
-
-  @Override
-  protected Publisher<ObjectResult> fetchBatch(List<FetchInput> inputs) {
-    throw new OrchestrateException("Batch loading for collections is not (yet) supported.");
-  }
+    @Override
+    protected Publisher<ObjectResult> fetchBatch(List<FetchInput> inputs) {
+        throw new OrchestrateException("Batch loading for collections is not (yet) supported.");
+    }
 }

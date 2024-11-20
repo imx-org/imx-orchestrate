@@ -7,9 +7,9 @@ import lombok.Getter;
 @Builder(toBuilder = true)
 public final class SourceDataElement implements DataElement {
 
-  private final ObjectReference subject;
+    private final ObjectReference subject;
 
-  private final String property;
+    private final String property;
 
-  private final Object value;
+    private final Object value;
 }

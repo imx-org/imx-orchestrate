@@ -2,9 +2,9 @@ package nl.geostandaarden.imx.orchestrate.model.lineage;
 
 public interface DataElement {
 
-  ObjectReference getSubject();
+    ObjectReference getSubject();
 
-  String getProperty();
+    String getProperty();
 
-  Object getValue();
+    Object getValue();
 }

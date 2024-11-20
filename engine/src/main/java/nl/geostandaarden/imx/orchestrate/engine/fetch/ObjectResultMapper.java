@@ -40,321 +40,312 @@ import nl.geostandaarden.imx.orchestrate.model.result.PropertyMappingResult;
 @Builder
 public final class ObjectResultMapper {
 
-  private final ModelMapping modelMapping;
+    private final ModelMapping modelMapping;
 
-  public ObjectResult map(ObjectResult objectResult, DataRequest request) {
-    var sourceType = objectResult.getType();
-    var targetType = request.getObjectType();
+    public ObjectResult map(ObjectResult objectResult, DataRequest request) {
+        var sourceType = objectResult.getType();
+        var targetType = request.getObjectType();
 
-    return modelMapping.getObjectTypeMapping(targetType, sourceType)
-        .map(typeMapping -> map(objectResult, request, targetType, typeMapping))
-        .orElseThrow(() -> new OrchestrateException("Type mapping not found for source root: " + sourceType.getName()));
-  }
+        return modelMapping
+                .getObjectTypeMapping(targetType, sourceType)
+                .map(typeMapping -> map(objectResult, request, targetType, typeMapping))
+                .orElseThrow(() ->
+                        new OrchestrateException("Type mapping not found for source root: " + sourceType.getName()));
+    }
 
-  private ObjectResult map(ObjectResult objectResult, DataRequest request, ObjectType targetType, ObjectTypeMapping typeMapping) {
-    var properties = new HashMap<String, Object>();
-    var lineageBuilder = ObjectLineage.builder();
+    private ObjectResult map(
+            ObjectResult objectResult, DataRequest request, ObjectType targetType, ObjectTypeMapping typeMapping) {
+        var properties = new HashMap<String, Object>();
+        var lineageBuilder = ObjectLineage.builder();
 
-    request.getSelectedProperties()
-        .forEach(selectedProperty -> {
-          if (!targetType.hasProperty(selectedProperty.getName())) {
-            return;
-          }
-
-          var property = targetType.getProperty(selectedProperty.getName());
-          var propertyMapping = typeMapping.getPropertyMapping(property);
-
-          if (propertyMapping.isEmpty() && property instanceof AbstractRelation relation) {
-            var nestedType = modelMapping.getTargetType(relation.getTarget());
-
-            modelMapping.getObjectTypeMapping(nestedType, objectResult.getType())
-                .ifPresent(nestedTypeMapping -> {
-                  var propertyValue = map(objectResult, selectedProperty.getNestedRequest())
-                      .getProperties();
-                  properties.put(property.getName(), propertyValue);
-                });
-
-            if (!property.getMultiplicity().isSingular()) {
-              properties.put(property.getName(), emptyList());
+        request.getSelectedProperties().forEach(selectedProperty -> {
+            if (!targetType.hasProperty(selectedProperty.getName())) {
+                return;
             }
 
-            return;
-          }
+            var property = targetType.getProperty(selectedProperty.getName());
+            var propertyMapping = typeMapping.getPropertyMapping(property);
 
-          var propertyResult = mapProperty(objectResult, property, propertyMapping.get());
+            if (propertyMapping.isEmpty() && property instanceof AbstractRelation relation) {
+                var nestedType = modelMapping.getTargetType(relation.getTarget());
 
-          if (propertyResult == null) {
-            return;
-          }
+                modelMapping
+                        .getObjectTypeMapping(nestedType, objectResult.getType())
+                        .ifPresent(nestedTypeMapping -> {
+                            var propertyValue = map(objectResult, selectedProperty.getNestedRequest())
+                                    .getProperties();
+                            properties.put(property.getName(), propertyValue);
+                        });
 
-          Object propertyValue = null;
-          Object lineageValue = null;
+                if (!property.getMultiplicity().isSingular()) {
+                    properties.put(property.getName(), emptyList());
+                }
 
-          if (property instanceof Attribute attribute) {
-            propertyValue = mapAttribute(attribute, propertyResult.getValue());
+                return;
+            }
+
+            var propertyResult = mapProperty(objectResult, property, propertyMapping.get());
+
+            if (propertyResult == null) {
+                return;
+            }
+
+            Object propertyValue = null;
+            Object lineageValue = null;
+
+            if (property instanceof Attribute attribute) {
+                propertyValue = mapAttribute(attribute, propertyResult.getValue());
+
+                if (propertyValue != null) {
+                    lineageValue = attribute.getType().mapLineageValue(propertyValue);
+                }
+            }
+
+            if (property instanceof AbstractRelation) {
+                propertyValue = mapRelation(propertyResult.getValue(), selectedProperty.getNestedRequest());
+                lineageValue = getRelationLineageValue(propertyValue);
+            }
 
             if (propertyValue != null) {
-              lineageValue = attribute.getType()
-                  .mapLineageValue(propertyValue);
+                properties.put(property.getName(), propertyValue);
+
+                List<?> lineageValues;
+                if (lineageValue instanceof List<?> values) {
+                    lineageValues = values;
+                } else {
+                    if (lineageValue == null) {
+                        lineageValues = List.of();
+                    } else {
+                        lineageValues = List.of(lineageValue);
+                    }
+                }
+
+                lineageValues.forEach(value -> lineageBuilder.orchestratedDataElement(OrchestratedDataElement.builder()
+                        .subject(ObjectReference.builder()
+                                .objectType(targetType.getName())
+                                .objectKey(objectResult.getKey())
+                                .build())
+                        .property(property.getName())
+                        .value(value)
+                        .wasDerivedFrom(propertyResult.getSourceDataElements())
+                        .wasGeneratedBy(propertyResult.getPropertyMappingExecution())
+                        .build()));
             }
-          }
-
-          if (property instanceof AbstractRelation) {
-            propertyValue = mapRelation(propertyResult.getValue(), selectedProperty.getNestedRequest());
-            lineageValue = getRelationLineageValue(propertyValue);
-          }
-
-          if (propertyValue != null) {
-            properties.put(property.getName(), propertyValue);
-
-            List<?> lineageValues;
-            if (lineageValue instanceof List<?> values) {
-              lineageValues = values;
-            } else {
-              if (lineageValue == null) {
-                lineageValues = List.of();
-              } else {
-                lineageValues = List.of(lineageValue);
-              }
-            }
-
-            lineageValues.forEach(value -> lineageBuilder.orchestratedDataElement(OrchestratedDataElement.builder()
-                .subject(ObjectReference.builder()
-                    .objectType(targetType.getName())
-                    .objectKey(objectResult.getKey())
-                    .build())
-                .property(property.getName())
-                .value(value)
-                .wasDerivedFrom(propertyResult.getSourceDataElements())
-                .wasGeneratedBy(propertyResult.getPropertyMappingExecution())
-                .build()));
-          }
         });
 
-    return ObjectResult.builder()
-        .type(targetType)
-        .properties(properties)
-        .lineage(lineageBuilder.build())
-        .build();
-  }
-
-  private Object getRelationLineageValue(Object relationValue) {
-    List<?> values;
-
-    if (relationValue instanceof List<?> relationValues) {
-      values = relationValues;
-    } else {
-      if (relationValue == null) {
-        values = List.of();
-      } else {
-        values = List.of(relationValue);
-      }
+        return ObjectResult.builder()
+                .type(targetType)
+                .properties(properties)
+                .lineage(lineageBuilder.build())
+                .build();
     }
 
-    return values.stream()
-        .map(this::getSubjectReferenceFromRelationValue)
-        .toList();
-  }
+    private Object getRelationLineageValue(Object relationValue) {
+        List<?> values;
 
-  private ObjectReference getSubjectReferenceFromRelationValue(Object value) {
-    if (value instanceof ObjectResult objectResult && (objectResult.getLineage() != null)) {
-      return objectResult.getLineage()
-          .getOrchestratedDataElements()
-          .stream()
-          .map(OrchestratedDataElement::getSubject)
-          .findFirst()
-          .orElseThrow(() -> new OrchestrateException(
-              String.format("Expected data elements in relation value lineage but was %s", value)));
-    }
-    throw new OrchestrateException(String.format("Expected object result but was %s", value));
-  }
+        if (relationValue instanceof List<?> relationValues) {
+            values = relationValues;
+        } else {
+            if (relationValue == null) {
+                values = List.of();
+            } else {
+                values = List.of(relationValue);
+            }
+        }
 
-  private Object mapAttribute(Attribute attribute, Object value) {
-    if (value == null) {
-      return null;
+        return values.stream().map(this::getSubjectReferenceFromRelationValue).toList();
     }
 
-    return attribute.getType()
-        .mapSourceValue(value);
-  }
-
-  private Object mapRelation(Object value, DataRequest request) {
-    if (value instanceof ObjectResult nestedObjectResult) {
-      return map(nestedObjectResult, request);
+    private ObjectReference getSubjectReferenceFromRelationValue(Object value) {
+        if (value instanceof ObjectResult objectResult && (objectResult.getLineage() != null)) {
+            return objectResult.getLineage().getOrchestratedDataElements().stream()
+                    .map(OrchestratedDataElement::getSubject)
+                    .findFirst()
+                    .orElseThrow(() -> new OrchestrateException(
+                            String.format("Expected data elements in relation value lineage but was %s", value)));
+        }
+        throw new OrchestrateException(String.format("Expected object result but was %s", value));
     }
 
-    if (value instanceof CollectionResult nestedCollectionResult) {
-      return nestedCollectionResult.getObjectResults()
-          .stream()
-          .map(result -> map(result, request))
-          .toList();
+    private Object mapAttribute(Attribute attribute, Object value) {
+        if (value == null) {
+            return null;
+        }
+
+        return attribute.getType().mapSourceValue(value);
     }
 
-    if (value instanceof List<?> nestedResultList) {
-      return nestedResultList.stream()
-          .flatMap(nestedResult -> {
-            if (nestedResult instanceof ObjectResult nestedObjectResult) {
-              return Stream.of(map(nestedObjectResult, request));
+    private Object mapRelation(Object value, DataRequest request) {
+        if (value instanceof ObjectResult nestedObjectResult) {
+            return map(nestedObjectResult, request);
+        }
+
+        if (value instanceof CollectionResult nestedCollectionResult) {
+            return nestedCollectionResult.getObjectResults().stream()
+                    .map(result -> map(result, request))
+                    .toList();
+        }
+
+        if (value instanceof List<?> nestedResultList) {
+            return nestedResultList.stream()
+                    .flatMap(nestedResult -> {
+                        if (nestedResult instanceof ObjectResult nestedObjectResult) {
+                            return Stream.of(map(nestedObjectResult, request));
+                        }
+
+                        if (nestedResult instanceof CollectionResult nestedCollectionResult) {
+                            return nestedCollectionResult.getObjectResults().stream()
+                                    .map(nestedObjectResult -> map(nestedObjectResult, request));
+                        }
+
+                        throw new OrchestrateException("Could not map nested result");
+                    })
+                    .toList();
+        }
+
+        return null;
+    }
+
+    private PropertyMappingResult mapProperty(
+            ObjectResult objectResult, Property property, PropertyMapping propertyMapping) {
+        var pathMappingResults = propertyMapping.getPathMappings().stream()
+                .map(pathMapping -> pathMappingResult(objectResult, property, pathMapping))
+                .toList();
+
+        var combiner = propertyMapping.getCombiner();
+
+        if (combiner == null) {
+            var hasMultiMultiplicity = !property.getMultiplicity().isSingular();
+
+            combiner = hasMultiMultiplicity
+                    ? new NoopCombinerType().create(Map.of())
+                    : new CoalesceCombinerType().create(Map.of());
+        }
+
+        PropertyMappingExecution propertyMappingExecution = PropertyMappingExecution.builder()
+                .used(propertyMapping)
+                .wasInformedBy(pathMappingResults.stream()
+                        .map(PathMappingResult::getPathMappingExecution)
+                        .toList())
+                .build();
+
+        var pathResults = pathMappingResults.stream()
+                .map(PathMappingResult::getPathResults)
+                .flatMap(List::stream)
+                .toList();
+
+        return combiner.apply(pathResults).withPropertyMappingExecution(propertyMappingExecution);
+    }
+
+    private PathMappingResult pathMappingResult(ObjectResult objectResult, Property property, PathMapping pathMapping) {
+        var pathResults = pathResult(objectResult, property, pathMapping.getPath(), pathMapping.getPath())
+                .flatMap(pathResult -> resultMapPathResult(pathResult, objectResult, property, pathMapping))
+                .toList();
+
+        return PathMappingResult.builder()
+                .pathResults(pathResults)
+                .pathMappingExecution(PathMappingExecution.builder()
+                        .used(pathMapping)
+                        .wasInformedBy(pathResults.stream()
+                                .map(PathResult::getPathExecution)
+                                .toList())
+                        .build())
+                .build();
+    }
+
+    private Object mapLineageValue(Object value, Property property) {
+        if (property instanceof Attribute attribute) {
+            return attribute.getType().mapLineageValue(value);
+        }
+
+        return value;
+    }
+
+    private Stream<PathResult> pathResult(ObjectResult objectResult, Property property, Path path, Path fullPath) {
+        var currentSegment = path.getFirstSegment();
+
+        if (path.isLeaf()) {
+            var propertyValue = objectResult.getProperty(currentSegment);
+
+            List<?> sourceDataValues;
+
+            if (propertyValue == null) {
+                sourceDataValues = List.of();
+            } else if (propertyValue instanceof List<?> propertyValues) {
+                sourceDataValues = propertyValues;
+            } else {
+                sourceDataValues = List.of(propertyValue);
             }
 
-            if (nestedResult instanceof CollectionResult nestedCollectionResult) {
-              return nestedCollectionResult.getObjectResults()
-                  .stream()
-                  .map(nestedObjectResult -> map(nestedObjectResult, request));
-            }
+            Set<SourceDataElement> sourceDataElements = sourceDataValues.stream()
+                    .map(value -> SourceDataElement.builder()
+                            .subject(objectResult.getObjectReference())
+                            .property(currentSegment)
+                            .value(
+                                    value instanceof ObjectResult objectResultValue
+                                            ? objectResultValue.getObjectReference()
+                                            : mapLineageValue(value, property))
+                            .build())
+                    .collect(Collectors.toUnmodifiableSet());
 
-            throw new OrchestrateException("Could not map nested result");
-          })
-          .toList();
+            var pathResult = PathResult.builder()
+                    .value(propertyValue)
+                    .pathExecution(PathExecution.builder()
+                            .used(path)
+                            .startNode(objectResult.getObjectReference())
+                            .references(sourceDataElements)
+                            .build())
+                    .build();
+
+            return Stream.of(pathResult);
+        }
+
+        var nestedResult = objectResult.getProperty(currentSegment);
+
+        if (nestedResult == null) {
+            return Stream.of(PathResult.empty());
+        }
+
+        var remainingPath = path.withoutFirstSegment();
+
+        if (nestedResult instanceof ObjectResult nestedObjectResult) {
+            return pathResult(nestedObjectResult, property, remainingPath, fullPath);
+        }
+
+        if (nestedResult instanceof CollectionResult nestedCollectionResult) {
+            return nestedCollectionResult.getObjectResults().stream()
+                    .flatMap(nestedObjectResult -> pathResult(nestedObjectResult, property, remainingPath, fullPath));
+        }
+
+        if (nestedResult instanceof Map<?, ?> mapResult) {
+            return pathResult(objectResult.withProperties(cast(mapResult)), property, remainingPath, fullPath);
+        }
+
+        throw new OrchestrateException("Could not map path: " + path);
     }
 
-    return null;
-  }
+    private Stream<PathResult> resultMapPathResult(
+            PathResult pathResult, ObjectResult objectResult, Property property, PathMapping pathMapping) {
+        // TODO: Lazy fetching & multi multiplicity
+        var nextedPathResult = pathMapping.getNextPathMappings().stream()
+                .flatMap(nextPathMapping -> nextPathResults(pathResult, objectResult, property, nextPathMapping))
+                .findFirst()
+                .orElse(pathResult);
 
-  private PropertyMappingResult mapProperty(ObjectResult objectResult, Property property, PropertyMapping propertyMapping) {
-    var pathMappingResults = propertyMapping.getPathMappings()
-        .stream()
-        .map(pathMapping -> pathMappingResult(objectResult, property, pathMapping))
-        .toList();
+        var mappedPathResult = pathMapping.getResultMappers().stream()
+                .reduce(nextedPathResult, (acc, resultMapper) -> resultMapper.apply(acc, property), noopCombiner());
 
-    var combiner = propertyMapping.getCombiner();
-
-    if (combiner == null) {
-      var hasMultiMultiplicity = !property.getMultiplicity()
-          .isSingular();
-
-      combiner = hasMultiMultiplicity
-          ? new NoopCombinerType().create(Map.of())
-          : new CoalesceCombinerType().create(Map.of());
+        return Stream.of(mappedPathResult);
     }
 
-    PropertyMappingExecution propertyMappingExecution = PropertyMappingExecution.builder()
-        .used(propertyMapping)
-        .wasInformedBy(pathMappingResults.stream()
-            .map(PathMappingResult::getPathMappingExecution)
-            .toList())
-        .build();
+    private Stream<PathResult> nextPathResults(
+            PathResult previousPathResult, ObjectResult objectResult, Property property, PathMapping nextPathMapping) {
+        var ifMatch = nextPathMapping.getIfMatch();
 
-    var pathResults = pathMappingResults.stream()
-        .map(PathMappingResult::getPathResults)
-        .flatMap(List::stream)
-        .toList();
+        if (ifMatch != null && ifMatch.test(previousPathResult.getValue())) {
+            return pathMappingResult(objectResult, property, nextPathMapping).getPathResults().stream();
+        }
 
-    return combiner.apply(pathResults)
-        .withPropertyMappingExecution(propertyMappingExecution);
-  }
-
-  private PathMappingResult pathMappingResult(ObjectResult objectResult, Property property, PathMapping pathMapping) {
-    var pathResults = pathResult(objectResult, property, pathMapping.getPath(), pathMapping.getPath())
-        .flatMap(pathResult -> resultMapPathResult(pathResult, objectResult, property, pathMapping))
-        .toList();
-
-    return PathMappingResult.builder()
-        .pathResults(pathResults)
-        .pathMappingExecution(PathMappingExecution.builder()
-            .used(pathMapping)
-            .wasInformedBy(pathResults.stream()
-                .map(PathResult::getPathExecution)
-                .toList())
-            .build())
-        .build();
-  }
-
-  private Object mapLineageValue(Object value, Property property) {
-    if (property instanceof Attribute attribute) {
-      return attribute.getType()
-          .mapLineageValue(value);
+        return Stream.of(previousPathResult);
     }
-
-    return value;
-  }
-
-  private Stream<PathResult> pathResult(ObjectResult objectResult, Property property, Path path, Path fullPath) {
-    var currentSegment = path.getFirstSegment();
-
-    if (path.isLeaf()) {
-      var propertyValue = objectResult.getProperty(currentSegment);
-
-      List<?> sourceDataValues;
-
-      if (propertyValue == null) {
-        sourceDataValues = List.of();
-      } else if (propertyValue instanceof List<?> propertyValues) {
-        sourceDataValues = propertyValues;
-      } else {
-        sourceDataValues = List.of(propertyValue);
-      }
-
-      Set<SourceDataElement> sourceDataElements = sourceDataValues.stream()
-          .map(value -> SourceDataElement.builder()
-              .subject(objectResult.getObjectReference())
-              .property(currentSegment)
-              .value(value instanceof ObjectResult objectResultValue ? objectResultValue.getObjectReference()
-                  : mapLineageValue(value, property))
-              .build())
-          .collect(Collectors.toUnmodifiableSet());
-
-      var pathResult = PathResult.builder()
-          .value(propertyValue)
-          .pathExecution(PathExecution.builder()
-              .used(path)
-              .startNode(objectResult.getObjectReference())
-              .references(sourceDataElements)
-              .build())
-          .build();
-
-      return Stream.of(pathResult);
-    }
-
-    var nestedResult = objectResult.getProperty(currentSegment);
-
-    if (nestedResult == null) {
-      return Stream.of(PathResult.empty());
-    }
-
-    var remainingPath = path.withoutFirstSegment();
-
-    if (nestedResult instanceof ObjectResult nestedObjectResult) {
-      return pathResult(nestedObjectResult, property, remainingPath, fullPath);
-    }
-
-    if (nestedResult instanceof CollectionResult nestedCollectionResult) {
-      return nestedCollectionResult.getObjectResults()
-          .stream()
-          .flatMap(nestedObjectResult -> pathResult(nestedObjectResult, property, remainingPath, fullPath));
-    }
-
-    if (nestedResult instanceof Map<?, ?> mapResult) {
-      return pathResult(objectResult.withProperties(cast(mapResult)), property, remainingPath, fullPath);
-    }
-
-    throw new OrchestrateException("Could not map path: " + path);
-  }
-
-  private Stream<PathResult> resultMapPathResult(PathResult pathResult, ObjectResult objectResult, Property property, PathMapping pathMapping) {
-    // TODO: Lazy fetching & multi multiplicity
-    var nextedPathResult = pathMapping.getNextPathMappings()
-        .stream()
-        .flatMap(nextPathMapping -> nextPathResults(pathResult, objectResult, property, nextPathMapping))
-        .findFirst()
-        .orElse(pathResult);
-
-    var mappedPathResult = pathMapping.getResultMappers()
-        .stream()
-        .reduce(nextedPathResult, (acc, resultMapper) -> resultMapper.apply(acc, property), noopCombiner());
-
-    return Stream.of(mappedPathResult);
-
-  }
-
-  private Stream<PathResult> nextPathResults(PathResult previousPathResult, ObjectResult objectResult, Property property, PathMapping nextPathMapping) {
-    var ifMatch = nextPathMapping.getIfMatch();
-
-    if (ifMatch != null && ifMatch.test(previousPathResult.getValue())) {
-      return pathMappingResult(objectResult, property, nextPathMapping)
-          .getPathResults().stream();
-    }
-
-    return Stream.of(previousPathResult);
-  }
 }

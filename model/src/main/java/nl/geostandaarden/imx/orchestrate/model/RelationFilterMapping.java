@@ -10,11 +10,11 @@ import lombok.extern.jackson.Jacksonized;
 @Builder(toBuilder = true)
 public final class RelationFilterMapping {
 
-  private final String property;
+    private final String property;
 
-  private final Map<String, Path> keyMapping;
+    private final Map<String, Path> keyMapping;
 
-  private final String operator;
+    private final String operator;
 
-  private final Path sourcePath;
+    private final Path sourcePath;
 }

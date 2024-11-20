@@ -4,7 +4,7 @@ import java.util.Map;
 
 public interface ResultMapperType {
 
-  String getName();
+    String getName();
 
-  ResultMapper create(Map<String, Object> options);
+    ResultMapper create(Map<String, Object> options);
 }

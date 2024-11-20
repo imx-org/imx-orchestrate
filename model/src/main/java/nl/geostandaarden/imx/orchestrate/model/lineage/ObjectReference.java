@@ -8,7 +8,7 @@ import lombok.Getter;
 @Builder(toBuilder = true)
 public class ObjectReference {
 
-  private final String objectType;
+    private final String objectType;
 
-  private final Map<String, Object> objectKey;
+    private final Map<String, Object> objectKey;
 }

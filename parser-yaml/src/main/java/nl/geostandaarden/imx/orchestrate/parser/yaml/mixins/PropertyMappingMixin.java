@@ -7,7 +7,7 @@ import nl.geostandaarden.imx.orchestrate.model.PathMapping;
 
 public abstract class PropertyMappingMixin {
 
-  @JsonAlias("pathMappings")
-  @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-  private List<PathMapping> pathMappings;
+    @JsonAlias("pathMappings")
+    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+    private List<PathMapping> pathMappings;
 }

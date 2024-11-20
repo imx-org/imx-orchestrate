@@ -9,28 +9,29 @@ import nl.geostandaarden.imx.orchestrate.model.result.PropertyMappingResult;
 
 public final class SumCombinerType implements ResultCombinerType {
 
-  @Override
-  public String getName() {
-    return "sum";
-  }
+    @Override
+    public String getName() {
+        return "sum";
+    }
 
-  @Override
-  public ResultCombiner create(Map<String, Object> options) {
-    return pathResults -> {
-      // TODO: Support double/decimal types? Improve type safety?
-      var sumValue = pathResults.stream()
-          .map(PathResult::getValue)
-          .map(Integer.class::cast)
-          .mapToInt(Integer::intValue).sum();
+    @Override
+    public ResultCombiner create(Map<String, Object> options) {
+        return pathResults -> {
+            // TODO: Support double/decimal types? Improve type safety?
+            var sumValue = pathResults.stream()
+                    .map(PathResult::getValue)
+                    .map(Integer.class::cast)
+                    .mapToInt(Integer::intValue)
+                    .sum();
 
-      return PropertyMappingResult.builder()
-          .value(sumValue)
-          .sourceDataElements(pathResults.stream()
-              .map(PathResult::getPathExecution)
-              .map(PathExecution::getReferences)
-              .flatMap(Set::stream)
-              .collect(Collectors.toSet()))
-          .build();
-    };
-  }
+            return PropertyMappingResult.builder()
+                    .value(sumValue)
+                    .sourceDataElements(pathResults.stream()
+                            .map(PathResult::getPathExecution)
+                            .map(PathExecution::getReferences)
+                            .flatMap(Set::stream)
+                            .collect(Collectors.toSet()))
+                    .build();
+        };
+    }
 }

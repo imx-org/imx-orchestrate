@@ -9,10 +9,11 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 public abstract class AbstractRelation extends AbstractProperty {
 
-  protected final ObjectTypeRef target;
+    protected final ObjectTypeRef target;
 
-  public ObjectTypeRef getTarget(ObjectTypeRef parentTypeRef) {
-    return target.getModelAlias() != null ? target : ObjectTypeRef.forType(parentTypeRef.getModelAlias(),
-        target.getName());
-  }
+    public ObjectTypeRef getTarget(ObjectTypeRef parentTypeRef) {
+        return target.getModelAlias() != null
+                ? target
+                : ObjectTypeRef.forType(parentTypeRef.getModelAlias(), target.getName());
+    }
 }

@@ -16,31 +16,29 @@ import nl.geostandaarden.imx.orchestrate.model.lineage.ObjectReference;
 @Builder(toBuilder = true)
 public class ObjectResult implements DataResult {
 
-  private final ObjectType type;
+    private final ObjectType type;
 
-  @Singular
-  private final Map<String, Object> properties;
+    @Singular
+    private final Map<String, Object> properties;
 
-  private final ObjectLineage lineage;
+    private final ObjectLineage lineage;
 
-  public Map<String, Object> getKey() {
-    return extractKey(type, properties);
-  }
+    public Map<String, Object> getKey() {
+        return extractKey(type, properties);
+    }
 
-  public Object getProperty(String name) {
-    return properties.get(name);
-  }
+    public Object getProperty(String name) {
+        return properties.get(name);
+    }
 
-  public ObjectResult withProperties(Map<String, Object> properties) {
-    return toBuilder()
-        .properties(properties)
-        .build();
-  }
+    public ObjectResult withProperties(Map<String, Object> properties) {
+        return toBuilder().properties(properties).build();
+    }
 
-  public ObjectReference getObjectReference() {
-    return ObjectReference.builder()
-        .objectType(type.getName())
-        .objectKey(extractKey(type, properties))
-        .build();
-  }
+    public ObjectReference getObjectReference() {
+        return ObjectReference.builder()
+                .objectType(type.getName())
+                .objectKey(extractKey(type, properties))
+                .build();
+    }
 }

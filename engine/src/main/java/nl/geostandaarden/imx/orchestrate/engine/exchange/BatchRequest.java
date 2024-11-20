@@ -14,48 +14,52 @@ import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 @Getter
 public final class BatchRequest extends AbstractDataRequest {
 
-  private final Collection<Map<String, Object>> objectKeys;
+    private final Collection<Map<String, Object>> objectKeys;
 
-  private BatchRequest(Model model, ObjectType objectType, Set<SelectedProperty> selectedProperties, Collection<Map<String, Object>> objectKeys) {
-    super(model, objectType, selectedProperties);
-    this.objectKeys = objectKeys;
-  }
-
-  @Override
-  public String toString() {
-    return super.toString()
-        .concat("Object keys: " + objectKeys + "\n");
-  }
-
-  public static BatchRequest.Builder builder(Model model) {
-    return new Builder(model);
-  }
-
-  public static class Builder extends AbstractDataRequest.Builder<Builder> {
-
-    private Collection<Map<String, Object>> objectKeys = new LinkedHashSet<>();
-
-    private Builder(Model model) {
-      super(model);
-    }
-
-    public Builder objectKeys(Collection<Map<String, Object>> objectKeys) {
-      this.objectKeys = objectKeys;
-      return this;
-    }
-
-    public Builder objectKey(Map<String, Object> objectKey) {
-      objectKeys.add(objectKey);
-      return this;
-    }
-
-    public BatchRequest build() {
-      return new BatchRequest(model, objectType, unmodifiableSet(selectedProperties), unmodifiableCollection(objectKeys));
+    private BatchRequest(
+            Model model,
+            ObjectType objectType,
+            Set<SelectedProperty> selectedProperties,
+            Collection<Map<String, Object>> objectKeys) {
+        super(model, objectType, selectedProperties);
+        this.objectKeys = objectKeys;
     }
 
     @Override
-    protected Builder self() {
-      return this;
+    public String toString() {
+        return super.toString().concat("Object keys: " + objectKeys + "\n");
     }
-  }
+
+    public static BatchRequest.Builder builder(Model model) {
+        return new Builder(model);
+    }
+
+    public static class Builder extends AbstractDataRequest.Builder<Builder> {
+
+        private Collection<Map<String, Object>> objectKeys = new LinkedHashSet<>();
+
+        private Builder(Model model) {
+            super(model);
+        }
+
+        public Builder objectKeys(Collection<Map<String, Object>> objectKeys) {
+            this.objectKeys = objectKeys;
+            return this;
+        }
+
+        public Builder objectKey(Map<String, Object> objectKey) {
+            objectKeys.add(objectKey);
+            return this;
+        }
+
+        public BatchRequest build() {
+            return new BatchRequest(
+                    model, objectType, unmodifiableSet(selectedProperties), unmodifiableCollection(objectKeys));
+        }
+
+        @Override
+        protected Builder self() {
+            return this;
+        }
+    }
 }

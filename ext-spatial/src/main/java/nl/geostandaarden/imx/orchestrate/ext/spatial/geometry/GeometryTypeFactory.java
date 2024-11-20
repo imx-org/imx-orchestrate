@@ -7,27 +7,27 @@ import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeFactory;
 
 public class GeometryTypeFactory implements ValueTypeFactory<GeometryType> {
 
-  public static final Set<String> FILTER_OPERATOR_TYPES = Set.of("equals", "intersects", "touches", "contains",
-      "within", "overlaps", "crosses", "disjoint");
+    public static final Set<String> FILTER_OPERATOR_TYPES =
+            Set.of("equals", "intersects", "touches", "contains", "within", "overlaps", "crosses", "disjoint");
 
-  @Override
-  public String getTypeName() {
-    return GeometryType.TYPE_NAME;
-  }
-
-  @Override
-  public GeometryType create(Map<String, Object> options) {
-    var srid = options.getOrDefault("srid", GeometryType.DEFAULT_SRID);
-
-    if (srid instanceof Integer sridInt) {
-      return new GeometryType(sridInt);
+    @Override
+    public String getTypeName() {
+        return GeometryType.TYPE_NAME;
     }
 
-    throw new ModelException("SRID is not an integer.");
-  }
+    @Override
+    public GeometryType create(Map<String, Object> options) {
+        var srid = options.getOrDefault("srid", GeometryType.DEFAULT_SRID);
 
-  @Override
-  public Set<String> getSupportedFilterTypes() {
-    return FILTER_OPERATOR_TYPES;
-  }
+        if (srid instanceof Integer sridInt) {
+            return new GeometryType(sridInt);
+        }
+
+        throw new ModelException("SRID is not an integer.");
+    }
+
+    @Override
+    public Set<String> getSupportedFilterTypes() {
+        return FILTER_OPERATOR_TYPES;
+    }
 }

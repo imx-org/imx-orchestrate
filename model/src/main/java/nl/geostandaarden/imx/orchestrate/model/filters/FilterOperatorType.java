@@ -4,7 +4,7 @@ import java.util.Map;
 
 public interface FilterOperatorType {
 
-  String getName();
+    String getName();
 
-  FilterOperator create(Map<String, Object> options);
+    FilterOperator create(Map<String, Object> options);
 }

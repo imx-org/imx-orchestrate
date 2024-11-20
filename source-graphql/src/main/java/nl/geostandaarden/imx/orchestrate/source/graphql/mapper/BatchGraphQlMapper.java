@@ -19,60 +19,51 @@ import nl.geostandaarden.imx.orchestrate.source.graphql.config.GraphQlOrchestrat
 @RequiredArgsConstructor
 public class BatchGraphQlMapper extends AbstractGraphQlMapper<BatchRequest> {
 
-  private static final String OPERATION_NAME = "Query";
+    private static final String OPERATION_NAME = "Query";
 
-  private final GraphQlOrchestrateConfig config;
+    private final GraphQlOrchestrateConfig config;
 
-  public ExecutionInput convert(BatchRequest request) {
-    var fieldName = uncapitalize(request.getObjectType()
-        .getName()) + config.getBatchSuffix();
+    public ExecutionInput convert(BatchRequest request) {
+        var fieldName = uncapitalize(request.getObjectType().getName()) + config.getBatchSuffix();
 
-    var arguments = getArguments(request);
+        var arguments = getArguments(request);
 
-    var selectionSet = createSelectionSet(request.getSelectedProperties());
-    var queryField = new Field(fieldName, arguments, selectionSet);
+        var selectionSet = createSelectionSet(request.getSelectedProperties());
+        var queryField = new Field(fieldName, arguments, selectionSet);
 
-    var query = OperationDefinition.newOperationDefinition()
-        .name(OPERATION_NAME)
-        .operation(OperationDefinition.Operation.QUERY)
-        .selectionSet(new SelectionSet(List.of(queryField)))
-        .build();
+        var query = OperationDefinition.newOperationDefinition()
+                .name(OPERATION_NAME)
+                .operation(OperationDefinition.Operation.QUERY)
+                .selectionSet(new SelectionSet(List.of(queryField)))
+                .build();
 
-    return ExecutionInput.newExecutionInput()
-        .query(AstPrinter.printAst(query))
-        .build();
-  }
-
-  private List<Argument> getArguments(BatchRequest request) {
-    var argumentMap = new ConcurrentHashMap<String, List<String>>();
-
-    for (var objectKey : request.getObjectKeys()) {
-      var entry = objectKey.entrySet()
-          .stream()
-          .findFirst()
-          .orElseThrow();
-
-      if (!argumentMap.containsKey(entry.getKey())) {
-        argumentMap.put(entry.getKey(), new ArrayList<>());
-      }
-
-      argumentMap.get(entry.getKey())
-          .add((String) entry.getValue());
+        return ExecutionInput.newExecutionInput()
+                .query(AstPrinter.printAst(query))
+                .build();
     }
 
-    if (argumentMap.size() > 1) {
-      throw new SourceException("Batch requests can only contain values for 1 key property.");
+    private List<Argument> getArguments(BatchRequest request) {
+        var argumentMap = new ConcurrentHashMap<String, List<String>>();
+
+        for (var objectKey : request.getObjectKeys()) {
+            var entry = objectKey.entrySet().stream().findFirst().orElseThrow();
+
+            if (!argumentMap.containsKey(entry.getKey())) {
+                argumentMap.put(entry.getKey(), new ArrayList<>());
+            }
+
+            argumentMap.get(entry.getKey()).add((String) entry.getValue());
+        }
+
+        if (argumentMap.size() > 1) {
+            throw new SourceException("Batch requests can only contain values for 1 key property.");
+        }
+
+        var argument = argumentMap.entrySet().stream().findFirst().orElseThrow();
+        return List.of(getArgument(argument.getKey(), argument.getValue()));
     }
 
-    var argument = argumentMap.entrySet()
-        .stream()
-        .findFirst()
-        .orElseThrow();
-    return List.of(getArgument(argument.getKey(), argument.getValue()));
-  }
-
-  private Argument getArgument(String name, Object value) {
-    return new Argument(name, ValueMapper.mapToValue(value));
-  }
-
+    private Argument getArgument(String name, Object value) {
+        return new Argument(name, ValueMapper.mapToValue(value));
+    }
 }

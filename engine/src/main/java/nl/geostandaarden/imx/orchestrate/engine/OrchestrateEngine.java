@@ -19,41 +19,38 @@ import reactor.core.publisher.Mono;
 @Getter
 public final class OrchestrateEngine {
 
-  private final ModelMapping modelMapping;
+    private final ModelMapping modelMapping;
 
-  private final Map<String, Source> sources;
+    private final Map<String, Source> sources;
 
-  private final Set<OrchestrateExtension> extensions;
+    private final Set<OrchestrateExtension> extensions;
 
-  private final FetchPlanner fetchPlanner;
+    private final FetchPlanner fetchPlanner;
 
-  @Builder
-  private OrchestrateEngine(ModelMapping modelMapping, @Singular Map<String, Source> sources, @Singular Set<OrchestrateExtension> extensions) {
-    this.modelMapping = modelMapping;
-    this.sources = sources;
-    this.extensions = extensions;
-    this.fetchPlanner = new FetchPlanner(modelMapping, sources);
-  }
+    @Builder
+    private OrchestrateEngine(
+            ModelMapping modelMapping,
+            @Singular Map<String, Source> sources,
+            @Singular Set<OrchestrateExtension> extensions) {
+        this.modelMapping = modelMapping;
+        this.sources = sources;
+        this.extensions = extensions;
+        this.fetchPlanner = new FetchPlanner(modelMapping, sources);
+    }
 
-  public Mono<ObjectResult> fetch(ObjectRequest request) {
-    return fetchPlanner.fetch(request)
-        .take(1)
-        .singleOrEmpty();
-  }
+    public Mono<ObjectResult> fetch(ObjectRequest request) {
+        return fetchPlanner.fetch(request).take(1).singleOrEmpty();
+    }
 
-  public Mono<CollectionResult> fetch(CollectionRequest request) {
-    return fetchPlanner.fetch(request)
-        .collectList()
-        .map(objectResults -> CollectionResult.builder()
-            .objectResults(objectResults)
-            .build());
-  }
+    public Mono<CollectionResult> fetch(CollectionRequest request) {
+        return fetchPlanner.fetch(request).collectList().map(objectResults -> CollectionResult.builder()
+                .objectResults(objectResults)
+                .build());
+    }
 
-  public Mono<CollectionResult> fetch(BatchRequest request) {
-    return fetchPlanner.fetch(request)
-        .collectList()
-        .map(objectResults -> CollectionResult.builder()
-            .objectResults(objectResults)
-            .build());
-  }
+    public Mono<CollectionResult> fetch(BatchRequest request) {
+        return fetchPlanner.fetch(request).collectList().map(objectResults -> CollectionResult.builder()
+                .objectResults(objectResults)
+                .build());
+    }
 }

@@ -11,26 +11,23 @@ import nl.geostandaarden.imx.orchestrate.model.lineage.SourceDataElement;
 @Builder(toBuilder = true)
 public final class PropertyMappingResult {
 
-  private final Object value;
+    private final Object value;
 
-  private final Set<SourceDataElement> sourceDataElements;
+    private final Set<SourceDataElement> sourceDataElements;
 
-  private final PropertyMappingExecution propertyMappingExecution;
+    private final PropertyMappingExecution propertyMappingExecution;
 
-  private final List<PathMappingResult> pathMappingResults;
+    private final List<PathMappingResult> pathMappingResults;
 
-  public boolean isEmpty() {
-    return value == null;
-  }
+    public boolean isEmpty() {
+        return value == null;
+    }
 
-  public PropertyMappingResult withPropertyMappingExecution(PropertyMappingExecution propertyMappingExecution) {
-    return toBuilder()
-        .propertyMappingExecution(propertyMappingExecution)
-        .build();
-  }
+    public PropertyMappingResult withPropertyMappingExecution(PropertyMappingExecution propertyMappingExecution) {
+        return toBuilder().propertyMappingExecution(propertyMappingExecution).build();
+    }
 
-  public static PropertyMappingResult empty() {
-    return PropertyMappingResult.builder()
-        .build();
-  }
+    public static PropertyMappingResult empty() {
+        return PropertyMappingResult.builder().build();
+    }
 }

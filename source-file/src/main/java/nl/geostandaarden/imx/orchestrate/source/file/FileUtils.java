@@ -16,47 +16,44 @@ import nl.geostandaarden.imx.orchestrate.model.Property;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileUtils {
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  public static String getBaseName(Path filePath) {
-    var fileName = filePath.getFileName()
-        .toString();
+    public static String getBaseName(Path filePath) {
+        var fileName = filePath.getFileName().toString();
 
-    var dotIndex = fileName.lastIndexOf(".");
+        var dotIndex = fileName.lastIndexOf(".");
 
-    if (dotIndex == -1) {
-      throw new IllegalArgumentException("File path does not have an extension.");
+        if (dotIndex == -1) {
+            throw new IllegalArgumentException("File path does not have an extension.");
+        }
+
+        return fileName.substring(0, dotIndex);
     }
 
-    return fileName.substring(0, dotIndex);
-  }
+    public static Map<String, Object> getObjectKey(ObjectNode objectNode, ObjectType objectType) {
+        var propertyNames = objectType.getIdentityProperties().stream()
+                .map(Property::getName)
+                .toList();
 
-  public static Map<String, Object> getObjectKey(ObjectNode objectNode, ObjectType objectType) {
-    var propertyNames = objectType.getIdentityProperties()
-        .stream()
-        .map(Property::getName)
-        .toList();
-
-    return objectNodeToMap(objectNode.deepCopy()
-        .retain(propertyNames));
-  }
-
-  public static Map<String, Object> getObjectProperties(ObjectNode objectNode, Set<SelectedProperty> selectedProperties) {
-    var propertyNames = selectedProperties.stream()
-        .map(SelectedProperty::getProperty)
-        .map(Property::getName)
-        .toList();
-
-    return objectNodeToMap(objectNode.deepCopy()
-        .retain(propertyNames));
-  }
-
-  @SuppressWarnings("unchecked")
-  private static Map<String, Object> objectNodeToMap(ObjectNode objectNode) {
-    try {
-      return OBJECT_MAPPER.treeToValue(objectNode, Map.class);
-    } catch (JsonProcessingException e) {
-      throw new SourceException("Error while procession object.", e);
+        return objectNodeToMap(objectNode.deepCopy().retain(propertyNames));
     }
-  }
+
+    public static Map<String, Object> getObjectProperties(
+            ObjectNode objectNode, Set<SelectedProperty> selectedProperties) {
+        var propertyNames = selectedProperties.stream()
+                .map(SelectedProperty::getProperty)
+                .map(Property::getName)
+                .toList();
+
+        return objectNodeToMap(objectNode.deepCopy().retain(propertyNames));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> objectNodeToMap(ObjectNode objectNode) {
+        try {
+            return OBJECT_MAPPER.treeToValue(objectNode, Map.class);
+        } catch (JsonProcessingException e) {
+            throw new SourceException("Error while procession object.", e);
+        }
+    }
 }

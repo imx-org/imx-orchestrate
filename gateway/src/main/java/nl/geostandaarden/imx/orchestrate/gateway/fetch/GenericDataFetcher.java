@@ -33,126 +33,118 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public final class GenericDataFetcher implements DataFetcher<Mono<? extends DataResult>> {
 
-  private final OrchestrateEngine engine;
+    private final OrchestrateEngine engine;
 
-  private final String hasLineageFieldName;
+    private final String hasLineageFieldName;
 
-  @Override
-  public Mono<? extends DataResult> get(DataFetchingEnvironment environment) {
-    var request = createRequest(environment);
+    @Override
+    public Mono<? extends DataResult> get(DataFetchingEnvironment environment) {
+        var request = createRequest(environment);
 
-    if (request instanceof ObjectRequest objectRequest) {
-      return engine.fetch(objectRequest);
+        if (request instanceof ObjectRequest objectRequest) {
+            return engine.fetch(objectRequest);
+        }
+
+        if (request instanceof CollectionRequest collectionRequest) {
+            return engine.fetch(collectionRequest);
+        }
+
+        if (request instanceof BatchRequest batchRequest) {
+            return engine.fetch(batchRequest);
+        }
+
+        throw new OrchestrateException("Unsupported request: " + request.getClass());
     }
 
-    if (request instanceof CollectionRequest collectionRequest) {
-      return engine.fetch(collectionRequest);
+    private boolean isReservedField(SelectedField selectedField) {
+        var name = selectedField.getName();
+        return hasLineageFieldName.equals(name) || name.startsWith("__");
     }
 
-    if (request instanceof BatchRequest batchRequest) {
-      return engine.fetch(batchRequest);
+    private DataRequest createRequest(DataFetchingEnvironment environment) {
+        var fieldName = environment.getField().getName();
+        var fieldTypeName = unwrapAll(environment.getFieldType()).getName();
+        var targetModel = engine.getModelMapping().getTargetModel();
+
+        if (fieldName.endsWith(SchemaConstants.QUERY_COLLECTION_SUFFIX)) {
+            var requestBuilder = CollectionRequest.builder(targetModel).objectType(fieldTypeName);
+
+            Map<String, Object> filterValue = environment.getArgument(SchemaConstants.QUERY_FILTER_ARGUMENT);
+
+            if (filterValue != null) {
+                var filter = createFilterExpression(targetModel.getObjectType(fieldTypeName), filterValue);
+                requestBuilder.filter(filter);
+            }
+
+            return selectProperties(requestBuilder, environment.getSelectionSet())
+                    .build();
+        }
+
+        if (fieldName.endsWith(SchemaConstants.QUERY_BATCH_SUFFIX)) {
+            List<Map<String, Object>> objectKeys =
+                    cast(environment.getArguments().get(SchemaConstants.BATCH_KEYS_ARG));
+
+            var requestBuilder =
+                    BatchRequest.builder(targetModel).objectType(fieldTypeName).objectKeys(objectKeys);
+
+            return selectProperties(requestBuilder, environment.getSelectionSet())
+                    .build();
+        }
+
+        var requestBuilder =
+                ObjectRequest.builder(targetModel).objectType(fieldTypeName).objectKey(environment.getArguments());
+
+        return selectProperties(requestBuilder, environment.getSelectionSet()).build();
     }
 
-    throw new OrchestrateException("Unsupported request: " + request.getClass());
-  }
+    private <B extends AbstractDataRequest.Builder<B>> B selectProperties(
+            B requestBuilder, DataFetchingFieldSelectionSet selectionSet) {
+        selectionSet.getImmediateFields().stream()
+                .filter(not(this::isReservedField))
+                .forEach(selectedField -> {
+                    var fieldName = selectedField.getName();
+                    var fieldType = unwrapNonNull(selectedField.getType());
 
-  private boolean isReservedField(SelectedField selectedField) {
-    var name = selectedField.getName();
-    return hasLineageFieldName.equals(name) || name.startsWith("__");
-  }
+                    if (fieldType instanceof GraphQLObjectType) {
+                        requestBuilder.selectObjectProperty(fieldName, nestedRequestBuilder -> {
+                            selectProperties(nestedRequestBuilder, selectedField.getSelectionSet());
+                            return nestedRequestBuilder.build();
+                        });
 
-  private DataRequest createRequest(DataFetchingEnvironment environment) {
-    var fieldName = environment.getField()
-        .getName();
-    var fieldTypeName = unwrapAll(environment.getFieldType())
-        .getName();
-    var targetModel = engine.getModelMapping()
-        .getTargetModel();
+                        return;
+                    }
 
-    if (fieldName.endsWith(SchemaConstants.QUERY_COLLECTION_SUFFIX)) {
-      var requestBuilder = CollectionRequest.builder(targetModel)
-          .objectType(fieldTypeName);
+                    if (fieldType instanceof GraphQLList && !isScalar(unwrapAll(fieldType))) {
+                        requestBuilder.selectCollectionProperty(fieldName, nestedRequestBuilder -> {
+                            selectProperties(nestedRequestBuilder, selectedField.getSelectionSet());
+                            return nestedRequestBuilder.build();
+                        });
 
-      Map<String, Object> filterValue = environment.getArgument(SchemaConstants.QUERY_FILTER_ARGUMENT);
+                        return;
+                    }
 
-      if (filterValue != null) {
-        var filter = createFilterExpression(targetModel.getObjectType(fieldTypeName), filterValue);
-        requestBuilder.filter(filter);
-      }
+                    requestBuilder.selectProperty(fieldName);
+                });
 
-      return selectProperties(requestBuilder, environment.getSelectionSet())
-          .build();
+        return requestBuilder;
     }
 
-    if (fieldName.endsWith(SchemaConstants.QUERY_BATCH_SUFFIX)) {
-      List<Map<String, Object>> objectKeys = cast(environment.getArguments()
-          .get(SchemaConstants.BATCH_KEYS_ARG));
+    private FilterExpression createFilterExpression(ObjectType targetType, Map<String, Object> arguments) {
+        if (arguments.size() > 1) {
+            throw new OrchestrateException("Currently only a single filter property is supported.");
+        }
 
-      var requestBuilder = BatchRequest.builder(targetModel)
-          .objectType(fieldTypeName)
-          .objectKeys(objectKeys);
+        var firstEntry = arguments.entrySet().iterator().next();
 
-      return selectProperties(requestBuilder, environment.getSelectionSet())
-          .build();
+        var propertyName = firstEntry.getKey();
+        var property = targetType.getProperty(propertyName);
+
+        if (property instanceof Attribute attribute) {
+            return attribute
+                    .getType()
+                    .createFilterExpression(Path.fromProperties(property), cast(arguments.get(propertyName)));
+        }
+
+        throw new OrchestrateException("Currently only attributes can be filtered.");
     }
-
-    var requestBuilder = ObjectRequest.builder(targetModel)
-        .objectType(fieldTypeName)
-        .objectKey(environment.getArguments());
-
-    return selectProperties(requestBuilder, environment.getSelectionSet())
-        .build();
-  }
-
-  private <B extends AbstractDataRequest.Builder<B>> B selectProperties(B requestBuilder, DataFetchingFieldSelectionSet selectionSet) {
-    selectionSet.getImmediateFields()
-        .stream()
-        .filter(not(this::isReservedField))
-        .forEach(selectedField -> {
-          var fieldName = selectedField.getName();
-          var fieldType = unwrapNonNull(selectedField.getType());
-
-          if (fieldType instanceof GraphQLObjectType) {
-            requestBuilder.selectObjectProperty(fieldName, nestedRequestBuilder -> {
-              selectProperties(nestedRequestBuilder, selectedField.getSelectionSet());
-              return nestedRequestBuilder.build();
-            });
-
-            return;
-          }
-
-          if (fieldType instanceof GraphQLList && !isScalar(unwrapAll(fieldType))) {
-            requestBuilder.selectCollectionProperty(fieldName, nestedRequestBuilder -> {
-              selectProperties(nestedRequestBuilder, selectedField.getSelectionSet());
-              return nestedRequestBuilder.build();
-            });
-
-            return;
-          }
-
-          requestBuilder.selectProperty(fieldName);
-        });
-
-    return requestBuilder;
-  }
-
-  private FilterExpression createFilterExpression(ObjectType targetType, Map<String, Object> arguments) {
-    if (arguments.size() > 1) {
-      throw new OrchestrateException("Currently only a single filter property is supported.");
-    }
-
-    var firstEntry = arguments.entrySet()
-        .iterator()
-        .next();
-
-    var propertyName = firstEntry.getKey();
-    var property = targetType.getProperty(propertyName);
-
-    if (property instanceof Attribute attribute) {
-      return attribute.getType()
-          .createFilterExpression(Path.fromProperties(property), cast(arguments.get(propertyName)));
-    }
-
-    throw new OrchestrateException("Currently only attributes can be filtered.");
-  }
 }

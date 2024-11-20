@@ -9,7 +9,7 @@ import lombok.extern.jackson.Jacksonized;
 @Builder(toBuilder = true)
 public final class SourceRelation {
 
-  private final ObjectTypeRef sourceType;
+    private final ObjectTypeRef sourceType;
 
-  private final Relation property;
+    private final Relation property;
 }

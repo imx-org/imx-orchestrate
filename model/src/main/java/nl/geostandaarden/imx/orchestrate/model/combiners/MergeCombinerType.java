@@ -10,39 +10,39 @@ import nl.geostandaarden.imx.orchestrate.model.result.PropertyMappingResult;
 
 public final class MergeCombinerType implements ResultCombinerType {
 
-  @Override
-  public String getName() {
-    return "merge";
-  }
+    @Override
+    public String getName() {
+        return "merge";
+    }
 
-  @Override
-  public ResultCombiner create(Map<String, Object> options) {
-    return pathResults -> {
-      var value = pathResults.stream()
-          .filter(PathResult::isNotNull)
-          .flatMap(pathResult -> {
-            var pathValue = pathResult.getValue();
+    @Override
+    public ResultCombiner create(Map<String, Object> options) {
+        return pathResults -> {
+            var value = pathResults.stream()
+                    .filter(PathResult::isNotNull)
+                    .flatMap(pathResult -> {
+                        var pathValue = pathResult.getValue();
 
-//            if (pathValue instanceof CollectionResult collectionResult) {
-//              return collectionResult.getObjectResults()
-//                  .stream();
-//            }
+                        //            if (pathValue instanceof CollectionResult collectionResult) {
+                        //              return collectionResult.getObjectResults()
+                        //                  .stream();
+                        //            }
 
-            return Stream.of(pathValue);
-          })
-          .toList();
+                        return Stream.of(pathValue);
+                    })
+                    .toList();
 
-      var sourceDataElements = pathResults.stream()
-          .filter(PathResult::isNotNull)
-          .map(PathResult::getPathExecution)
-          .map(PathExecution::getReferences)
-          .flatMap(Set::stream)
-          .collect(Collectors.toSet());
+            var sourceDataElements = pathResults.stream()
+                    .filter(PathResult::isNotNull)
+                    .map(PathResult::getPathExecution)
+                    .map(PathExecution::getReferences)
+                    .flatMap(Set::stream)
+                    .collect(Collectors.toSet());
 
-      return PropertyMappingResult.builder()
-          .value(value)
-          .sourceDataElements(sourceDataElements)
-          .build();
-    };
-  }
+            return PropertyMappingResult.builder()
+                    .value(value)
+                    .sourceDataElements(sourceDataElements)
+                    .build();
+        };
+    }
 }

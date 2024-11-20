@@ -17,29 +17,27 @@ import nl.geostandaarden.imx.orchestrate.parser.yaml.YamlModelParserException;
 
 public final class SourceModelDeserializer extends JsonDeserializer<Set<Model>> {
 
-  @Override
-  public Set<Model> deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-    var node = parser.getCodec()
-        .readTree(parser);
+    @Override
+    public Set<Model> deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+        var node = parser.getCodec().readTree(parser);
 
-    if (node instanceof ObjectNode objectNode) {
-      var models = new HashSet<Model>();
+        if (node instanceof ObjectNode objectNode) {
+            var models = new HashSet<Model>();
 
-      objectNode.fields()
-          .forEachRemaining(entry -> {
-            try {
-              models.add(context.readTreeAsValue(entry.getValue(), Model.class)
-                  .toBuilder()
-                  .alias(entry.getKey())
-                  .build());
-            } catch (IOException e) {
-              throw new YamlModelParserException("Could not parse source model: " + entry.getKey(), e);
-            }
-          });
+            objectNode.fields().forEachRemaining(entry -> {
+                try {
+                    models.add(context.readTreeAsValue(entry.getValue(), Model.class).toBuilder()
+                            .alias(entry.getKey())
+                            .build());
+                } catch (IOException e) {
+                    throw new YamlModelParserException("Could not parse source model: " + entry.getKey(), e);
+                }
+            });
 
-      return unmodifiableSet(models);
+            return unmodifiableSet(models);
+        }
+
+        throw new YamlModelMappingParserException(
+                String.format(YamlModelParser.INVALID_OBJECT_NODE, YamlModelMappingParser.SOURCE_MODELS_KEY));
     }
-
-    throw new YamlModelMappingParserException(String.format(YamlModelParser.INVALID_OBJECT_NODE, YamlModelMappingParser.SOURCE_MODELS_KEY));
-  }
 }

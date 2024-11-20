@@ -5,13 +5,13 @@ import lombok.ToString;
 @ToString
 public final class DoubleType implements ScalarType<Double> {
 
-  @Override
-  public Class<Double> getJavaType() {
-    return Double.class;
-  }
+    @Override
+    public Class<Double> getJavaType() {
+        return Double.class;
+    }
 
-  @Override
-  public String getName() {
-    return Double.class.getSimpleName();
-  }
+    @Override
+    public String getName() {
+        return Double.class.getSimpleName();
+    }
 }

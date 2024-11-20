@@ -14,32 +14,32 @@ import nl.geostandaarden.imx.orchestrate.model.Property;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SelectedProperty {
 
-  private final Property property;
+    private final Property property;
 
-  private final DataRequest nestedRequest;
+    private final DataRequest nestedRequest;
 
-  public String getName() {
-    return property.getName();
-  }
-
-  @Override
-  public String toString() {
-    return property.getName();
-  }
-
-  public static SelectedProperty forProperty(Property property) {
-    return forProperty(property, null);
-  }
-
-  public static SelectedProperty forProperty(Property property, DataRequest nestedRequest) {
-    if (property instanceof Attribute && nestedRequest != null) {
-      throw new OrchestrateException("Attribute properties can not have a nested request.");
+    public String getName() {
+        return property.getName();
     }
 
-    if (property instanceof AbstractRelation && nestedRequest == null) {
-      throw new OrchestrateException("Relation properties require a nested request.");
+    @Override
+    public String toString() {
+        return property.getName();
     }
 
-    return new SelectedProperty(property, nestedRequest);
-  }
+    public static SelectedProperty forProperty(Property property) {
+        return forProperty(property, null);
+    }
+
+    public static SelectedProperty forProperty(Property property, DataRequest nestedRequest) {
+        if (property instanceof Attribute && nestedRequest != null) {
+            throw new OrchestrateException("Attribute properties can not have a nested request.");
+        }
+
+        if (property instanceof AbstractRelation && nestedRequest == null) {
+            throw new OrchestrateException("Relation properties require a nested request.");
+        }
+
+        return new SelectedProperty(property, nestedRequest);
+    }
 }

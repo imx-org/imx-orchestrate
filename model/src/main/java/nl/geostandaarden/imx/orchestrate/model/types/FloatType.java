@@ -5,13 +5,13 @@ import lombok.ToString;
 @ToString
 public final class FloatType implements ScalarType<Float> {
 
-  @Override
-  public Class<Float> getJavaType() {
-    return Float.class;
-  }
+    @Override
+    public Class<Float> getJavaType() {
+        return Float.class;
+    }
 
-  @Override
-  public String getName() {
-    return Float.class.getSimpleName();
-  }
+    @Override
+    public String getName() {
+        return Float.class.getSimpleName();
+    }
 }

@@ -5,7 +5,7 @@ import nl.geostandaarden.imx.orchestrate.model.types.ValueTypeRegistry;
 
 public interface ModelLoader {
 
-  String getName();
+    String getName();
 
-  Model load(String location, ValueTypeRegistry valueTypeRegistry);
+    Model load(String location, ValueTypeRegistry valueTypeRegistry);
 }

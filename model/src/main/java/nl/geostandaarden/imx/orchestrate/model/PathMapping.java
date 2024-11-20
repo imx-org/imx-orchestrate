@@ -13,15 +13,15 @@ import nl.geostandaarden.imx.orchestrate.model.matchers.Matcher;
 @Builder(toBuilder = true)
 public class PathMapping {
 
-  private final Path path;
+    private final Path path;
 
-  private final PathRepeat repeat;
+    private final PathRepeat repeat;
 
-  private final Matcher ifMatch;
+    private final Matcher ifMatch;
 
-  @Singular
-  private final List<PathMapping> nextPathMappings;
+    @Singular
+    private final List<PathMapping> nextPathMappings;
 
-  @Singular
-  private final List<ResultMapper> resultMappers;
+    @Singular
+    private final List<ResultMapper> resultMappers;
 }

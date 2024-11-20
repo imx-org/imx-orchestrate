@@ -16,44 +16,40 @@ import nl.geostandaarden.imx.orchestrate.parser.yaml.YamlModelParserException;
 
 public class ValueTypeDeserializer extends StdDeserializer<ValueType> {
 
-  @Serial
-  private static final long serialVersionUID = 8168580685904926025L;
+    @Serial
+    private static final long serialVersionUID = 8168580685904926025L;
 
-  private final transient ValueTypeRegistry valueTypeRegistry;
+    private final transient ValueTypeRegistry valueTypeRegistry;
 
-  public ValueTypeDeserializer(ValueTypeRegistry valueTypeRegistry) {
-    super(ValueType.class);
-    this.valueTypeRegistry = valueTypeRegistry;
-  }
-
-  @Override
-  public ValueType deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-    var typeNode = parser.getCodec()
-        .readTree(parser);
-
-    if (typeNode instanceof TextNode textNode) {
-      return valueTypeRegistry.getValueTypeFactory(textNode.textValue())
-          .create(Map.of());
+    public ValueTypeDeserializer(ValueTypeRegistry valueTypeRegistry) {
+        super(ValueType.class);
+        this.valueTypeRegistry = valueTypeRegistry;
     }
 
-    if (typeNode instanceof ObjectNode objectNode) {
-      var typeName = objectNode.get("name")
-          .textValue();
+    @Override
+    public ValueType deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+        var typeNode = parser.getCodec().readTree(parser);
 
-      var options = Optional.ofNullable(objectNode.get("options"))
-          .map(optionsNode -> {
-            try {
-              return context.readTreeAsValue(optionsNode, Map.class);
-            } catch (IOException e) {
-              throw new YamlModelParserException("Could not parse options map.", e);
-            }
-          })
-          .orElse(Map.of());
+        if (typeNode instanceof TextNode textNode) {
+            return valueTypeRegistry.getValueTypeFactory(textNode.textValue()).create(Map.of());
+        }
 
-      return valueTypeRegistry.getValueTypeFactory(typeName)
-          .create(options);
+        if (typeNode instanceof ObjectNode objectNode) {
+            var typeName = objectNode.get("name").textValue();
+
+            var options = Optional.ofNullable(objectNode.get("options"))
+                    .map(optionsNode -> {
+                        try {
+                            return context.readTreeAsValue(optionsNode, Map.class);
+                        } catch (IOException e) {
+                            throw new YamlModelParserException("Could not parse options map.", e);
+                        }
+                    })
+                    .orElse(Map.of());
+
+            return valueTypeRegistry.getValueTypeFactory(typeName).create(options);
+        }
+
+        throw new YamlModelParserException(String.format(YamlModelParser.INVALID_TEXT_NODE, "type"));
     }
-
-    throw new YamlModelParserException(String.format(YamlModelParser.INVALID_TEXT_NODE, "type"));
-  }
 }

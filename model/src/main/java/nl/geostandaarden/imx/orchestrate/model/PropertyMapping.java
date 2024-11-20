@@ -12,8 +12,8 @@ import nl.geostandaarden.imx.orchestrate.model.combiners.ResultCombiner;
 @Builder(toBuilder = true)
 public final class PropertyMapping {
 
-  @Singular
-  private final List<PathMapping> pathMappings;
+    @Singular
+    private final List<PathMapping> pathMappings;
 
-  private final ResultCombiner combiner;
+    private final ResultCombiner combiner;
 }

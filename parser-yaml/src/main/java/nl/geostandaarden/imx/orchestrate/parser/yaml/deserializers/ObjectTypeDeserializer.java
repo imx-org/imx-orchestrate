@@ -16,68 +16,70 @@ import nl.geostandaarden.imx.orchestrate.parser.yaml.YamlModelParserException;
 
 public class ObjectTypeDeserializer extends StdDeserializer<ObjectType> {
 
-  @Serial
-  private static final long serialVersionUID = 8168580685904926025L;
+    @Serial
+    private static final long serialVersionUID = 8168580685904926025L;
 
-  public ObjectTypeDeserializer() {
-    super(ObjectType.class);
-  }
-
-  @Override
-  public ObjectType deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-    var node = parser.getCodec()
-        .readTree(parser);
-
-    if (node instanceof ObjectNode objectTypeNode) {
-      return createObjectType(objectTypeNode, context);
+    public ObjectTypeDeserializer() {
+        super(ObjectType.class);
     }
 
-    throw new YamlModelParserException(String.format(YamlModelParser.INVALID_OBJECT_NODE, YamlModelParser.OBJECT_TYPES_KEY));
-  }
+    @Override
+    public ObjectType deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+        var node = parser.getCodec().readTree(parser);
 
-  private ObjectType createObjectType(ObjectNode objectTypeNode, DeserializationContext context) {
-    var objectTypeBuilder = ObjectType.builder();
+        if (node instanceof ObjectNode objectTypeNode) {
+            return createObjectType(objectTypeNode, context);
+        }
 
-    if (objectTypeNode.has(YamlModelParser.ATTRIBUTES_KEY)) {
-      if (objectTypeNode.get(YamlModelParser.ATTRIBUTES_KEY) instanceof ObjectNode attributesNode) {
-        attributesNode.fields()
-            .forEachRemaining(entry -> objectTypeBuilder.property(createAttribute(entry, context)));
-      } else {
-        throw new YamlModelParserException(String.format(YamlModelParser.INVALID_OBJECT_NODE, YamlModelParser.ATTRIBUTES_KEY));
-      }
+        throw new YamlModelParserException(
+                String.format(YamlModelParser.INVALID_OBJECT_NODE, YamlModelParser.OBJECT_TYPES_KEY));
     }
 
-    if (objectTypeNode.has(YamlModelParser.RELATIONS_KEY)) {
-      if (objectTypeNode.get(YamlModelParser.RELATIONS_KEY) instanceof ObjectNode relationsNode) {
-        relationsNode.fields()
-            .forEachRemaining(entry -> objectTypeBuilder.property(createRelation(entry, context)));
-      } else {
-        throw new YamlModelParserException(String.format(YamlModelParser.INVALID_OBJECT_NODE, YamlModelParser.RELATIONS_KEY));
-      }
+    private ObjectType createObjectType(ObjectNode objectTypeNode, DeserializationContext context) {
+        var objectTypeBuilder = ObjectType.builder();
+
+        if (objectTypeNode.has(YamlModelParser.ATTRIBUTES_KEY)) {
+            if (objectTypeNode.get(YamlModelParser.ATTRIBUTES_KEY) instanceof ObjectNode attributesNode) {
+                attributesNode
+                        .fields()
+                        .forEachRemaining(entry -> objectTypeBuilder.property(createAttribute(entry, context)));
+            } else {
+                throw new YamlModelParserException(
+                        String.format(YamlModelParser.INVALID_OBJECT_NODE, YamlModelParser.ATTRIBUTES_KEY));
+            }
+        }
+
+        if (objectTypeNode.has(YamlModelParser.RELATIONS_KEY)) {
+            if (objectTypeNode.get(YamlModelParser.RELATIONS_KEY) instanceof ObjectNode relationsNode) {
+                relationsNode
+                        .fields()
+                        .forEachRemaining(entry -> objectTypeBuilder.property(createRelation(entry, context)));
+            } else {
+                throw new YamlModelParserException(
+                        String.format(YamlModelParser.INVALID_OBJECT_NODE, YamlModelParser.RELATIONS_KEY));
+            }
+        }
+
+        return objectTypeBuilder.build();
     }
 
-    return objectTypeBuilder.build();
-  }
-
-  private Attribute createAttribute(Map.Entry<String, JsonNode> entry, DeserializationContext context) {
-    try {
-      return context.readTreeAsValue(entry.getValue(), Attribute.class)
-          .toBuilder()
-          .name(entry.getKey())
-          .build();
-    } catch (IOException e) {
-      throw new YamlModelParserException("Could not parse attribute: " + entry.getKey(), e);
+    private Attribute createAttribute(Map.Entry<String, JsonNode> entry, DeserializationContext context) {
+        try {
+            return context.readTreeAsValue(entry.getValue(), Attribute.class).toBuilder()
+                    .name(entry.getKey())
+                    .build();
+        } catch (IOException e) {
+            throw new YamlModelParserException("Could not parse attribute: " + entry.getKey(), e);
+        }
     }
-  }
 
-  private Relation createRelation(Map.Entry<String, JsonNode> entry, DeserializationContext context) {
-    try {
-      return context.readTreeAsValue(entry.getValue(), Relation.class)
-          .toBuilder()
-          .name(entry.getKey())
-          .build();
-    } catch (IOException e) {
-      throw new YamlModelParserException("Could not parse relation: " + entry.getKey(), e);
+    private Relation createRelation(Map.Entry<String, JsonNode> entry, DeserializationContext context) {
+        try {
+            return context.readTreeAsValue(entry.getValue(), Relation.class).toBuilder()
+                    .name(entry.getKey())
+                    .build();
+        } catch (IOException e) {
+            throw new YamlModelParserException("Could not parse relation: " + entry.getKey(), e);
+        }
     }
-  }
 }

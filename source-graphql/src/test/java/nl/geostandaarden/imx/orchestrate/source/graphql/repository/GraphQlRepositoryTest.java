@@ -28,96 +28,96 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class GraphQlRepositoryTest {
 
-  @Mock
-  private Executor executor;
+    @Mock
+    private Executor executor;
 
-  @Mock
-  private ObjectGraphQlMapper objectGraphQlMapper;
+    @Mock
+    private ObjectGraphQlMapper objectGraphQlMapper;
 
-  @Mock
-  private CollectionGraphQlMapper collectionGraphQlMapper;
+    @Mock
+    private CollectionGraphQlMapper collectionGraphQlMapper;
 
-  @Mock
-  private BatchGraphQlMapper batchGraphQlMapper;
+    @Mock
+    private BatchGraphQlMapper batchGraphQlMapper;
 
-  @Mock
-  private ResponseMapper responseMapper;
+    @Mock
+    private ResponseMapper responseMapper;
 
-  @InjectMocks
-  private GraphQlRepository repository;
+    @InjectMocks
+    private GraphQlRepository repository;
 
-  @Test
-  void findOne_usesCorrectMappers() {
-    this.repository.findOne(getObjectRequest());
+    @Test
+    void findOne_usesCorrectMappers() {
+        this.repository.findOne(getObjectRequest());
 
-    verify(objectGraphQlMapper, times(1)).convert(any(ObjectRequest.class));
-    verifyNoInteractions(collectionGraphQlMapper);
-    verifyNoInteractions(batchGraphQlMapper);
+        verify(objectGraphQlMapper, times(1)).convert(any(ObjectRequest.class));
+        verifyNoInteractions(collectionGraphQlMapper);
+        verifyNoInteractions(batchGraphQlMapper);
 
-    verify(responseMapper, times(1)).processFindOneResult(any());
-    verify(responseMapper, never()).processFindResult(any(), any());
-    verify(responseMapper, never()).processBatchResult(any(), any());
-  }
+        verify(responseMapper, times(1)).processFindOneResult(any());
+        verify(responseMapper, never()).processFindResult(any(), any());
+        verify(responseMapper, never()).processBatchResult(any(), any());
+    }
 
-  @Test
-  void find_usesCorrectMappers() {
-    this.repository.find(getCollectionRequest());
+    @Test
+    void find_usesCorrectMappers() {
+        this.repository.find(getCollectionRequest());
 
-    verifyNoInteractions(objectGraphQlMapper);
-    verify(collectionGraphQlMapper, times(1)).convert(any(CollectionRequest.class));
-    verifyNoInteractions(batchGraphQlMapper);
+        verifyNoInteractions(objectGraphQlMapper);
+        verify(collectionGraphQlMapper, times(1)).convert(any(CollectionRequest.class));
+        verifyNoInteractions(batchGraphQlMapper);
 
-    verify(responseMapper, never()).processFindOneResult(any());
-    verify(responseMapper, times(1)).processFindResult(any(), any());
-    verify(responseMapper, never()).processBatchResult(any(), any());
-  }
+        verify(responseMapper, never()).processFindOneResult(any());
+        verify(responseMapper, times(1)).processFindResult(any(), any());
+        verify(responseMapper, never()).processBatchResult(any(), any());
+    }
 
-  @Test
-  void findBatch_usesCorrectMappers() {
-    this.repository.findBatch(getBatchRequest());
+    @Test
+    void findBatch_usesCorrectMappers() {
+        this.repository.findBatch(getBatchRequest());
 
-    verifyNoInteractions(objectGraphQlMapper);
-    verifyNoInteractions(collectionGraphQlMapper);
-    verify(batchGraphQlMapper, times(1)).convert(any(BatchRequest.class));
+        verifyNoInteractions(objectGraphQlMapper);
+        verifyNoInteractions(collectionGraphQlMapper);
+        verify(batchGraphQlMapper, times(1)).convert(any(BatchRequest.class));
 
-    verify(responseMapper, never()).processFindOneResult(any());
-    verify(responseMapper, never()).processFindResult(any(), any());
-    verify(responseMapper, times(1)).processBatchResult(any(), any());
-  }
+        verify(responseMapper, never()).processFindOneResult(any());
+        verify(responseMapper, never()).processFindResult(any(), any());
+        verify(responseMapper, times(1)).processBatchResult(any(), any());
+    }
 
-  private ObjectRequest getObjectRequest() {
-    return ObjectRequest.builder(createModel())
-        .objectType("abc")
-        .objectKey(Map.of("id", "123"))
-        .selectProperty("attr")
-        .build();
-  }
+    private ObjectRequest getObjectRequest() {
+        return ObjectRequest.builder(createModel())
+                .objectType("abc")
+                .objectKey(Map.of("id", "123"))
+                .selectProperty("attr")
+                .build();
+    }
 
-  private CollectionRequest getCollectionRequest() {
-    return CollectionRequest.builder(createModel())
-        .objectType("abc")
-        .selectProperty("attr")
-        .build();
-  }
+    private CollectionRequest getCollectionRequest() {
+        return CollectionRequest.builder(createModel())
+                .objectType("abc")
+                .selectProperty("attr")
+                .build();
+    }
 
-  private BatchRequest getBatchRequest() {
-    return BatchRequest.builder(createModel())
-        .objectType("abc")
-        .objectKey(Map.of("id", "123"))
-        .objectKey(Map.of("id", "456"))
-        .selectProperty("attr")
-        .build();
-  }
+    private BatchRequest getBatchRequest() {
+        return BatchRequest.builder(createModel())
+                .objectType("abc")
+                .objectKey(Map.of("id", "123"))
+                .objectKey(Map.of("id", "456"))
+                .selectProperty("attr")
+                .build();
+    }
 
-  private Model createModel() {
-    return Model.builder()
-        .objectType(ObjectType.builder()
-            .name("abc")
-            .property(Attribute.builder()
-                .name("attr")
-                .type(ScalarTypes.STRING)
-                .build())
-            .build())
-        .build();
-  }
+    private Model createModel() {
+        return Model.builder()
+                .objectType(ObjectType.builder()
+                        .name("abc")
+                        .property(Attribute.builder()
+                                .name("attr")
+                                .type(ScalarTypes.STRING)
+                                .build())
+                        .build())
+                .build();
+    }
 }

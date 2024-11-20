@@ -8,8 +8,7 @@ class GraphQlOrchestrateConfigTest {
 
     @Test
     void build_returnsNewGraphQlOrchestrateConfig_forSuffixValues() {
-        var result = GraphQlOrchestrateConfig
-                .builder()
+        var result = GraphQlOrchestrateConfig.builder()
                 .collectionSuffix("Collection")
                 .batchSuffix("Batch")
                 .build();

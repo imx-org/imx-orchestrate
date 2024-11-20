@@ -8,14 +8,14 @@ import lombok.Getter;
 @Builder
 public class FilterOperator {
 
-  private final String type;
+    private final String type;
 
-  private final String alias;
+    private final String alias;
 
-  private Map<String, Object> options;
+    private Map<String, Object> options;
 
-  @Override
-  public String toString() {
-    return alias != null ? alias : type;
-  }
+    @Override
+    public String toString() {
+        return alias != null ? alias : type;
+    }
 }

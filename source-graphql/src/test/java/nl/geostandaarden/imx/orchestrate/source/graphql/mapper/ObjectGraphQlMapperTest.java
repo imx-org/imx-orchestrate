@@ -18,30 +18,29 @@ import org.junit.jupiter.api.Test;
 
 class ObjectGraphQlMapperTest {
 
-  private ObjectGraphQlMapper objectGraphQlMapper;
+    private ObjectGraphQlMapper objectGraphQlMapper;
 
-  @BeforeEach
-  void init() {
-    var config = GraphQlOrchestrateConfig.builder()
-        .build();
-    objectGraphQlMapper = new ObjectGraphQlMapper(config);
-  }
+    @BeforeEach
+    void init() {
+        var config = GraphQlOrchestrateConfig.builder().build();
+        objectGraphQlMapper = new ObjectGraphQlMapper(config);
+    }
 
-  @Test
-  void convert_returnsExpectedResult_forRequest() {
-    var request = ObjectRequest.builder(createModel())
-        .objectKey(Map.of("identificatie", "12345", "id", "456"))
-        .objectType("Nummeraanduiding")
-        .selectProperty("naam")
-        .selectObjectProperty("adres", builder -> builder
-            .selectProperty("straat")
-            .selectProperty("huisnummer")
-            .build())
-        .build();
+    @Test
+    void convert_returnsExpectedResult_forRequest() {
+        var request = ObjectRequest.builder(createModel())
+                .objectKey(Map.of("identificatie", "12345", "id", "456"))
+                .objectType("Nummeraanduiding")
+                .selectProperty("naam")
+                .selectObjectProperty("adres", builder -> builder.selectProperty("straat")
+                        .selectProperty("huisnummer")
+                        .build())
+                .build();
 
-    ExecutionInput result = objectGraphQlMapper.convert(request);
+        ExecutionInput result = objectGraphQlMapper.convert(request);
 
-    var expected = """
+        var expected =
+                """
         query Query {
           nummeraanduiding(identificatie: "12345", id: "456") {
             naam
@@ -52,43 +51,43 @@ class ObjectGraphQlMapperTest {
           }
         }""";
 
-    GraphQlAssert.assertThat(result.getQuery()).graphQlEquals(expected);
-  }
+        GraphQlAssert.assertThat(result.getQuery()).graphQlEquals(expected);
+    }
 
-  @Test
-  void convert_throwsException_forRequest_withoutSelectionSet() {
-    var request = ObjectRequest.builder(createModel())
-        .objectKey(Map.of("identificatie", "12345"))
-        .objectType("Nummeraanduiding")
-        .build();
+    @Test
+    void convert_throwsException_forRequest_withoutSelectionSet() {
+        var request = ObjectRequest.builder(createModel())
+                .objectKey(Map.of("identificatie", "12345"))
+                .objectType("Nummeraanduiding")
+                .build();
 
-    assertThrows(SourceException.class, () -> objectGraphQlMapper.convert(request));
-  }
+        assertThrows(SourceException.class, () -> objectGraphQlMapper.convert(request));
+    }
 
-  private Model createModel() {
-    return Model.builder()
-        .objectType(ObjectType.builder()
-            .name("Nummeraanduiding")
-            .property(Attribute.builder()
-                .name("naam")
-                .type(ScalarTypes.STRING)
-                .build())
-            .property(Relation.builder()
-                .name("adres")
-                .target(ObjectTypeRef.forType("Adres"))
-                .build())
-            .build())
-        .objectType(ObjectType.builder()
-            .name("Adres")
-            .property(Attribute.builder()
-                .name("straat")
-                .type(ScalarTypes.STRING)
-                .build())
-            .property(Attribute.builder()
-                .name("huisnummer")
-                .type(ScalarTypes.INTEGER)
-                .build())
-            .build())
-        .build();
-  }
+    private Model createModel() {
+        return Model.builder()
+                .objectType(ObjectType.builder()
+                        .name("Nummeraanduiding")
+                        .property(Attribute.builder()
+                                .name("naam")
+                                .type(ScalarTypes.STRING)
+                                .build())
+                        .property(Relation.builder()
+                                .name("adres")
+                                .target(ObjectTypeRef.forType("Adres"))
+                                .build())
+                        .build())
+                .objectType(ObjectType.builder()
+                        .name("Adres")
+                        .property(Attribute.builder()
+                                .name("straat")
+                                .type(ScalarTypes.STRING)
+                                .build())
+                        .property(Attribute.builder()
+                                .name("huisnummer")
+                                .type(ScalarTypes.INTEGER)
+                                .build())
+                        .build())
+                .build();
+    }
 }

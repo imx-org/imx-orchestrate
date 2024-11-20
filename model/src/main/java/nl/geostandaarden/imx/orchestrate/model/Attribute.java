@@ -12,5 +12,5 @@ import nl.geostandaarden.imx.orchestrate.model.types.ValueType;
 @SuperBuilder(toBuilder = true)
 public final class Attribute extends AbstractProperty {
 
-  private final ValueType type;
+    private final ValueType type;
 }

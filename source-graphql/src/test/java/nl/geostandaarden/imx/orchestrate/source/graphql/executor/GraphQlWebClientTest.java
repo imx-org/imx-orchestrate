@@ -1,5 +1,14 @@
 package nl.geostandaarden.imx.orchestrate.source.graphql.executor;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
+import java.time.Duration;
+import java.util.List;
 import nl.geostandaarden.imx.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,16 +23,6 @@ import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
 import reactor.core.publisher.Mono;
-
-import java.time.Duration;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 @MockitoSettings(strictness = Strictness.LENIENT)
 class GraphQlWebClientTest {
@@ -44,8 +43,7 @@ class GraphQlWebClientTest {
 
     @Test
     void create_returnsWebClient_withConfig() {
-        var config = GraphQlOrchestrateConfig
-                .builder()
+        var config = GraphQlOrchestrateConfig.builder()
                 .authToken("123456790".toCharArray())
                 .baseUrl("http://localhost:8080")
                 .build();
@@ -60,9 +58,7 @@ class GraphQlWebClientTest {
 
     @Test
     void create_returnsWebClient_withoutConfig() {
-        var config = GraphQlOrchestrateConfig
-                .builder()
-                .build();
+        var config = GraphQlOrchestrateConfig.builder().build();
 
         createWebClientAndFireRequest(config);
         var request = verifyAndGetRequest();

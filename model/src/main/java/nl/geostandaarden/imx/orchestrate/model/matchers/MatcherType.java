@@ -4,7 +4,7 @@ import java.util.Map;
 
 public interface MatcherType {
 
-  String getName();
+    String getName();
 
-  Matcher create(Map<String, Object> options);
+    Matcher create(Map<String, Object> options);
 }

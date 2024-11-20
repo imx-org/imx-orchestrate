@@ -12,16 +12,16 @@ import lombok.extern.jackson.Jacksonized;
 @Builder(toBuilder = true)
 public final class ObjectTypeMapping {
 
-  private final ObjectTypeRef sourceRoot;
+    private final ObjectTypeRef sourceRoot;
 
-  @Singular
-  private final Map<String, PropertyMapping> propertyMappings;
+    @Singular
+    private final Map<String, PropertyMapping> propertyMappings;
 
-  public Optional<PropertyMapping> getPropertyMapping(String name) {
-    return Optional.ofNullable(propertyMappings.get(name));
-  }
+    public Optional<PropertyMapping> getPropertyMapping(String name) {
+        return Optional.ofNullable(propertyMappings.get(name));
+    }
 
-  public Optional<PropertyMapping> getPropertyMapping(Property property) {
-    return getPropertyMapping(property.getName());
-  }
+    public Optional<PropertyMapping> getPropertyMapping(Property property) {
+        return getPropertyMapping(property.getName());
+    }
 }

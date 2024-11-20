@@ -8,13 +8,13 @@ import lombok.Getter;
 @Builder(toBuilder = true)
 public final class OrchestratedDataElement implements DataElement {
 
-  private final ObjectReference subject;
+    private final ObjectReference subject;
 
-  private final String property;
+    private final String property;
 
-  private final Object value;
+    private final Object value;
 
-  private final PropertyMappingExecution wasGeneratedBy;
+    private final PropertyMappingExecution wasGeneratedBy;
 
-  private final Set<SourceDataElement> wasDerivedFrom;
+    private final Set<SourceDataElement> wasDerivedFrom;
 }

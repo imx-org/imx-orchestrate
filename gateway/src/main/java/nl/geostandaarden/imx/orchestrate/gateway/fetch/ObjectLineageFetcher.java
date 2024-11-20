@@ -17,49 +17,45 @@ import nl.geostandaarden.imx.orchestrate.model.lineage.ObjectLineage;
 @RequiredArgsConstructor
 public class ObjectLineageFetcher implements DataFetcher<Map<String, Object>> {
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-      .setSerializationInclusion(Include.NON_NULL);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(Include.NON_NULL);
 
-  private final Map<String, String> nameMapping;
+    private final Map<String, String> nameMapping;
 
-  @Override
-  public Map<String, Object> get(DataFetchingEnvironment environment) {
-    Map<String, Object> source = environment.getSource();
-    var hasLineageField = nameMapping.getOrDefault(HAS_LINEAGE_FIELD, HAS_LINEAGE_FIELD);
-    var hasLineageValue = source.get(hasLineageField);
+    @Override
+    public Map<String, Object> get(DataFetchingEnvironment environment) {
+        Map<String, Object> source = environment.getSource();
+        var hasLineageField = nameMapping.getOrDefault(HAS_LINEAGE_FIELD, HAS_LINEAGE_FIELD);
+        var hasLineageValue = source.get(hasLineageField);
 
-    if (hasLineageValue instanceof ObjectLineage objectLineage) {
-      return renameKeys(FetchUtils.cast(OBJECT_MAPPER.convertValue(objectLineage, Map.class)));
+        if (hasLineageValue instanceof ObjectLineage objectLineage) {
+            return renameKeys(FetchUtils.cast(OBJECT_MAPPER.convertValue(objectLineage, Map.class)));
+        }
+
+        throw new OrchestrateException("Could not fetch object lineage.");
     }
 
-    throw new OrchestrateException("Could not fetch object lineage.");
-  }
+    private Map<String, Object> renameKeys(Map<String, Object> map) {
+        return map.entrySet().stream()
+                .collect(Collectors.toMap(entry -> nameMapping.getOrDefault(entry.getKey(), entry.getKey()), entry -> {
+                    var value = entry.getValue();
 
-  private Map<String, Object> renameKeys(Map<String, Object> map) {
-    return map.entrySet()
-        .stream()
-        .collect(Collectors.toMap(entry -> nameMapping.getOrDefault(entry.getKey(), entry.getKey()),
-            entry -> {
-              var value = entry.getValue();
+                    if (value instanceof Map<?, ?> mapValue) {
+                        return renameKeys(FetchUtils.cast(mapValue));
+                    }
 
-              if (value instanceof Map<?, ?> mapValue) {
-                return renameKeys(FetchUtils.cast(mapValue));
-              }
+                    if (value instanceof List<?> listValue) {
+                        return listValue.stream()
+                                .map(item -> {
+                                    if (item instanceof Map<?, ?> mapItem) {
+                                        return renameKeys(FetchUtils.cast(mapItem));
+                                    }
 
-              if (value instanceof List<?> listValue) {
-                return listValue.stream()
-                    .map(item -> {
-                      if (item instanceof Map<?, ?> mapItem) {
-                        return renameKeys(FetchUtils.cast(mapItem));
-                      }
+                                    return item;
+                                })
+                                .toList();
+                    }
 
-                      return item;
-                    })
-                    .toList();
-              }
-
-              return value;
-            }
-        ));
-  }
+                    return value;
+                }));
+    }
 }

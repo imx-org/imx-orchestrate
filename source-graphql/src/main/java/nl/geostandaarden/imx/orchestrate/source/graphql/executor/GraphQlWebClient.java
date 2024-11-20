@@ -3,7 +3,6 @@ package nl.geostandaarden.imx.orchestrate.source.graphql.executor;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Consumer;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
@@ -17,27 +16,25 @@ import reactor.netty.resources.ConnectionProvider;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class GraphQlWebClient {
 
-  static WebClient create(GraphQlOrchestrateConfig config) {
-    Consumer<HttpHeaders> headerBuilder = headers -> Optional.ofNullable(config.getAuthToken())
-        .ifPresent(bearerAuth -> headers.add("Authorization", "Bearer ".concat(String.valueOf(bearerAuth))));
+    static WebClient create(GraphQlOrchestrateConfig config) {
+        Consumer<HttpHeaders> headerBuilder = headers -> Optional.ofNullable(config.getAuthToken())
+                .ifPresent(bearerAuth -> headers.add("Authorization", "Bearer ".concat(String.valueOf(bearerAuth))));
 
-    ConnectionProvider provider = ConnectionProvider.builder("orchestrate")
-        .maxIdleTime(Duration.ofSeconds(10))
-        .build();
+        ConnectionProvider provider = ConnectionProvider.builder("orchestrate")
+                .maxIdleTime(Duration.ofSeconds(10))
+                .build();
 
-    HttpClient client = HttpClient.create(provider);
+        HttpClient client = HttpClient.create(provider);
 
-    var webClientBuilder = WebClient.builder()
-        .clientConnector(new ReactorClientHttpConnector());
+        var webClientBuilder = WebClient.builder().clientConnector(new ReactorClientHttpConnector());
 
-    return webClientBuilder.defaultHeaders(headerBuilder)
-        .clientConnector(new ReactorClientHttpConnector(client))
-        .exchangeStrategies(ExchangeStrategies.builder()
-            .codecs(configurer -> configurer.defaultCodecs()
-                .maxInMemorySize(5 * 1024 * 1024))
-            .build())
-        .baseUrl(config.getBaseUrl())
-        .build();
-  }
-
+        return webClientBuilder
+                .defaultHeaders(headerBuilder)
+                .clientConnector(new ReactorClientHttpConnector(client))
+                .exchangeStrategies(ExchangeStrategies.builder()
+                        .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(5 * 1024 * 1024))
+                        .build())
+                .baseUrl(config.getBaseUrl())
+                .build();
+    }
 }

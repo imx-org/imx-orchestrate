@@ -37,84 +37,83 @@ import org.springframework.graphql.execution.GraphQlSource;
 @EnableConfigurationProperties(GraphQlProperties.class)
 public class GatewayConfiguration {
 
-  private final GatewayProperties gatewayProperties;
+    private final GatewayProperties gatewayProperties;
 
-  @Bean
-  public GraphQlSource graphQlSource() throws IOException {
-    var extensions = resolveExtensions();
+    @Bean
+    public GraphQlSource graphQlSource() throws IOException {
+        var extensions = resolveExtensions();
 
-    var componentRegistry = new ComponentRegistry();
-    extensions.forEach(extension -> extension.registerComponents(componentRegistry));
+        var componentRegistry = new ComponentRegistry();
+        extensions.forEach(extension -> extension.registerComponents(componentRegistry));
 
-    var modelLoaderRegistry = new ModelLoaderRegistry();
-    resolveModelLoaders().forEach(modelLoaderRegistry::register);
+        var modelLoaderRegistry = new ModelLoaderRegistry();
+        resolveModelLoaders().forEach(modelLoaderRegistry::register);
 
-    var valueTypeRegistry = new ValueTypeRegistry();
-    extensions.forEach(extension -> valueTypeRegistry.register(extension.getValueTypeFactories().toArray(ValueTypeFactory[]::new)));
+        var valueTypeRegistry = new ValueTypeRegistry();
+        extensions.forEach(extension ->
+                valueTypeRegistry.register(extension.getValueTypeFactories().toArray(ValueTypeFactory[]::new)));
 
-    var modelMapping = new YamlModelMappingParser(componentRegistry, modelLoaderRegistry, valueTypeRegistry)
-        .parse(new FileInputStream(gatewayProperties.getMapping()));
+        var modelMapping = new YamlModelMappingParser(componentRegistry, modelLoaderRegistry, valueTypeRegistry)
+                .parse(new FileInputStream(gatewayProperties.getMapping()));
 
-    var sourceModelMap = modelMapping.getSourceModels().stream()
-        .collect(toUnmodifiableMap(Model::getAlias, Function.identity()));
+        var sourceModelMap = modelMapping.getSourceModels().stream()
+                .collect(toUnmodifiableMap(Model::getAlias, Function.identity()));
 
-    var sources = gatewayProperties.getSources()
-        .entrySet()
-        .stream()
-        .collect(Collectors.toMap(Map.Entry::getKey, e -> resolveSource(e.getKey(), e.getValue(), sourceModelMap)));
+        var sources = gatewayProperties.getSources().entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey, e -> resolveSource(e.getKey(), e.getValue(), sourceModelMap)));
 
-    var engine = OrchestrateEngine.builder()
-        .modelMapping(modelMapping)
-        .sources(sources)
-        .extensions(extensions)
-        .build();
+        var engine = OrchestrateEngine.builder()
+                .modelMapping(modelMapping)
+                .sources(sources)
+                .extensions(extensions)
+                .build();
 
-    var graphQL = GraphQL.newGraphQL(SchemaFactory.create(engine)).build();
+        var graphQL = GraphQL.newGraphQL(SchemaFactory.create(engine)).build();
 
-    return new GraphQlSource() {
-      @Override
-      public GraphQL graphQl() {
-        return graphQL;
-      }
+        return new GraphQlSource() {
+            @Override
+            public GraphQL graphQl() {
+                return graphQL;
+            }
 
-      @Override
-      public GraphQLSchema schema() {
-        return graphQL.getGraphQLSchema();
-      }
-    };
-  }
-
-  private Set<OrchestrateExtension> resolveExtensions() {
-    return ServiceLoader.load(OrchestrateExtension.class)
-        .stream()
-        .map(ServiceLoader.Provider::get)
-        .collect(toUnmodifiableSet());
-  }
-
-  private Set<ModelLoader> resolveModelLoaders() {
-    return ServiceLoader.load(ModelLoader.class)
-        .stream()
-        .map(ServiceLoader.Provider::get)
-        .collect(toUnmodifiableSet());
-  }
-
-  private Source resolveSource(String dataset, GatewaySource source, Map<String, Model> sourceModels) {
-    if (!sourceModels.containsKey(dataset)) {
-      throw new GatewayException(String.format("No model with alias `%s` configured in model mapping.", dataset));
+            @Override
+            public GraphQLSchema schema() {
+                return graphQL.getGraphQLSchema();
+            }
+        };
     }
 
-    ServiceLoader<SourceType> loader = ServiceLoader.load(SourceType.class);
+    private Set<OrchestrateExtension> resolveExtensions() {
+        return ServiceLoader.load(OrchestrateExtension.class).stream()
+                .map(ServiceLoader.Provider::get)
+                .collect(toUnmodifiableSet());
+    }
 
-    return loader.stream()
-        .map(ServiceLoader.Provider::get)
-        .filter(e -> e.getName().equals(source.getType()))
-        .findFirst()
-        .map(s -> s.create(sourceModels.get(dataset), source.getOptions()))
-        .orElseThrow(() -> new GatewayException(String.format("Source type '%s' not found.", source.getType())));
-  }
+    private Set<ModelLoader> resolveModelLoaders() {
+        return ServiceLoader.load(ModelLoader.class).stream()
+                .map(ServiceLoader.Provider::get)
+                .collect(toUnmodifiableSet());
+    }
 
-  @Bean
-  public DefaultExecutionGraphQlService graphQlService(GraphQlSource graphQlSource) {
-    return new DefaultExecutionGraphQlService(graphQlSource);
-  }
+    private Source resolveSource(String dataset, GatewaySource source, Map<String, Model> sourceModels) {
+        if (!sourceModels.containsKey(dataset)) {
+            throw new GatewayException(String.format("No model with alias `%s` configured in model mapping.", dataset));
+        }
+
+        ServiceLoader<SourceType> loader = ServiceLoader.load(SourceType.class);
+
+        return loader.stream()
+                .map(ServiceLoader.Provider::get)
+                .filter(e -> e.getName().equals(source.getType()))
+                .findFirst()
+                .map(s -> s.create(sourceModels.get(dataset), source.getOptions()))
+                .orElseThrow(
+                        () -> new GatewayException(String.format("Source type '%s' not found.", source.getType())));
+    }
+
+    @Bean
+    public DefaultExecutionGraphQlService graphQlService(GraphQlSource graphQlSource) {
+        return new DefaultExecutionGraphQlService(graphQlSource);
+    }
 }

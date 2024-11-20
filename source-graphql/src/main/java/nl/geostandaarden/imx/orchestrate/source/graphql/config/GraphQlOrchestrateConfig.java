@@ -7,13 +7,13 @@ import lombok.Getter;
 @Builder
 public class GraphQlOrchestrateConfig {
 
-  private char[] authToken;
+    private char[] authToken;
 
-  private String baseUrl;
+    private String baseUrl;
 
-  @Builder.Default
-  private String collectionSuffix = "Collection";
+    @Builder.Default
+    private String collectionSuffix = "Collection";
 
-  @Builder.Default
-  private String batchSuffix = "Batch";
+    @Builder.Default
+    private String batchSuffix = "Batch";
 }

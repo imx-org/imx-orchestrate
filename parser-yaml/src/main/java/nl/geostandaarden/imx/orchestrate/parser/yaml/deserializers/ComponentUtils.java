@@ -14,26 +14,28 @@ import nl.geostandaarden.imx.orchestrate.parser.yaml.YamlModelMappingParserExcep
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class ComponentUtils {
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  public static String parseType(TreeNode node) {
-    if (node instanceof ObjectNode objectNode) {
-      var typeNode = Optional.ofNullable(objectNode.get("type"))
-          .orElseThrow(() -> new YamlModelMappingParserException("Result mapper instances require a 'type' property."));
+    public static String parseType(TreeNode node) {
+        if (node instanceof ObjectNode objectNode) {
+            var typeNode = Optional.ofNullable(objectNode.get("type"))
+                    .orElseThrow(() ->
+                            new YamlModelMappingParserException("Result mapper instances require a 'type' property."));
 
-      if (typeNode.getNodeType() != JsonNodeType.STRING) {
-        throw new YamlModelMappingParserException("Result mapper `type` property must be a string.");
-      }
+            if (typeNode.getNodeType() != JsonNodeType.STRING) {
+                throw new YamlModelMappingParserException("Result mapper `type` property must be a string.");
+            }
 
-      return typeNode.textValue();
+            return typeNode.textValue();
+        }
+
+        throw new YamlModelMappingParserException("Object node expected for component instances.");
     }
 
-    throw new YamlModelMappingParserException("Object node expected for component instances.");
-  }
-
-  public static Map<String, Object> parseOptions(TreeNode node) {
-    return Optional.ofNullable(node.get("options"))
-        .map(optionsNode -> OBJECT_MAPPER.convertValue(optionsNode, new TypeReference<Map<String, Object>>() {}))
-        .orElse(Map.of());
-  }
+    public static Map<String, Object> parseOptions(TreeNode node) {
+        return Optional.ofNullable(node.get("options"))
+                .map(optionsNode ->
+                        OBJECT_MAPPER.convertValue(optionsNode, new TypeReference<Map<String, Object>>() {}))
+                .orElse(Map.of());
+    }
 }

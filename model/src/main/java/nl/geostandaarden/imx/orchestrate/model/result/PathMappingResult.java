@@ -9,7 +9,7 @@ import nl.geostandaarden.imx.orchestrate.model.lineage.PathMappingExecution;
 @Builder(toBuilder = true)
 public class PathMappingResult {
 
-  private final List<PathResult> pathResults;
+    private final List<PathResult> pathResults;
 
-  private final PathMappingExecution pathMappingExecution;
+    private final PathMappingExecution pathMappingExecution;
 }

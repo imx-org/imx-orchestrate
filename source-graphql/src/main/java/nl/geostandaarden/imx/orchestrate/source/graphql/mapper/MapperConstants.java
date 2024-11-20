@@ -6,5 +6,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 class MapperConstants {
 
-  static final String NODES = "nodes";
+    static final String NODES = "nodes";
 }

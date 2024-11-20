@@ -5,13 +5,13 @@ import lombok.ToString;
 @ToString
 public final class BooleanType implements ScalarType<Boolean> {
 
-  @Override
-  public Class<Boolean> getJavaType() {
-    return Boolean.class;
-  }
+    @Override
+    public Class<Boolean> getJavaType() {
+        return Boolean.class;
+    }
 
-  @Override
-  public String getName() {
-    return Boolean.class.getSimpleName();
-  }
+    @Override
+    public String getName() {
+        return Boolean.class.getSimpleName();
+    }
 }

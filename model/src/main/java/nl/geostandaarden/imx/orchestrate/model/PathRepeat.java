@@ -10,5 +10,5 @@ import nl.geostandaarden.imx.orchestrate.model.matchers.Matcher;
 @Builder(toBuilder = true)
 public final class PathRepeat {
 
-  private final Matcher untilMatch;
+    private final Matcher untilMatch;
 }

@@ -10,10 +10,10 @@ import nl.geostandaarden.imx.orchestrate.model.Path;
 @Builder(toBuilder = true)
 public class PathExecution {
 
-  private Path used;
+    private Path used;
 
-  private final ObjectReference startNode;
+    private final ObjectReference startNode;
 
-  @Builder.Default
-  private final Set<SourceDataElement> references = new LinkedHashSet<>();
+    @Builder.Default
+    private final Set<SourceDataElement> references = new LinkedHashSet<>();
 }
