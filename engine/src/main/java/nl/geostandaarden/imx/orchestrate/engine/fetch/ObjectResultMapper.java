@@ -14,6 +14,7 @@ import lombok.Builder;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.DataRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.DataResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import nl.geostandaarden.imx.orchestrate.model.AbstractRelation;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
@@ -41,6 +42,14 @@ import nl.geostandaarden.imx.orchestrate.model.result.PropertyMappingResult;
 public final class ObjectResultMapper {
 
     private final ModelMapping modelMapping;
+
+    public ObjectResult map(DataResult result, DataRequest request) {
+        if (result instanceof ObjectResult objectResult) {
+            return map(objectResult, request);
+        }
+
+        throw new OrchestrateException("Could not map result: " + result.getClass());
+    }
 
     public ObjectResult map(ObjectResult objectResult, DataRequest request) {
         var sourceType = objectResult.getType();
