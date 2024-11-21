@@ -45,6 +45,10 @@ public final class ObjectType {
                 .toList();
     }
 
+    public boolean hasIdentityProperties() {
+        return !identityProperties.isEmpty();
+    }
+
     public Property getProperty(String name) {
         return Optional.ofNullable(propertyMap.get(name))
                 .orElseThrow(() -> new ModelException("Attribute not found: " + name));

@@ -20,6 +20,9 @@ import nl.geostandaarden.imx.orchestrate.engine.exchange.DataRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.SelectedProperty;
+import nl.geostandaarden.imx.orchestrate.engine.fetch.stage.StageExecutor;
+import nl.geostandaarden.imx.orchestrate.engine.fetch.stage.StagePlanner;
+import nl.geostandaarden.imx.orchestrate.engine.selection.TreeResolver;
 import nl.geostandaarden.imx.orchestrate.engine.source.Source;
 import nl.geostandaarden.imx.orchestrate.model.AbstractRelation;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
@@ -44,18 +47,23 @@ public final class FetchPlanner {
 
     private final Map<String, Source> sources;
 
+    private final TreeResolver treeResolver;
+
+    private final StageExecutor stageExecutor = new StageExecutor();
+
     public Flux<ObjectResult> fetch(ObjectRequest request) {
         var typeMappings = modelMapping.getObjectTypeMappings(request.getObjectType());
-        var input = FetchInput.newInput(request.getObjectKey());
 
         return Flux.fromIterable(typeMappings).flatMapSequential(typeMapping -> {
-            var sourcePaths = resolveSourcePaths(request, typeMapping, Path.fromProperties());
+            var selection = treeResolver.resolve(request, typeMapping);
+            var stage = new StagePlanner().plan(selection);
 
-            var resultMapper =
-                    ObjectResultMapper.builder().modelMapping(modelMapping).build();
+            var resultMapper = ObjectResultMapper.builder() //
+                    .modelMapping(modelMapping)
+                    .build();
 
-            return fetchSourceObject(typeMapping.getSourceRoot(), sourcePaths, false, null)
-                    .execute(input)
+            return stageExecutor //
+                    .execute(stage)
                     .map(result -> resultMapper.map(result, request));
         });
     }

@@ -5,11 +5,14 @@ import static java.util.Collections.unmodifiableSet;
 import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
+import nl.geostandaarden.imx.orchestrate.engine.selection.ObjectNode;
 import nl.geostandaarden.imx.orchestrate.model.Model;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 
 @Getter
 public final class ObjectRequest extends AbstractDataRequest {
+
+    private final ObjectNode selection;
 
     private final Map<String, Object> objectKey;
 
@@ -17,9 +20,15 @@ public final class ObjectRequest extends AbstractDataRequest {
             Model model,
             ObjectType objectType,
             Set<SelectedProperty> selectedProperties,
+            ObjectNode selection,
             Map<String, Object> objectKey) {
         super(model, objectType, selectedProperties);
+        this.selection = selection;
         this.objectKey = objectKey;
+    }
+
+    public ObjectType getObjectType() {
+        return selection != null ? selection.getObjectType() : objectType;
     }
 
     @Override
@@ -33,10 +42,17 @@ public final class ObjectRequest extends AbstractDataRequest {
 
     public static class Builder extends AbstractDataRequest.Builder<Builder> {
 
+        private ObjectNode selection;
+
         private Map<String, Object> objectKey;
 
         private Builder(Model model) {
             super(model);
+        }
+
+        public Builder selection(ObjectNode selection) {
+            this.selection = selection;
+            return self();
         }
 
         public Builder objectKey(Map<String, Object> objectKey) {
@@ -45,7 +61,7 @@ public final class ObjectRequest extends AbstractDataRequest {
         }
 
         public ObjectRequest build() {
-            return new ObjectRequest(model, objectType, unmodifiableSet(selectedProperties), objectKey);
+            return new ObjectRequest(model, objectType, unmodifiableSet(selectedProperties), selection, objectKey);
         }
 
         @Override
