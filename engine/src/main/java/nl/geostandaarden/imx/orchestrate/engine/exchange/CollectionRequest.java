@@ -27,6 +27,10 @@ public final class CollectionRequest extends AbstractDataRequest {
         this.filter = filter;
     }
 
+    public ObjectType getObjectType() {
+        return selection != null ? selection.getObjectType() : objectType;
+    }
+
     @Override
     public String toString() {
         return super.toString().concat(filter == null ? "" : "Filter: " + filter + "\n");
