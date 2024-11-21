@@ -19,7 +19,9 @@ public class StagePlanner {
     public Stage plan(ObjectNode selection) {
         var subSelection = createSubSelection(selection, Path.empty());
 
-        var request = ObjectRequest.builder(null).selection(subSelection).build();
+        var request = ObjectRequest.builder(null) //
+                .selection(subSelection)
+                .build();
 
         return Stage.builder()
                 .request(request)
@@ -30,7 +32,9 @@ public class StagePlanner {
     public Stage plan(CollectionNode selection) {
         var subSelection = createSubSelection(selection, Path.empty());
 
-        var request = CollectionRequest.builder(null).selection(subSelection).build();
+        var request = CollectionRequest.builder(null) //
+                .selection(subSelection)
+                .build();
 
         return Stage.builder()
                 .request(request)
@@ -41,7 +45,10 @@ public class StagePlanner {
     private ObjectNode createSubSelection(ObjectNode selection, Path path) {
         var childNodes = createChildNodes(selection, path);
 
-        return selection.toBuilder().clearChildNodes().childNodes(childNodes).build();
+        return selection.toBuilder() //
+                .clearChildNodes()
+                .childNodes(childNodes)
+                .build();
     }
 
     private CollectionNode createSubSelection(CollectionNode selection, Path path) {

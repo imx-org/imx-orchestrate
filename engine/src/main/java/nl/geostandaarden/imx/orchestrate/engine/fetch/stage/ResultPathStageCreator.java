@@ -19,6 +19,10 @@ public class ResultPathStageCreator implements NextStageCreator {
 
     @Override
     public Mono<Stage> create(ObjectResult result) {
-        return Mono.just(stagePlanner.plan(selection));
+        var stage = stagePlanner.plan(selection.toBuilder() //
+                .objectKey(result.getKey())
+                .build());
+
+        return Mono.just(stage);
     }
 }

@@ -31,6 +31,10 @@ public final class ObjectRequest extends AbstractDataRequest {
         return selection != null ? selection.getObjectType() : objectType;
     }
 
+    public Map<String, Object> getObjectKey() {
+        return selection != null ? selection.getObjectKey() : objectKey;
+    }
+
     @Override
     public String toString() {
         return super.toString().concat("Object key: " + objectKey + "\n");
