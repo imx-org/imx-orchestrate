@@ -12,7 +12,7 @@ import nl.geostandaarden.imx.orchestrate.engine.selection.ObjectNode;
 import nl.geostandaarden.imx.orchestrate.engine.selection.TreeNode;
 import nl.geostandaarden.imx.orchestrate.model.Path;
 
-public class StagePlanner {
+public final class StagePlanner {
 
     private final List<ResultPathStageCreator> nextStageCreators = new ArrayList<>();
 
@@ -70,7 +70,6 @@ public class StagePlanner {
                 } else {
                     // TODO: Make sure foreign key is selected + handle inverse relations
                     nextStageCreators.add(ResultPathStageCreator.builder()
-                            .stagePlanner(this)
                             .resultPath(childPath)
                             .selection(objectNode)
                             .build());

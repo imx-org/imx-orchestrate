@@ -7,8 +7,9 @@ import nl.geostandaarden.imx.orchestrate.engine.exchange.DataResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuples;
 
-public class StageExecutor {
+public final class StageExecutor {
 
     public Mono<DataResult> execute(Stage stage) {
         var request = stage.getRequest();
@@ -36,9 +37,13 @@ public class StageExecutor {
                             .properties(properties)
                             .build();
 
-                    return stage.getNextStages(result) //
-                            .flatMap(this::execute)
-                            .reduce(result, this::combineNextResult);
+                    return stage.getNextStages(result)
+                            .flatMap(nextStage -> execute(nextStage)
+                                    .map(nextResult -> Tuples.of(nextResult, nextStage.getNextResultCombiner())))
+                            .reduce(result, (accResult, nextResultTuple) -> {
+                                var nextResultCombiner = nextResultTuple.getT2();
+                                return nextResultCombiner.combine(accResult, nextResultTuple.getT1());
+                            });
                 });
     }
 
@@ -61,11 +66,7 @@ public class StageExecutor {
 
                     return stage.getNextStages(result) //
                             .flatMap(this::execute)
-                            .reduce(result, this::combineNextResult);
+                            .reduce(result, stage.getNextResultCombiner()::combine);
                 });
-    }
-
-    private DataResult combineNextResult(DataResult result, DataResult nextResult) {
-        return result;
     }
 }

@@ -1,6 +1,7 @@
 package nl.geostandaarden.imx.orchestrate.engine.exchange;
 
 import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
@@ -14,4 +15,10 @@ public class CollectionResult implements DataResult {
 
     @Singular
     private final List<ObjectResult> objectResults;
+
+    public List<Map<String, Object>> getPropertyList() {
+        return objectResults.stream() //
+                .map(ObjectResult::getProperties)
+                .toList();
+    }
 }

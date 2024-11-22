@@ -11,10 +11,12 @@ import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import reactor.core.publisher.Flux;
 
 @Getter
-@Builder
+@Builder(toBuilder = true)
 public final class Stage {
 
     private final DataRequest request;
+
+    private final NextResultCombiner nextResultCombiner;
 
     @Singular
     @Getter(AccessLevel.NONE)
