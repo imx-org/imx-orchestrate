@@ -1,7 +1,6 @@
 package nl.geostandaarden.imx.orchestrate.source.graphql.mapper;
 
-import graphql.ExecutionInput;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
+import nl.geostandaarden.imx.orchestrate.engine.selection.SelectionBuilder;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.Model;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
@@ -23,20 +22,22 @@ class CollectionGraphQlMapperTest {
         var config = GraphQlOrchestrateConfig.builder()
                 .collectionSuffix("Collection")
                 .build();
+
         collectionGraphQlMapper = new CollectionGraphQlMapper(config);
     }
 
     @Test
     void convert_returnsExpectedResult_withoutFilter() {
-        var request = CollectionRequest.builder(createModel())
-                .objectType("Nummeraanduiding")
-                .selectProperty("naam")
-                .selectObjectProperty("adres", builder -> builder.selectProperty("straat")
-                        .selectProperty("huisnummer")
+        var selection = SelectionBuilder.newCollectionNode(createModel(), "Nummeraanduiding")
+                .select("naam")
+                .selectObject("adres", builder -> builder //
+                        .select("straat")
+                        .select("huisnummer")
                         .build())
                 .build();
 
-        ExecutionInput result = collectionGraphQlMapper.convert(request);
+        var request = selection.toRequest();
+        var result = collectionGraphQlMapper.convert(request);
 
         var expected =
                 """
@@ -57,21 +58,22 @@ class CollectionGraphQlMapperTest {
 
     @Test
     void convert_returnsExpectedResult_withFilter() {
-        var filterExpression = FilterExpression.builder()
+        var filter = FilterExpression.builder()
                 .value("Kerkstraat")
                 .path(Path.fromString("adres/straat"))
                 .build();
 
-        var request = CollectionRequest.builder(createModel())
-                .objectType("Nummeraanduiding")
-                .selectProperty("naam")
-                .selectObjectProperty("adres", builder -> builder.selectProperty("straat")
-                        .selectProperty("huisnummer")
+        var selection = SelectionBuilder.newCollectionNode(createModel(), "Nummeraanduiding")
+                .select("naam")
+                .selectObject("adres", builder -> builder //
+                        .select("straat")
+                        .select("huisnummer")
                         .build())
-                .filter(filterExpression)
+                .filter(filter)
                 .build();
 
-        ExecutionInput result = collectionGraphQlMapper.convert(request);
+        var request = selection.toRequest();
+        var result = collectionGraphQlMapper.convert(request);
 
         var expected =
                 """

@@ -36,7 +36,7 @@ public final class OrchestrateEngine {
         this.modelMapping = modelMapping;
         this.sources = sources;
         this.extensions = extensions;
-        this.fetchPlanner = new FetchPlanner(modelMapping, sources, new TreeResolver(modelMapping, sources));
+        this.fetchPlanner = new FetchPlanner(modelMapping, new TreeResolver(modelMapping, sources));
     }
 
     public Mono<ObjectResult> fetch(ObjectRequest request) {

@@ -51,7 +51,21 @@ public final class ObjectType {
 
     public Property getProperty(String name) {
         return Optional.ofNullable(propertyMap.get(name))
+                .orElseThrow(() -> new ModelException("Property not found: " + name));
+    }
+
+    public Attribute getAttribute(String name) {
+        return Optional.ofNullable(propertyMap.get(name))
+                .filter(Attribute.class::isInstance)
+                .map(Attribute.class::cast)
                 .orElseThrow(() -> new ModelException("Attribute not found: " + name));
+    }
+
+    public AbstractRelation getRelation(String name) {
+        return Optional.ofNullable(propertyMap.get(name))
+                .filter(AbstractRelation.class::isInstance)
+                .map(AbstractRelation.class::cast)
+                .orElseThrow(() -> new ModelException("Relation not found: " + name));
     }
 
     public boolean hasProperty(String name) {

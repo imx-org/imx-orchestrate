@@ -1,10 +1,8 @@
 package nl.geostandaarden.imx.orchestrate.source.file;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.Map;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
+import nl.geostandaarden.imx.orchestrate.engine.selection.SelectionBuilder;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.Model;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
@@ -16,10 +14,10 @@ class FileRepositoryTest {
 
     private static final Model MODEL = createModel();
 
-    private static final ObjectNode BUILDING1_NODE =
+    private static final com.fasterxml.jackson.databind.node.ObjectNode BUILDING1_NODE =
             new ObjectMapper().createObjectNode().put("id", 1).put("name", "Building 1");
 
-    private static final ObjectNode BUILDING2_NODE =
+    private static final com.fasterxml.jackson.databind.node.ObjectNode BUILDING2_NODE =
             new ObjectMapper().createObjectNode().put("id", 2).put("name", "Building 2");
 
     private static final Map<String, Object> BUILDING1_MAP = Map.of("id", 1, "name", "Building 1");
@@ -35,39 +33,41 @@ class FileRepositoryTest {
 
     @Test
     void findOne_ReturnsObject_IfExists() {
-        var objectRequest = ObjectRequest.builder(MODEL)
-                .objectType("Building")
+        var selection = SelectionBuilder.newObjectNode(MODEL, "Building")
                 .objectKey(Map.of("id", 1))
-                .selectProperty("id")
-                .selectProperty("name")
+                .select("id")
+                .select("name")
                 .build();
-        var result = fileRepository.findOne(objectRequest);
+
+        var request = selection.toRequest();
+        var result = fileRepository.findOne(request);
 
         StepVerifier.create(result).expectNext(BUILDING1_MAP).verifyComplete();
     }
 
     @Test
     void findOne_ReturnsEmptyMono_IfNotExists() {
-        var objectRequest = ObjectRequest.builder(MODEL)
-                .objectType("Building")
+        var selection = SelectionBuilder.newObjectNode(MODEL, "Building")
                 .objectKey(Map.of("id", 123))
-                .selectProperty("id")
-                .selectProperty("name")
+                .select("id")
+                .select("name")
                 .build();
-        var result = fileRepository.findOne(objectRequest);
+
+        var request = selection.toRequest();
+        var result = fileRepository.findOne(request);
 
         StepVerifier.create(result).verifyComplete();
     }
 
     @Test
     void find_ReturnsObjects_ForAllObjects() {
-        var collectionRequest = CollectionRequest.builder(MODEL)
-                .objectType("Building")
-                .selectProperty("id")
-                .selectProperty("name")
+        var selection = SelectionBuilder.newCollectionNode(MODEL, "Building")
+                .select("id")
+                .select("name")
                 .build();
 
-        var result = fileRepository.find(collectionRequest);
+        var request = selection.toRequest();
+        var result = fileRepository.find(request);
 
         StepVerifier.create(result)
                 .expectNext(BUILDING1_MAP)
@@ -91,6 +91,8 @@ class FileRepositoryTest {
     }
 
     private static Model createModel() {
-        return Model.builder().objectType(createBuildingType()).build();
+        return Model.builder() //
+                .objectType(createBuildingType())
+                .build();
     }
 }

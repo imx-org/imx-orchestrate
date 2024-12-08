@@ -1,25 +1,17 @@
 package nl.geostandaarden.imx.orchestrate.engine.selection;
 
 import java.util.Map;
-import lombok.Getter;
-import lombok.Singular;
-import lombok.experimental.SuperBuilder;
 import nl.geostandaarden.imx.orchestrate.engine.source.Source;
+import nl.geostandaarden.imx.orchestrate.model.AbstractRelation;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 
-@Getter
-@SuperBuilder(toBuilder = true)
-abstract class CompoundNode implements TreeNode {
+public interface CompoundNode extends TreeNode {
 
-    @Singular
-    private final Map<String, TreeNode> childNodes;
+    AbstractRelation getRelation();
 
-    private final ObjectType objectType;
+    Map<String, TreeNode> getChildNodes();
 
-    private final Source source;
+    ObjectType getObjectType();
 
-    @Override
-    public Map<String, TreeNode> getChildNodes() {
-        return childNodes;
-    }
+    Source getSource();
 }

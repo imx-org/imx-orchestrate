@@ -1,6 +1,7 @@
-package nl.geostandaarden.imx.orchestrate.engine.fetch.stage;
+package nl.geostandaarden.imx.orchestrate.engine.stage;
 
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.DataResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
@@ -13,5 +14,9 @@ public interface NextResultCombiner {
 
     default CollectionResult combine(CollectionResult result, DataResult nextResult) {
         throw new OrchestrateException("CollectionResult combiner not implemented.");
+    }
+
+    default BatchResult combine(BatchResult result, DataResult nextResult) {
+        throw new OrchestrateException("BatchResult combiner not implemented.");
     }
 }

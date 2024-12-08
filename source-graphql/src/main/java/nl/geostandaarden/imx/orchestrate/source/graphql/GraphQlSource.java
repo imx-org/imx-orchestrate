@@ -1,5 +1,6 @@
 package nl.geostandaarden.imx.orchestrate.source.graphql;
 
+import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.source.DataRepository;
 import nl.geostandaarden.imx.orchestrate.engine.source.Source;
 import nl.geostandaarden.imx.orchestrate.source.graphql.config.GraphQlOrchestrateConfig;
@@ -10,13 +11,10 @@ import nl.geostandaarden.imx.orchestrate.source.graphql.mapper.ObjectGraphQlMapp
 import nl.geostandaarden.imx.orchestrate.source.graphql.mapper.ResponseMapper;
 import nl.geostandaarden.imx.orchestrate.source.graphql.repository.GraphQlRepository;
 
+@RequiredArgsConstructor
 public class GraphQlSource implements Source {
 
     private final GraphQlOrchestrateConfig config;
-
-    GraphQlSource(GraphQlOrchestrateConfig config) {
-        this.config = config;
-    }
 
     @Override
     public DataRepository getDataRepository() {

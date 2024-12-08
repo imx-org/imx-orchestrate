@@ -4,32 +4,34 @@ import graphql.ExecutionInput;
 import graphql.language.Field;
 import graphql.language.SelectionSet;
 import java.util.List;
-import java.util.Set;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.DataRequest;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.SelectedProperty;
+import nl.geostandaarden.imx.orchestrate.engine.selection.CompoundNode;
+import nl.geostandaarden.imx.orchestrate.engine.selection.TreeNode;
 import nl.geostandaarden.imx.orchestrate.engine.source.SourceException;
 
-abstract class AbstractGraphQlMapper<T extends DataRequest> {
+abstract class AbstractGraphQlMapper<T extends DataRequest<?>> {
 
     abstract ExecutionInput convert(T request);
 
-    protected SelectionSet createSelectionSet(Set<SelectedProperty> selectedProperties) {
-        if (selectedProperties.isEmpty()) {
+    protected SelectionSet createSelectionSet(CompoundNode selection) {
+        if (selection.getChildNodes().isEmpty()) {
             throw new SourceException("SelectionSet cannot be empty.");
         }
 
-        var fields = selectedProperties.stream().map(this::getField).toList();
+        var fields = selection.getChildNodes().entrySet().stream()
+                .map(entry -> getField(entry.getKey(), entry.getValue()))
+                .toList();
 
         return new SelectionSet(fields);
     }
 
-    private Field getField(SelectedProperty property) {
+    private Field getField(String name, TreeNode node) {
         SelectionSet selectionSet = null;
 
-        if (property.getNestedRequest() != null) {
-            selectionSet = createSelectionSet(property.getNestedRequest().getSelectedProperties());
+        if (node instanceof CompoundNode compoundNode) {
+            selectionSet = createSelectionSet(compoundNode);
         }
 
-        return new Field(property.getProperty().getName(), List.of(), selectionSet);
+        return new Field(name, List.of(), selectionSet);
     }
 }

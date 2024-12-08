@@ -2,9 +2,8 @@ package nl.geostandaarden.imx.orchestrate.source.graphql.mapper;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import graphql.ExecutionInput;
 import java.util.Map;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchRequest;
+import nl.geostandaarden.imx.orchestrate.engine.selection.SelectionBuilder;
 import nl.geostandaarden.imx.orchestrate.engine.source.SourceException;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.Model;
@@ -26,22 +25,24 @@ class BatchGraphQlMapperTest {
                 .collectionSuffix("Collectie")
                 .batchSuffix("Batch")
                 .build();
+
         batchGraphQlMapper = new BatchGraphQlMapper(config);
     }
 
     @Test
     void convert_returnsExpectedResult_forRequest() {
-        var request = BatchRequest.builder(createModel())
+        var selection = SelectionBuilder.newBatchNode(createModel(), "Nummeraanduiding")
                 .objectKey(Map.of("identificatie", "12345"))
                 .objectKey(Map.of("identificatie", "34567"))
-                .objectType("Nummeraanduiding")
-                .selectProperty("naam")
-                .selectObjectProperty("adres", builder -> builder.selectProperty("straat")
-                        .selectProperty("huisnummer")
+                .select("naam")
+                .selectObject("adres", builder -> builder //
+                        .select("straat")
+                        .select("huisnummer")
                         .build())
                 .build();
 
-        ExecutionInput result = batchGraphQlMapper.convert(request);
+        var request = selection.toRequest();
+        var result = batchGraphQlMapper.convert(request);
 
         var expected =
                 """
@@ -60,15 +61,17 @@ class BatchGraphQlMapperTest {
 
     @Test
     void convert_throwsException_forRequest_withMoreThanOneKeyProperty() {
-        var request = BatchRequest.builder(createModel())
+        var selection = SelectionBuilder.newBatchNode(createModel(), "Nummeraanduiding")
                 .objectKey(Map.of("identificatie", "12345"))
                 .objectKey(Map.of("id", "34567"))
-                .objectType("Nummeraanduiding")
-                .selectProperty("naam")
-                .selectObjectProperty("adres", builder -> builder.selectProperty("straat")
-                        .selectProperty("huisnummer")
+                .select("naam")
+                .selectObject("adres", builder -> builder //
+                        .select("straat")
+                        .select("huisnummer")
                         .build())
                 .build();
+
+        var request = selection.toRequest();
 
         assertThrows(SourceException.class, () -> batchGraphQlMapper.convert(request));
     }

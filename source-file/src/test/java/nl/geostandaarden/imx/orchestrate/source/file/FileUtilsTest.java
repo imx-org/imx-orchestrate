@@ -9,9 +9,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.nio.file.Paths;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Stream;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.SelectedProperty;
+import nl.geostandaarden.imx.orchestrate.engine.selection.AttributeNode;
+import nl.geostandaarden.imx.orchestrate.engine.selection.TreeNode;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 import nl.geostandaarden.imx.orchestrate.model.types.ScalarTypes;
@@ -51,11 +52,13 @@ class FileUtilsTest {
         var objectNode = createObjectNode();
         var objectType = createObjectType();
 
-        var selectedProperties = Set.of(
-                SelectedProperty.forProperty(objectType.getProperty("id")),
-                SelectedProperty.forProperty(objectType.getProperty("name")));
+        Map<String, TreeNode> childNodes = Map.of(
+                "id",
+                AttributeNode.forAttribute(objectType.getAttribute("id")),
+                "name",
+                AttributeNode.forAttribute(objectType.getAttribute("name")));
 
-        var objectProperties = getObjectProperties(objectNode, selectedProperties);
+        var objectProperties = getObjectProperties(objectNode, childNodes);
 
         assertThat(objectProperties).containsEntry("id", 1).containsEntry("name", "Building 1");
     }
