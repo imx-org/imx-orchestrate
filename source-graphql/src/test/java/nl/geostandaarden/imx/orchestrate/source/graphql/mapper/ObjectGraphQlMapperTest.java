@@ -2,9 +2,8 @@ package nl.geostandaarden.imx.orchestrate.source.graphql.mapper;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import graphql.ExecutionInput;
 import java.util.Map;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
+import nl.geostandaarden.imx.orchestrate.engine.selection.SelectionBuilder;
 import nl.geostandaarden.imx.orchestrate.engine.source.SourceException;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.Model;
@@ -28,16 +27,17 @@ class ObjectGraphQlMapperTest {
 
     @Test
     void convert_returnsExpectedResult_forRequest() {
-        var request = ObjectRequest.builder(createModel())
+        var selection = SelectionBuilder.newObjectNode(createModel(), "Nummeraanduiding")
                 .objectKey(Map.of("identificatie", "12345", "id", "456"))
-                .objectType("Nummeraanduiding")
-                .selectProperty("naam")
-                .selectObjectProperty("adres", builder -> builder.selectProperty("straat")
-                        .selectProperty("huisnummer")
+                .select("naam")
+                .selectObject("adres", builder -> builder //
+                        .select("straat")
+                        .select("huisnummer")
                         .build())
                 .build();
 
-        ExecutionInput result = objectGraphQlMapper.convert(request);
+        var request = selection.toRequest();
+        var result = objectGraphQlMapper.convert(request);
 
         var expected =
                 """
@@ -56,10 +56,11 @@ class ObjectGraphQlMapperTest {
 
     @Test
     void convert_throwsException_forRequest_withoutSelectionSet() {
-        var request = ObjectRequest.builder(createModel())
+        var selection = SelectionBuilder.newObjectNode(createModel(), "Nummeraanduiding")
                 .objectKey(Map.of("identificatie", "12345"))
-                .objectType("Nummeraanduiding")
                 .build();
+
+        var request = selection.toRequest();
 
         assertThrows(SourceException.class, () -> objectGraphQlMapper.convert(request));
     }

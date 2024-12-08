@@ -28,12 +28,12 @@ objectTypes:
         target: adr:Address
         multiplicity: 1
         inverseName: isMainAddressOf
-        inverseMultiplicity: 1
+        inverseMultiplicity: 0..1
       hasSubAddress:
         target: adr:Address
         multiplicity: 0..*
         inverseName: isSubAddressOf
-        inverseMultiplicity: 1
+        inverseMultiplicity: 0..1
 
   Bridge:
     attributes:
