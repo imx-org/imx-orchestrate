@@ -34,7 +34,7 @@ jobs:
         run: |
           export SNAPSHOT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           export VERSION_TAG=v${SNAPSHOT_VERSION%%-*}
-          mvn -B release:prepare release:perform -B -DreleaseVersion=${{ github.event.inputs.releaseVersion }} -DdevelopmentVersion=${{ github.event.inputs.developmentVersion }}
+          mvn release:prepare release:perform -B -DreleaseVersion=${{ github.event.inputs.releaseVersion }} -DdevelopmentVersion=${{ github.event.inputs.developmentVersion }}
           gh release create $VERSION_TAG --generate-notes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
