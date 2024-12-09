@@ -5,9 +5,10 @@ import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
+import nl.geostandaarden.imx.orchestrate.engine.fetch.result.ObjectResultMapper;
+import nl.geostandaarden.imx.orchestrate.engine.fetch.stage.StageExecutor;
+import nl.geostandaarden.imx.orchestrate.engine.fetch.stage.StagePlanner;
 import nl.geostandaarden.imx.orchestrate.engine.selection.TreeResolver;
-import nl.geostandaarden.imx.orchestrate.engine.stage.StageExecutor;
-import nl.geostandaarden.imx.orchestrate.engine.stage.StagePlanner;
 import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
 import reactor.core.publisher.Flux;
 

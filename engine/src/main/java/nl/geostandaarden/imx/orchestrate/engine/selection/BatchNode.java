@@ -15,6 +15,8 @@ public final class BatchNode extends AbstractCompoundNode {
     private final Collection<Map<String, Object>> objectKeys;
 
     public BatchRequest toRequest() {
-        return BatchRequest.builder().selection(this).build();
+        return BatchRequest.builder() //
+                .selection(this)
+                .build();
     }
 }

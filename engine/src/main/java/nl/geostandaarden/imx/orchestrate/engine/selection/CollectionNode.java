@@ -12,6 +12,8 @@ public final class CollectionNode extends AbstractCompoundNode {
     private final FilterExpression filter;
 
     public CollectionRequest toRequest() {
-        return CollectionRequest.builder().selection(this).build();
+        return CollectionRequest.builder() //
+                .selection(this)
+                .build();
     }
 }

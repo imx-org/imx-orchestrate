@@ -1,4 +1,4 @@
-package nl.geostandaarden.imx.orchestrate.engine.stage;
+package nl.geostandaarden.imx.orchestrate.engine.fetch.stage;
 
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchResult;

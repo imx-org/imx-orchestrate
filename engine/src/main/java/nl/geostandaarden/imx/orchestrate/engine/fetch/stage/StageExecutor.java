@@ -1,9 +1,7 @@
-package nl.geostandaarden.imx.orchestrate.engine.stage;
+package nl.geostandaarden.imx.orchestrate.engine.fetch.stage;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchRequest;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import nl.geostandaarden.imx.orchestrate.engine.selection.BatchNode;
 import nl.geostandaarden.imx.orchestrate.engine.selection.CollectionNode;
@@ -11,6 +9,7 @@ import nl.geostandaarden.imx.orchestrate.engine.selection.ObjectNode;
 import reactor.core.publisher.Flux;
 import reactor.util.function.Tuples;
 
+@Slf4j
 public final class StageExecutor {
 
     public Flux<ObjectResult> execute(Stage stage) {
@@ -34,12 +33,13 @@ public final class StageExecutor {
     public Flux<ObjectResult> execute(Stage stage, ObjectNode selection) {
         var repository = selection.getSource().getDataRepository();
 
-        var request = ObjectRequest.builder() //
-                .selection(selection)
-                .build();
+        log.debug(("\n=== ObjectRequest ===\n")
+                .concat("Object type: " + selection.getObjectType().getName() + "\n")
+                .concat("Object key: " + selection.getObjectKey() + "\n")
+                .concat("Selection: " + selection.getChildNodes() + "\n"));
 
         return repository
-                .findOne(request)
+                .findOne(selection.toRequest())
                 .map(properties -> ObjectResult.builder()
                         .type(selection.getObjectType())
                         .properties(properties)
@@ -56,12 +56,13 @@ public final class StageExecutor {
     public Flux<ObjectResult> execute(Stage stage, CollectionNode selection) {
         var repository = selection.getSource().getDataRepository();
 
-        var request = CollectionRequest.builder() //
-                .selection(selection)
-                .build();
+        log.debug(("\n=== CollectionRequest ===\n")
+                .concat("Object type: " + selection.getObjectType().getName() + "\n")
+                .concat("Filter: " + selection.getFilter() + "\n")
+                .concat("Selection: " + selection.getChildNodes() + "\n"));
 
         return repository
-                .find(request)
+                .find(selection.toRequest())
                 .map(properties -> ObjectResult.builder()
                         .type(selection.getObjectType())
                         .properties(properties)
@@ -78,12 +79,13 @@ public final class StageExecutor {
     public Flux<ObjectResult> execute(Stage stage, BatchNode selection) {
         var repository = selection.getSource().getDataRepository();
 
-        var request = BatchRequest.builder() //
-                .selection(selection)
-                .build();
+        log.debug(("\n=== BatchRequest ===\n")
+                .concat("Object type: " + selection.getObjectType().getName() + "\n")
+                .concat("Object keys: " + selection.getObjectKeys() + "\n")
+                .concat("Selection: " + selection.getChildNodes() + "\n"));
 
         return repository
-                .findBatch(request)
+                .findBatch(selection.toRequest())
                 .map(properties -> ObjectResult.builder()
                         .type(selection.getObjectType())
                         .properties(properties)

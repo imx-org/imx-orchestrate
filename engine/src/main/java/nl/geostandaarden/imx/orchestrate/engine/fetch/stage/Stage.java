@@ -1,4 +1,4 @@
-package nl.geostandaarden.imx.orchestrate.engine.stage;
+package nl.geostandaarden.imx.orchestrate.engine.fetch.stage;
 
 import java.util.List;
 import lombok.AccessLevel;

@@ -1,4 +1,4 @@
-package nl.geostandaarden.imx.orchestrate.engine.fetch;
+package nl.geostandaarden.imx.orchestrate.engine.fetch.result;
 
 import static java.util.Collections.emptyList;
 import static nl.geostandaarden.imx.orchestrate.engine.fetch.FetchUtils.cast;

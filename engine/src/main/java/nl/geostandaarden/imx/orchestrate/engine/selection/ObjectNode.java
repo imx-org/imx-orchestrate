@@ -12,6 +12,8 @@ public final class ObjectNode extends AbstractCompoundNode {
     private final Map<String, Object> objectKey;
 
     public ObjectRequest toRequest() {
-        return ObjectRequest.builder().selection(this).build();
+        return ObjectRequest.builder() //
+                .selection(this)
+                .build();
     }
 }

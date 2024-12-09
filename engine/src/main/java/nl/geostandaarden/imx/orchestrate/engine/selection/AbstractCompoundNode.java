@@ -21,6 +21,13 @@ abstract class AbstractCompoundNode implements CompoundNode {
 
     private final Source source;
 
+    public String toString() {
+        return childNodes.entrySet().stream()
+                .map(entry -> entry.getValue() instanceof CompoundNode ? entry.toString() : entry.getKey())
+                .toList()
+                .toString();
+    }
+
     @Override
     public Map<String, TreeNode> getChildNodes() {
         return childNodes;
