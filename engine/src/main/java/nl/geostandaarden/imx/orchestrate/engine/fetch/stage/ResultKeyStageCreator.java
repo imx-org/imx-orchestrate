@@ -3,6 +3,7 @@ package nl.geostandaarden.imx.orchestrate.engine.fetch.stage;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Getter;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
@@ -30,9 +31,11 @@ public class ResultKeyStageCreator implements NextStageCreator {
     @Override
     public Mono<Stage> create(ObjectResult result) {
         if (selection instanceof ObjectNode objectNode) {
+            var objectKey = resolveObjectKey(result);
+
             if (selection.getRelation() instanceof Relation) {
                 var nextSelection = objectNode.toBuilder() //
-                        .objectKey(result.getKey())
+                        .objectKey(objectKey)
                         .build();
 
                 return Mono.just(new StagePlanner().plan(nextSelection, createNextResultCombiner(false)));
@@ -40,7 +43,7 @@ public class ResultKeyStageCreator implements NextStageCreator {
                 var filter = FilterExpression.builder()
                         .path(Path.fromString(
                                 inverseRelation.getOriginRelation().getName()))
-                        .value(result.getKey())
+                        .value(objectKey)
                         .build();
 
                 var nextSelection = CollectionNode.builder()
@@ -147,5 +150,19 @@ public class ResultKeyStageCreator implements NextStageCreator {
                 throw new UnsupportedOperationException();
             }
         };
+    }
+
+    private Map<String, Object> resolveObjectKey(ObjectResult result) {
+        var keyMapping = selection.getRelation().getKeyMapping();
+
+        if (keyMapping != null) {
+            return keyMapping.entrySet().stream() //
+                    .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, entry -> {
+                        // TODO: Support complex paths
+                        return result.getProperty(entry.getValue().getFirstSegment());
+                    }));
+        }
+
+        return result.getKey();
     }
 }
