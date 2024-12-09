@@ -29,11 +29,14 @@ public class CollectionGraphQlMapper extends AbstractGraphQlMapper<CollectionReq
     private final GraphQlOrchestrateConfig config;
 
     public ExecutionInput convert(CollectionRequest request) {
-        var filterExpression = request.getFilter();
+        var typeName = request.getSelection() //
+                .getObjectType()
+                .getName();
 
-        var fieldName = uncapitalize(request.getObjectType().getName()) + config.getCollectionSuffix();
+        var filterExpression = request.getSelection().getFilter();
+        var fieldName = uncapitalize(typeName) + config.getCollectionSuffix();
 
-        var selectionSet = createSelectionSet(request.getSelectedProperties());
+        var selectionSet = createSelectionSet(request.getSelection());
         var nodes = new Field(NODES, selectionSet);
 
         var fieldBuilder = Field.newField(fieldName).selectionSet(new SelectionSet(List.of(nodes)));

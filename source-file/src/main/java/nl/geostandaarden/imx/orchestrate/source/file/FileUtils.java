@@ -5,10 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.SelectedProperty;
+import nl.geostandaarden.imx.orchestrate.engine.selection.TreeNode;
 import nl.geostandaarden.imx.orchestrate.engine.source.SourceException;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 import nl.geostandaarden.imx.orchestrate.model.Property;
@@ -38,13 +37,8 @@ public class FileUtils {
         return objectNodeToMap(objectNode.deepCopy().retain(propertyNames));
     }
 
-    public static Map<String, Object> getObjectProperties(
-            ObjectNode objectNode, Set<SelectedProperty> selectedProperties) {
-        var propertyNames = selectedProperties.stream()
-                .map(SelectedProperty::getProperty)
-                .map(Property::getName)
-                .toList();
-
+    public static Map<String, Object> getObjectProperties(ObjectNode objectNode, Map<String, TreeNode> childNodes) {
+        var propertyNames = childNodes.keySet();
         return objectNodeToMap(objectNode.deepCopy().retain(propertyNames));
     }
 

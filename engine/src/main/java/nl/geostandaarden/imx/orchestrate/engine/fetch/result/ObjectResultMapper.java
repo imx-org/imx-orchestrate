@@ -1,4 +1,4 @@
-package nl.geostandaarden.imx.orchestrate.engine.fetch;
+package nl.geostandaarden.imx.orchestrate.engine.fetch.result;
 
 import static java.util.Collections.emptyList;
 import static nl.geostandaarden.imx.orchestrate.engine.fetch.FetchUtils.cast;
@@ -13,8 +13,9 @@ import java.util.stream.Stream;
 import lombok.Builder;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionResult;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.DataRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
+import nl.geostandaarden.imx.orchestrate.engine.selection.CompoundNode;
+import nl.geostandaarden.imx.orchestrate.engine.selection.TreeNode;
 import nl.geostandaarden.imx.orchestrate.model.AbstractRelation;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
@@ -42,49 +43,55 @@ public final class ObjectResultMapper {
 
     private final ModelMapping modelMapping;
 
-    public ObjectResult map(ObjectResult objectResult, DataRequest request) {
-        var sourceType = objectResult.getType();
-        var targetType = request.getObjectType();
+    public ObjectResult map(ObjectResult result, CompoundNode selection) {
+        var sourceType = result.getType();
+        var targetType = selection.getObjectType();
 
         return modelMapping
                 .getObjectTypeMapping(targetType, sourceType)
-                .map(typeMapping -> map(objectResult, request, targetType, typeMapping))
+                .map(typeMapping -> map(result, selection.getChildNodes(), selection.getObjectType(), typeMapping))
                 .orElseThrow(() ->
                         new OrchestrateException("Type mapping not found for source root: " + sourceType.getName()));
     }
 
     private ObjectResult map(
-            ObjectResult objectResult, DataRequest request, ObjectType targetType, ObjectTypeMapping typeMapping) {
+            ObjectResult result,
+            Map<String, TreeNode> childNodes,
+            ObjectType targetType,
+            ObjectTypeMapping typeMapping) {
         var properties = new HashMap<String, Object>();
         var lineageBuilder = ObjectLineage.builder();
 
-        request.getSelectedProperties().forEach(selectedProperty -> {
-            if (!targetType.hasProperty(selectedProperty.getName())) {
+        childNodes.forEach((name, node) -> {
+            if (!targetType.hasProperty(name)) {
                 return;
             }
 
-            var property = targetType.getProperty(selectedProperty.getName());
+            var property = targetType.getProperty(name);
             var propertyMapping = typeMapping.getPropertyMapping(property);
 
             if (propertyMapping.isEmpty() && property instanceof AbstractRelation relation) {
                 var nestedType = modelMapping.getTargetType(relation.getTarget());
 
-                modelMapping
-                        .getObjectTypeMapping(nestedType, objectResult.getType())
-                        .ifPresent(nestedTypeMapping -> {
-                            var propertyValue = map(objectResult, selectedProperty.getNestedRequest())
-                                    .getProperties();
-                            properties.put(property.getName(), propertyValue);
-                        });
+                if (node instanceof CompoundNode compoundNode) {
+                    modelMapping
+                            .getObjectTypeMapping(nestedType, result.getType())
+                            .ifPresent(nestedTypeMapping -> {
+                                var propertyValue = map(result, compoundNode).getProperties();
+                                properties.put(property.getName(), propertyValue);
+                            });
 
-                if (!property.getMultiplicity().isSingular()) {
-                    properties.put(property.getName(), emptyList());
+                    if (!property.getMultiplicity().isSingular()) {
+                        properties.put(property.getName(), emptyList());
+                    }
+
+                    return;
                 }
 
-                return;
+                throw new OrchestrateException("Node is not a compound node.");
             }
 
-            var propertyResult = mapProperty(objectResult, property, propertyMapping.get());
+            var propertyResult = mapProperty(result, property, propertyMapping.get());
 
             if (propertyResult == null) {
                 return;
@@ -102,8 +109,12 @@ public final class ObjectResultMapper {
             }
 
             if (property instanceof AbstractRelation) {
-                propertyValue = mapRelation(propertyResult.getValue(), selectedProperty.getNestedRequest());
-                lineageValue = getRelationLineageValue(propertyValue);
+                if (node instanceof CompoundNode compoundNode) {
+                    propertyValue = mapRelation(propertyResult.getValue(), compoundNode);
+                    lineageValue = getRelationLineageValue(propertyValue);
+                } else {
+                    throw new OrchestrateException("Node is not a compound node.");
+                }
             }
 
             if (propertyValue != null) {
@@ -123,7 +134,7 @@ public final class ObjectResultMapper {
                 lineageValues.forEach(value -> lineageBuilder.orchestratedDataElement(OrchestratedDataElement.builder()
                         .subject(ObjectReference.builder()
                                 .objectType(targetType.getName())
-                                .objectKey(objectResult.getKey())
+                                .objectKey(result.getKey())
                                 .build())
                         .property(property.getName())
                         .value(value)
@@ -175,14 +186,14 @@ public final class ObjectResultMapper {
         return attribute.getType().mapSourceValue(value);
     }
 
-    private Object mapRelation(Object value, DataRequest request) {
+    private Object mapRelation(Object value, CompoundNode selection) {
         if (value instanceof ObjectResult nestedObjectResult) {
-            return map(nestedObjectResult, request);
+            return map(nestedObjectResult, selection);
         }
 
         if (value instanceof CollectionResult nestedCollectionResult) {
             return nestedCollectionResult.getObjectResults().stream()
-                    .map(result -> map(result, request))
+                    .map(result -> map(result, selection))
                     .toList();
         }
 
@@ -190,12 +201,12 @@ public final class ObjectResultMapper {
             return nestedResultList.stream()
                     .flatMap(nestedResult -> {
                         if (nestedResult instanceof ObjectResult nestedObjectResult) {
-                            return Stream.of(map(nestedObjectResult, request));
+                            return Stream.of(map(nestedObjectResult, selection));
                         }
 
                         if (nestedResult instanceof CollectionResult nestedCollectionResult) {
                             return nestedCollectionResult.getObjectResults().stream()
-                                    .map(nestedObjectResult -> map(nestedObjectResult, request));
+                                    .map(nestedObjectResult -> map(nestedObjectResult, selection));
                         }
 
                         throw new OrchestrateException("Could not map nested result");

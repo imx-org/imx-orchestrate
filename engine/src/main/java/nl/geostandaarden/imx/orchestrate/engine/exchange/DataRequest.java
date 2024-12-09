@@ -1,14 +1,8 @@
 package nl.geostandaarden.imx.orchestrate.engine.exchange;
 
-import java.util.Set;
-import nl.geostandaarden.imx.orchestrate.model.Model;
-import nl.geostandaarden.imx.orchestrate.model.ObjectType;
+import nl.geostandaarden.imx.orchestrate.engine.selection.CompoundNode;
 
-public interface DataRequest {
+public interface DataRequest<S extends CompoundNode> {
 
-    Model getModel();
-
-    ObjectType getObjectType();
-
-    Set<SelectedProperty> getSelectedProperties();
+    S getSelection();
 }

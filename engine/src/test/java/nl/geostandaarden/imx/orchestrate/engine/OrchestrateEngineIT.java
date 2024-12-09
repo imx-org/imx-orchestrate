@@ -15,6 +15,7 @@ import java.util.Map;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
+import nl.geostandaarden.imx.orchestrate.engine.selection.SelectionBuilder;
 import nl.geostandaarden.imx.orchestrate.engine.source.DataRepository;
 import nl.geostandaarden.imx.orchestrate.ext.spatial.SpatialExtension;
 import nl.geostandaarden.imx.orchestrate.model.ComponentRegistry;
@@ -79,23 +80,26 @@ class OrchestrateEngineIT {
     void fetch_returnsBuilding_forBuildingMatch() {
         var targetModel = engine.getModelMapping().getTargetModel();
 
-        var request = ObjectRequest.builder(targetModel)
-                .objectType("Construction")
+        var selection = SelectionBuilder.newObjectNode(targetModel, "Construction")
                 .objectKey(Map.of("id", "BU0001"))
-                .selectProperty("id")
-                .selectObjectProperty("dimensions", builder -> builder.selectProperty("surface")
+                .select("id")
+                .selectObject("dimensions", builder -> builder //
+                        .select("surface")
                         .build())
-                .selectProperty("geometry")
-                .selectCollectionProperty("hasAddress", builder -> builder.selectProperty("postalCode")
-                        .selectProperty("houseNumber")
-                        .selectObjectProperty("parcel", relBuilder -> relBuilder
-                                .selectProperty("geometry")
+                .select("geometry")
+                .selectCollection("hasAddress", builder -> builder //
+                        .select("houseNumber")
+                        .selectObject("parcel", builder2 -> builder2 //
+                                .select("geometry")
                                 .build())
                         .build())
                 .build();
 
+        var request = selection.toRequest();
+
         when(adrRepositoryMock.findOne(any(ObjectRequest.class))).thenAnswer(invocation -> {
-            var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+            var objectType =
+                    ((ObjectRequest) invocation.getArgument(0)).getSelection().getObjectType();
 
             return switch (objectType.getName()) {
                 case "Address" -> Mono.just(
@@ -105,7 +109,8 @@ class OrchestrateEngineIT {
         });
 
         when(cityRepositoryMock.findOne(any(ObjectRequest.class))).thenAnswer(invocation -> {
-            var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+            var objectType =
+                    ((ObjectRequest) invocation.getArgument(0)).getSelection().getObjectType();
 
             return switch (objectType.getName()) {
                 case "Building" -> Mono.just(Map.of(
@@ -130,7 +135,9 @@ class OrchestrateEngineIT {
         });
 
         when(cityRepositoryMock.find(any(CollectionRequest.class))).thenAnswer(invocation -> {
-            var objectType = ((CollectionRequest) invocation.getArgument(0)).getObjectType();
+            var objectType = ((CollectionRequest) invocation.getArgument(0))
+                    .getSelection()
+                    .getObjectType();
 
             return switch (objectType.getName()) {
                 case "BuildingPart" -> Flux.just(Map.of("id", "BP0001", "hasMainAddress", Map.of("id", "A0001")));
@@ -139,7 +146,8 @@ class OrchestrateEngineIT {
         });
 
         when(landRepositoryMock.findOne(any(ObjectRequest.class))).thenAnswer(invocation -> {
-            var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+            var objectType =
+                    ((ObjectRequest) invocation.getArgument(0)).getSelection().getObjectType();
 
             return switch (objectType.getName()) {
                 case "Parcel" -> Mono.just(Map.of(
@@ -181,20 +189,26 @@ class OrchestrateEngineIT {
     void fetch_returnsBridge_forBridgeMatch() {
         var targetModel = engine.getModelMapping().getTargetModel();
 
-        var request = ObjectRequest.builder(targetModel)
-                .objectType("Construction")
+        var selection = SelectionBuilder.newObjectNode(targetModel, "Construction")
                 .objectKey(Map.of("id", "BR0001"))
-                .selectProperty("id")
-                .selectObjectProperty("dimensions", builder -> builder.selectProperty("surface")
+                .select("id")
+                .selectObject("dimensions", builder -> builder //
+                        .select("surface")
                         .build())
-                .selectProperty("geometry")
-                .selectCollectionProperty("hasAddress", builder -> builder.selectProperty("postalCode")
-                        .selectProperty("houseNumber")
+                .select("geometry")
+                .selectCollection("hasAddress", builder -> builder //
+                        .select("houseNumber")
+                        .selectObject("parcel", builder2 -> builder2 //
+                                .select("geometry")
+                                .build())
                         .build())
                 .build();
 
+        var request = selection.toRequest();
+
         when(cityRepositoryMock.findOne(any(ObjectRequest.class))).thenAnswer(invocation -> {
-            var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+            var objectType =
+                    ((ObjectRequest) invocation.getArgument(0)).getSelection().getObjectType();
 
             return switch (objectType.getName()) {
                 case "Building" -> Mono.empty();
@@ -227,14 +241,16 @@ class OrchestrateEngineIT {
     void fetch_returnsEmpty_forNoSourceMatch() {
         var targetModel = engine.getModelMapping().getTargetModel();
 
-        var request = ObjectRequest.builder(targetModel)
-                .objectType("Construction")
+        var selection = SelectionBuilder.newObjectNode(targetModel, "Construction")
                 .objectKey(Map.of("id", "BU0001"))
-                .selectProperty("id")
-                .selectObjectProperty("dimensions", builder -> builder.selectProperty("surface")
+                .select("id")
+                .selectObject("dimensions", builder -> builder //
+                        .select("surface")
                         .build())
-                .selectProperty("geometry")
+                .select("geometry")
                 .build();
+
+        var request = selection.toRequest();
 
         when(cityRepositoryMock.findOne(any(ObjectRequest.class))).thenReturn(Mono.empty());
 
@@ -247,15 +263,17 @@ class OrchestrateEngineIT {
     void fetch_picksFirstResult_forMultipleMatches() {
         var targetModel = engine.getModelMapping().getTargetModel();
 
-        var request = ObjectRequest.builder(targetModel)
-                .objectType("Construction")
+        var selection = SelectionBuilder.newObjectNode(targetModel, "Construction")
                 .objectKey(Map.of("id", "BU0001"))
-                .selectProperty("id")
-                .selectProperty("geometry")
+                .select("id")
+                .select("geometry")
                 .build();
 
+        var request = selection.toRequest();
+
         when(cityRepositoryMock.findOne(any(ObjectRequest.class))).thenAnswer(invocation -> {
-            var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+            var objectType =
+                    ((ObjectRequest) invocation.getArgument(0)).getSelection().getObjectType();
 
             return switch (objectType.getName()) {
                 case "Building" -> Mono.just(Map.of(
@@ -281,11 +299,12 @@ class OrchestrateEngineIT {
     void fetch_returnsEmptyList_forEmptySources() {
         var targetModel = engine.getModelMapping().getTargetModel();
 
-        var request = CollectionRequest.builder(targetModel)
-                .objectType("Construction")
-                .selectProperty("id")
-                .selectProperty("geometry")
+        var selection = SelectionBuilder.newCollectionNode(targetModel, "Construction")
+                .select("id")
+                .select("geometry")
                 .build();
+
+        var request = selection.toRequest();
 
         when(cityRepositoryMock.find(any(CollectionRequest.class))).thenReturn(Flux.empty());
 
@@ -300,14 +319,17 @@ class OrchestrateEngineIT {
     void fetch_returnsMergedList_forMultipleSources() {
         var targetModel = engine.getModelMapping().getTargetModel();
 
-        var request = CollectionRequest.builder(targetModel)
-                .objectType("Construction")
-                .selectProperty("id")
-                .selectProperty("geometry")
+        var selection = SelectionBuilder.newCollectionNode(targetModel, "Construction")
+                .select("id")
+                .select("geometry")
                 .build();
 
+        var request = selection.toRequest();
+
         when(cityRepositoryMock.find(any(CollectionRequest.class))).thenAnswer(invocation -> {
-            var objectType = ((CollectionRequest) invocation.getArgument(0)).getObjectType();
+            var objectType = ((CollectionRequest) invocation.getArgument(0))
+                    .getSelection()
+                    .getObjectType();
 
             return switch (objectType.getName()) {
                 case "Building" -> Flux.just(
@@ -329,17 +351,20 @@ class OrchestrateEngineIT {
     void fetch_returnsAddressWithNestedBuilding_forDeepRelation() {
         var targetModel = engine.getModelMapping().getTargetModel();
 
-        var request = ObjectRequest.builder(targetModel)
-                .objectType("Address")
+        var selection = SelectionBuilder.newObjectNode(targetModel, "Address")
                 .objectKey(Map.of("id", "A0001"))
-                .selectProperty("id")
-                .selectCollectionProperty("isAddressOf", builder -> builder.selectProperty("id")
-                        .selectProperty("geometry")
+                .select("id")
+                .selectCollection("isAddressOf", builder -> builder //
+                        .select("id")
+                        .select("geometry")
                         .build())
                 .build();
 
+        var request = selection.toRequest();
+
         when(adrRepositoryMock.findOne(any(ObjectRequest.class))).thenAnswer(invocation -> {
-            var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+            var objectType =
+                    ((ObjectRequest) invocation.getArgument(0)).getSelection().getObjectType();
 
             return switch (objectType.getName()) {
                 case "Address" -> Mono.just(Map.of("id", "A0001"));
@@ -348,7 +373,8 @@ class OrchestrateEngineIT {
         });
 
         when(cityRepositoryMock.findOne(any(ObjectRequest.class))).thenAnswer(invocation -> {
-            var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+            var objectType =
+                    ((ObjectRequest) invocation.getArgument(0)).getSelection().getObjectType();
 
             return switch (objectType.getName()) {
                 case "Building" -> Mono.just(
@@ -359,8 +385,8 @@ class OrchestrateEngineIT {
 
         when(cityRepositoryMock.find(any(CollectionRequest.class))).thenAnswer(invocation -> {
             var collectionRequest = ((CollectionRequest) invocation.getArgument(0));
-            var objectType = collectionRequest.getObjectType();
-            var filter = collectionRequest.getFilter();
+            var objectType = collectionRequest.getSelection().getObjectType();
+            var filter = collectionRequest.getSelection().getFilter();
 
             if (!"BuildingPart".equals(objectType.getName()) || filter == null) {
                 throw new IllegalStateException();
@@ -401,16 +427,19 @@ class OrchestrateEngineIT {
     void fetch_returnsAddressWithNestedBuilding_forDeepRelationWithOnlyKeySelected() {
         var targetModel = engine.getModelMapping().getTargetModel();
 
-        var request = ObjectRequest.builder(targetModel)
-                .objectType("Address")
+        var selection = SelectionBuilder.newObjectNode(targetModel, "Address")
                 .objectKey(Map.of("id", "A0001"))
-                .selectProperty("id")
-                .selectCollectionProperty(
-                        "isAddressOf", builder -> builder.selectProperty("id").build())
+                .select("id")
+                .selectCollection("isAddressOf", builder -> builder //
+                        .select("id")
+                        .build())
                 .build();
 
+        var request = selection.toRequest();
+
         when(adrRepositoryMock.findOne(any(ObjectRequest.class))).thenAnswer(invocation -> {
-            var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+            var objectType =
+                    ((ObjectRequest) invocation.getArgument(0)).getSelection().getObjectType();
 
             return switch (objectType.getName()) {
                 case "Address" -> Mono.just(Map.of("id", "A0001"));
@@ -419,7 +448,8 @@ class OrchestrateEngineIT {
         });
 
         when(cityRepositoryMock.findOne(any(ObjectRequest.class))).thenAnswer(invocation -> {
-            var objectType = ((ObjectRequest) invocation.getArgument(0)).getObjectType();
+            var objectType =
+                    ((ObjectRequest) invocation.getArgument(0)).getSelection().getObjectType();
 
             return switch (objectType.getName()) {
                 case "Building" -> Mono.just(Map.of("id", "BU0001"));
@@ -429,8 +459,8 @@ class OrchestrateEngineIT {
 
         when(cityRepositoryMock.find(any(CollectionRequest.class))).thenAnswer(invocation -> {
             var collectionRequest = ((CollectionRequest) invocation.getArgument(0));
-            var objectType = collectionRequest.getObjectType();
-            var filter = collectionRequest.getFilter();
+            var objectType = collectionRequest.getSelection().getObjectType();
+            var filter = collectionRequest.getSelection().getFilter();
 
             if (!"BuildingPart".equals(objectType.getName()) || filter == null) {
                 throw new IllegalStateException();

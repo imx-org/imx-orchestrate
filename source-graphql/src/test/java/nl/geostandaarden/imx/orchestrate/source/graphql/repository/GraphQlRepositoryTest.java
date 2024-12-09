@@ -10,6 +10,7 @@ import java.util.Map;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
+import nl.geostandaarden.imx.orchestrate.engine.selection.SelectionBuilder;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.Model;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
@@ -86,27 +87,30 @@ class GraphQlRepositoryTest {
     }
 
     private ObjectRequest getObjectRequest() {
-        return ObjectRequest.builder(createModel())
-                .objectType("abc")
+        var selection = SelectionBuilder.newObjectNode(createModel(), "abc")
                 .objectKey(Map.of("id", "123"))
-                .selectProperty("attr")
+                .select("attr")
                 .build();
+
+        return selection.toRequest();
     }
 
     private CollectionRequest getCollectionRequest() {
-        return CollectionRequest.builder(createModel())
-                .objectType("abc")
-                .selectProperty("attr")
+        var selection = SelectionBuilder.newCollectionNode(createModel(), "abc")
+                .select("attr")
                 .build();
+
+        return selection.toRequest();
     }
 
     private BatchRequest getBatchRequest() {
-        return BatchRequest.builder(createModel())
-                .objectType("abc")
+        var selection = SelectionBuilder.newBatchNode(createModel(), "abc")
                 .objectKey(Map.of("id", "123"))
                 .objectKey(Map.of("id", "456"))
-                .selectProperty("attr")
+                .select("attr")
                 .build();
+
+        return selection.toRequest();
     }
 
     private Model createModel() {
