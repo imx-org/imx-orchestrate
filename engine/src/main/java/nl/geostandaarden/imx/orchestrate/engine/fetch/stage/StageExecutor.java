@@ -36,7 +36,7 @@ public final class StageExecutor {
         log.debug(("\n=== ObjectRequest ===\n")
                 .concat("Object type: " + selection.getObjectType().getName() + "\n")
                 .concat("Object key: " + selection.getObjectKey() + "\n")
-                .concat("Selection: " + selection.getChildNodes() + "\n"));
+                .concat("Selection: " + selection + "\n"));
 
         return repository
                 .findOne(selection.toRequest())
@@ -59,7 +59,7 @@ public final class StageExecutor {
         log.debug(("\n=== CollectionRequest ===\n")
                 .concat("Object type: " + selection.getObjectType().getName() + "\n")
                 .concat("Filter: " + selection.getFilter() + "\n")
-                .concat("Selection: " + selection.getChildNodes() + "\n"));
+                .concat("Selection: " + selection + "\n"));
 
         return repository
                 .find(selection.toRequest())
@@ -82,7 +82,7 @@ public final class StageExecutor {
         log.debug(("\n=== BatchRequest ===\n")
                 .concat("Object type: " + selection.getObjectType().getName() + "\n")
                 .concat("Object keys: " + selection.getObjectKeys() + "\n")
-                .concat("Selection: " + selection.getChildNodes() + "\n"));
+                .concat("Selection: " + selection + "\n"));
 
         return repository
                 .findBatch(selection.toRequest())
