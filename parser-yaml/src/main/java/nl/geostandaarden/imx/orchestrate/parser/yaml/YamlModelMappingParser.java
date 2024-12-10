@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import nl.geostandaarden.imx.orchestrate.model.ComponentRegistry;
+import nl.geostandaarden.imx.orchestrate.model.ConditionalWhen;
 import nl.geostandaarden.imx.orchestrate.model.Model;
 import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
 import nl.geostandaarden.imx.orchestrate.model.Multiplicity;
@@ -20,6 +21,7 @@ import nl.geostandaarden.imx.orchestrate.parser.yaml.deserializers.ModelLoaderDe
 import nl.geostandaarden.imx.orchestrate.parser.yaml.deserializers.MultiplicityDeserializer;
 import nl.geostandaarden.imx.orchestrate.parser.yaml.deserializers.ResultCombinerDeserializer;
 import nl.geostandaarden.imx.orchestrate.parser.yaml.deserializers.ResultMapperDeserializer;
+import nl.geostandaarden.imx.orchestrate.parser.yaml.mixins.ConditionalWhenMixin;
 import nl.geostandaarden.imx.orchestrate.parser.yaml.mixins.ModelMappingMixin;
 import nl.geostandaarden.imx.orchestrate.parser.yaml.mixins.PathMappingMixin;
 import nl.geostandaarden.imx.orchestrate.parser.yaml.mixins.PropertyMappingMixin;
@@ -37,6 +39,7 @@ public final class YamlModelMappingParser {
         var module = new SimpleModule()
                 .setMixInAnnotation(ModelMapping.ModelMappingBuilder.class, ModelMappingMixin.class)
                 .setMixInAnnotation(PropertyMapping.PropertyMappingBuilder.class, PropertyMappingMixin.class)
+                .setMixInAnnotation(ConditionalWhen.ConditionalWhenBuilder.class, ConditionalWhenMixin.class)
                 .setMixInAnnotation(PathMapping.PathMappingBuilder.class, PathMappingMixin.class)
                 .addDeserializer(Model.class, new ModelLoaderDeserializer(modelLoaderRegistry, valueTypeRegistry))
                 .addDeserializer(ResultCombiner.class, new ResultCombinerDeserializer(componentRegistry))

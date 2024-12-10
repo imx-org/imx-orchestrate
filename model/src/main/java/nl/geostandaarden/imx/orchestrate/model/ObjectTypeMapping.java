@@ -1,5 +1,6 @@
 package nl.geostandaarden.imx.orchestrate.model;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.Builder;
@@ -16,6 +17,9 @@ public final class ObjectTypeMapping {
 
     @Singular
     private final Map<String, PropertyMapping> propertyMappings;
+
+    @Singular
+    private final List<ConditionalMapping> conditionalMappings;
 
     public Optional<PropertyMapping> getPropertyMapping(String name) {
         return Optional.ofNullable(propertyMappings.get(name));
