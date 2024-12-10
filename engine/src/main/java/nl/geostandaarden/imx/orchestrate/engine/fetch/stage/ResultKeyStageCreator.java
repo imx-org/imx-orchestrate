@@ -50,7 +50,7 @@ public class ResultKeyStageCreator implements NextStageCreator {
                         .relation(inverseRelation)
                         .childNodes(selection.getChildNodes())
                         .objectType(objectNode.getObjectType())
-                        .source(selection.getSource())
+                        .modelAlias(selection.getModelAlias())
                         .filter(filter)
                         .build();
 
@@ -72,7 +72,7 @@ public class ResultKeyStageCreator implements NextStageCreator {
                             .relation(relation)
                             .childNodes(selection.getChildNodes())
                             .objectType(collectionNode.getObjectType())
-                            .source(selection.getSource())
+                            .modelAlias(selection.getModelAlias())
                             .objectKeys(objectKeys)
                             .build();
 
@@ -82,7 +82,7 @@ public class ResultKeyStageCreator implements NextStageCreator {
                             .relation(relation)
                             .childNodes(selection.getChildNodes())
                             .objectType(collectionNode.getObjectType())
-                            .source(selection.getSource())
+                            .modelAlias(selection.getModelAlias())
                             .objectKey(objectKeys.get(0))
                             .build();
 

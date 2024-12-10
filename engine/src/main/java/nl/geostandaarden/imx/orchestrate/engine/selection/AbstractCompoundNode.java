@@ -4,7 +4,6 @@ import java.util.Map;
 import lombok.Getter;
 import lombok.Singular;
 import lombok.experimental.SuperBuilder;
-import nl.geostandaarden.imx.orchestrate.engine.source.Source;
 import nl.geostandaarden.imx.orchestrate.model.AbstractRelation;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 
@@ -19,7 +18,7 @@ abstract class AbstractCompoundNode implements CompoundNode {
 
     private final ObjectType objectType;
 
-    private final Source source;
+    private final String modelAlias;
 
     public String toString() {
         return childNodes.entrySet().stream()

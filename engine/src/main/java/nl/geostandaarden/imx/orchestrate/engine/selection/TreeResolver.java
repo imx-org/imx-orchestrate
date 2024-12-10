@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
-import nl.geostandaarden.imx.orchestrate.engine.source.Source;
 import nl.geostandaarden.imx.orchestrate.model.AbstractRelation;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
@@ -21,8 +20,6 @@ import nl.geostandaarden.imx.orchestrate.model.PathMapping;
 public final class TreeResolver {
 
     private final ModelMapping modelMapping;
-
-    private final Map<String, Source> sources;
 
     public ObjectNode resolve(ObjectNode selection, ObjectTypeMapping typeMapping) {
         var sourcePaths = resolveSourcePaths(selection, typeMapping);
@@ -89,14 +86,13 @@ public final class TreeResolver {
             Map<String, Object> objectKey) {
         var childNodes = createChildNodes(sourceTypeRef, sourcePaths);
         var sourceType = modelMapping.getSourceType(sourceTypeRef);
-        var source = sources.get(sourceTypeRef.getModelAlias());
 
         return ObjectNode.builder()
                 .relation(relation)
                 .childNodes(childNodes)
                 .objectType(sourceType)
                 .objectKey(objectKey)
-                .source(source)
+                .modelAlias(sourceTypeRef.getModelAlias())
                 .build();
     }
 
@@ -104,13 +100,12 @@ public final class TreeResolver {
             ObjectTypeRef sourceTypeRef, Set<Path> sourcePaths, AbstractRelation relation) {
         var childNodes = createChildNodes(sourceTypeRef, sourcePaths);
         var sourceType = modelMapping.getSourceType(sourceTypeRef);
-        var source = sources.get(sourceTypeRef.getModelAlias());
 
         return CollectionNode.builder()
                 .relation(relation)
                 .childNodes(childNodes)
                 .objectType(sourceType)
-                .source(source)
+                .modelAlias(sourceTypeRef.getModelAlias())
                 .build();
     }
 
@@ -121,14 +116,13 @@ public final class TreeResolver {
             Collection<Map<String, Object>> objectKeys) {
         var childNodes = createChildNodes(sourceTypeRef, sourcePaths);
         var sourceType = modelMapping.getSourceType(sourceTypeRef);
-        var source = sources.get(sourceTypeRef.getModelAlias());
 
         return BatchNode.builder()
                 .relation(relation)
                 .childNodes(childNodes)
                 .objectType(sourceType)
                 .objectKeys(objectKeys)
-                .source(source)
+                .modelAlias(sourceTypeRef.getModelAlias())
                 .build();
     }
 
