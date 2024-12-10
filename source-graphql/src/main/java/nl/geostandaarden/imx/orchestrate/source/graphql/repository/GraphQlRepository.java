@@ -52,7 +52,9 @@ public class GraphQlRepository implements DataRepository {
         return true;
     }
 
-    private String getName(DataRequest request) {
-        return request.getObjectType().getName();
+    private String getName(DataRequest<?> request) {
+        return request.getSelection() //
+                .getObjectType()
+                .getName();
     }
 }

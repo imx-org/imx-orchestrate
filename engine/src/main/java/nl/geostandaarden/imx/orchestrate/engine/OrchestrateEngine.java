@@ -11,6 +11,7 @@ import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
 import nl.geostandaarden.imx.orchestrate.engine.fetch.FetchPlanner;
+import nl.geostandaarden.imx.orchestrate.engine.selection.TreeResolver;
 import nl.geostandaarden.imx.orchestrate.engine.source.Source;
 import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
 import nl.geostandaarden.imx.orchestrate.model.OrchestrateExtension;
@@ -35,7 +36,7 @@ public final class OrchestrateEngine {
         this.modelMapping = modelMapping;
         this.sources = sources;
         this.extensions = extensions;
-        this.fetchPlanner = new FetchPlanner(modelMapping, sources);
+        this.fetchPlanner = new FetchPlanner(modelMapping, sources, new TreeResolver(modelMapping));
     }
 
     public Mono<ObjectResult> fetch(ObjectRequest request) {

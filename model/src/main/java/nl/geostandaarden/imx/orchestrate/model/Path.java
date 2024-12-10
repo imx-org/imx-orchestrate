@@ -1,8 +1,9 @@
 package nl.geostandaarden.imx.orchestrate.model;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -35,9 +36,20 @@ public final class Path {
         return new Path(segments.subList(1, segments.size()));
     }
 
+    public Path append(String segment) {
+        var newSegments = new ArrayList<>(segments);
+        newSegments.add(segment);
+        return new Path(Collections.unmodifiableList(newSegments));
+    }
+
     public Path append(Path path) {
-        return new Path(
-                Stream.concat(segments.stream(), path.getSegments().stream()).toList());
+        var newSegments = new ArrayList<>(segments);
+        newSegments.addAll(path.getSegments());
+        return new Path(Collections.unmodifiableList(newSegments));
+    }
+
+    public static Path empty() {
+        return new Path(List.of());
     }
 
     public static Path fromString(String path) {

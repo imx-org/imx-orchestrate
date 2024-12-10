@@ -10,11 +10,11 @@ import reactor.core.publisher.Mono;
 
 public interface DataRepository {
 
-    Mono<Map<String, Object>> findOne(ObjectRequest objectRequest);
+    Mono<Map<String, Object>> findOne(ObjectRequest request);
 
-    Flux<Map<String, Object>> find(CollectionRequest collectionRequest);
+    Flux<Map<String, Object>> find(CollectionRequest request);
 
-    default Flux<Map<String, Object>> findBatch(BatchRequest batchRequest) {
+    default Flux<Map<String, Object>> findBatch(BatchRequest request) {
         throw new SourceException("Batch loading not supported.");
     }
 

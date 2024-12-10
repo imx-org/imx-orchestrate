@@ -22,11 +22,14 @@ public class ObjectGraphQlMapper extends AbstractGraphQlMapper<ObjectRequest> {
 
     @Override
     public ExecutionInput convert(ObjectRequest request) {
-        var fieldName = uncapitalize(request.getObjectType().getName());
+        var typeName = request.getSelection() //
+                .getObjectType()
+                .getName();
 
+        var fieldName = uncapitalize(typeName);
         var arguments = getArguments(request);
 
-        var selectionSet = createSelectionSet(request.getSelectedProperties());
+        var selectionSet = createSelectionSet(request.getSelection());
         var queryField = new Field(fieldName, arguments, selectionSet);
 
         var query = OperationDefinition.newOperationDefinition()
@@ -41,7 +44,7 @@ public class ObjectGraphQlMapper extends AbstractGraphQlMapper<ObjectRequest> {
     }
 
     private List<Argument> getArguments(ObjectRequest request) {
-        return request.getObjectKey().entrySet().stream()
+        return request.getSelection().getObjectKey().entrySet().stream()
                 .map(entry -> getArgument(entry.getKey(), entry.getValue()))
                 .toList();
     }

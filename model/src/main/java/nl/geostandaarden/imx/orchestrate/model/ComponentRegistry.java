@@ -10,8 +10,11 @@ import nl.geostandaarden.imx.orchestrate.model.combiners.NoopCombinerType;
 import nl.geostandaarden.imx.orchestrate.model.combiners.ResultCombiner;
 import nl.geostandaarden.imx.orchestrate.model.combiners.ResultCombinerType;
 import nl.geostandaarden.imx.orchestrate.model.combiners.SumCombinerType;
+import nl.geostandaarden.imx.orchestrate.model.mappers.AgeMapperType;
 import nl.geostandaarden.imx.orchestrate.model.mappers.AppendMapperType;
 import nl.geostandaarden.imx.orchestrate.model.mappers.CelMapperType;
+import nl.geostandaarden.imx.orchestrate.model.mappers.IsEmptyMapperType;
+import nl.geostandaarden.imx.orchestrate.model.mappers.IsNotEmptyMapperType;
 import nl.geostandaarden.imx.orchestrate.model.mappers.PrependMapperType;
 import nl.geostandaarden.imx.orchestrate.model.mappers.ResultMapper;
 import nl.geostandaarden.imx.orchestrate.model.mappers.ResultMapperType;
@@ -32,7 +35,13 @@ public final class ComponentRegistry {
     private final Map<String, MatcherType> matcherTypes = new HashMap<>();
 
     public ComponentRegistry() {
-        register(new AppendMapperType(), new CelMapperType(), new PrependMapperType());
+        register(
+                new AppendMapperType(),
+                new AgeMapperType(),
+                new CelMapperType(),
+                new IsEmptyMapperType(),
+                new IsNotEmptyMapperType(),
+                new PrependMapperType());
         register(
                 new CoalesceCombinerType(),
                 new JoinCombinerType(),

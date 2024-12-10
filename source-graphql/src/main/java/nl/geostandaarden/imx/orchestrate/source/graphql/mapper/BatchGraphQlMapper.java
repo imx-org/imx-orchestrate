@@ -24,11 +24,14 @@ public class BatchGraphQlMapper extends AbstractGraphQlMapper<BatchRequest> {
     private final GraphQlOrchestrateConfig config;
 
     public ExecutionInput convert(BatchRequest request) {
-        var fieldName = uncapitalize(request.getObjectType().getName()) + config.getBatchSuffix();
+        var typeName = request.getSelection() //
+                .getObjectType()
+                .getName();
 
+        var fieldName = uncapitalize(typeName) + config.getBatchSuffix();
         var arguments = getArguments(request);
 
-        var selectionSet = createSelectionSet(request.getSelectedProperties());
+        var selectionSet = createSelectionSet(request.getSelection());
         var queryField = new Field(fieldName, arguments, selectionSet);
 
         var query = OperationDefinition.newOperationDefinition()
@@ -45,7 +48,7 @@ public class BatchGraphQlMapper extends AbstractGraphQlMapper<BatchRequest> {
     private List<Argument> getArguments(BatchRequest request) {
         var argumentMap = new ConcurrentHashMap<String, List<String>>();
 
-        for (var objectKey : request.getObjectKeys()) {
+        for (var objectKey : request.getSelection().getObjectKeys()) {
             var entry = objectKey.entrySet().stream().findFirst().orElseThrow();
 
             if (!argumentMap.containsKey(entry.getKey())) {

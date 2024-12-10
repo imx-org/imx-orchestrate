@@ -12,19 +12,26 @@ import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.SelectedField;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateEngine;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
-import nl.geostandaarden.imx.orchestrate.engine.exchange.AbstractDataRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.DataRequest;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.DataResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
+import nl.geostandaarden.imx.orchestrate.engine.selection.AttributeNode;
+import nl.geostandaarden.imx.orchestrate.engine.selection.BatchNode;
+import nl.geostandaarden.imx.orchestrate.engine.selection.CollectionNode;
+import nl.geostandaarden.imx.orchestrate.engine.selection.ObjectNode;
+import nl.geostandaarden.imx.orchestrate.engine.selection.TreeNode;
 import nl.geostandaarden.imx.orchestrate.gateway.schema.SchemaConstants;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
+import nl.geostandaarden.imx.orchestrate.model.Model;
 import nl.geostandaarden.imx.orchestrate.model.ObjectType;
 import nl.geostandaarden.imx.orchestrate.model.Path;
 import nl.geostandaarden.imx.orchestrate.model.filters.FilterExpression;
@@ -61,22 +68,26 @@ public final class GenericDataFetcher implements DataFetcher<Mono<? extends Data
         return hasLineageFieldName.equals(name) || name.startsWith("__");
     }
 
-    private DataRequest createRequest(DataFetchingEnvironment environment) {
+    private DataRequest<?> createRequest(DataFetchingEnvironment environment) {
         var fieldName = environment.getField().getName();
-        var fieldTypeName = unwrapAll(environment.getFieldType()).getName();
         var targetModel = engine.getModelMapping().getTargetModel();
+        var targetType =
+                targetModel.getObjectType(unwrapAll(environment.getFieldType()).getName());
+        var childNodes = getChildNodes(targetModel, targetType, environment.getSelectionSet());
 
         if (fieldName.endsWith(SchemaConstants.QUERY_COLLECTION_SUFFIX)) {
-            var requestBuilder = CollectionRequest.builder(targetModel).objectType(fieldTypeName);
+            Map<String, Object> filterArg = environment.getArgument(SchemaConstants.QUERY_FILTER_ARGUMENT);
 
-            Map<String, Object> filterValue = environment.getArgument(SchemaConstants.QUERY_FILTER_ARGUMENT);
+            var filter = filterArg != null ? createFilterExpression(targetType, filterArg) : null;
 
-            if (filterValue != null) {
-                var filter = createFilterExpression(targetModel.getObjectType(fieldTypeName), filterValue);
-                requestBuilder.filter(filter);
-            }
+            var selection = CollectionNode.builder()
+                    .childNodes(childNodes)
+                    .objectType(targetType)
+                    .filter(filter)
+                    .build();
 
-            return selectProperties(requestBuilder, environment.getSelectionSet())
+            return CollectionRequest.builder() //
+                    .selection(selection)
                     .build();
         }
 
@@ -84,21 +95,32 @@ public final class GenericDataFetcher implements DataFetcher<Mono<? extends Data
             List<Map<String, Object>> objectKeys =
                     cast(environment.getArguments().get(SchemaConstants.BATCH_KEYS_ARG));
 
-            var requestBuilder =
-                    BatchRequest.builder(targetModel).objectType(fieldTypeName).objectKeys(objectKeys);
+            var selection = BatchNode.builder()
+                    .childNodes(childNodes)
+                    .objectType(targetType)
+                    .objectKeys(objectKeys)
+                    .build();
 
-            return selectProperties(requestBuilder, environment.getSelectionSet())
+            return BatchRequest.builder() //
+                    .selection(selection)
                     .build();
         }
 
-        var requestBuilder =
-                ObjectRequest.builder(targetModel).objectType(fieldTypeName).objectKey(environment.getArguments());
+        var selection = ObjectNode.builder()
+                .childNodes(childNodes)
+                .objectType(targetType)
+                .objectKey(environment.getArguments())
+                .build();
 
-        return selectProperties(requestBuilder, environment.getSelectionSet()).build();
+        return ObjectRequest.builder() //
+                .selection(selection)
+                .build();
     }
 
-    private <B extends AbstractDataRequest.Builder<B>> B selectProperties(
-            B requestBuilder, DataFetchingFieldSelectionSet selectionSet) {
+    private Map<String, TreeNode> getChildNodes(
+            Model model, ObjectType targetType, DataFetchingFieldSelectionSet selectionSet) {
+        var childNodes = new LinkedHashMap<String, TreeNode>();
+
         selectionSet.getImmediateFields().stream()
                 .filter(not(this::isReservedField))
                 .forEach(selectedField -> {
@@ -106,27 +128,32 @@ public final class GenericDataFetcher implements DataFetcher<Mono<? extends Data
                     var fieldType = unwrapNonNull(selectedField.getType());
 
                     if (fieldType instanceof GraphQLObjectType) {
-                        requestBuilder.selectObjectProperty(fieldName, nestedRequestBuilder -> {
-                            selectProperties(nestedRequestBuilder, selectedField.getSelectionSet());
-                            return nestedRequestBuilder.build();
-                        });
+                        var relation = targetType.getRelation(fieldName);
+                        var nestedType = model.getObjectType(relation.getTarget());
 
-                        return;
+                        childNodes.put(
+                                fieldName,
+                                ObjectNode.builder()
+                                        .objectType(nestedType)
+                                        .childNodes(getChildNodes(model, nestedType, selectedField.getSelectionSet()))
+                                        .build());
+                    } else if (fieldType instanceof GraphQLList && !isScalar(unwrapAll(fieldType))) {
+                        var relation = targetType.getRelation(fieldName);
+                        var nestedType = model.getObjectType(relation.getTarget());
+
+                        childNodes.put(
+                                fieldName,
+                                CollectionNode.builder()
+                                        .objectType(nestedType)
+                                        .childNodes(getChildNodes(model, nestedType, selectedField.getSelectionSet()))
+                                        .build());
+                    } else {
+                        var attribute = targetType.getAttribute(fieldName);
+                        childNodes.put(fieldName, AttributeNode.forAttribute(attribute));
                     }
-
-                    if (fieldType instanceof GraphQLList && !isScalar(unwrapAll(fieldType))) {
-                        requestBuilder.selectCollectionProperty(fieldName, nestedRequestBuilder -> {
-                            selectProperties(nestedRequestBuilder, selectedField.getSelectionSet());
-                            return nestedRequestBuilder.build();
-                        });
-
-                        return;
-                    }
-
-                    requestBuilder.selectProperty(fieldName);
                 });
 
-        return requestBuilder;
+        return Collections.unmodifiableMap(childNodes);
     }
 
     private FilterExpression createFilterExpression(ObjectType targetType, Map<String, Object> arguments) {
