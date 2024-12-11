@@ -38,9 +38,7 @@ jobs:
           git config user.email "actions@github.com"
       - name: Release
         run: |
-          export SNAPSHOT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          export VERSION_TAG=v${SNAPSHOT_VERSION%%-*}
           mvn release:prepare release:perform -B -DreleaseVersion=${{ github.event.inputs.releaseVersion }} -DdevelopmentVersion=${{ github.event.inputs.developmentVersion }}
-          gh release create $VERSION_TAG --generate-notes
+          gh release create v${{ github.event.inputs.releaseVersion }} --generate-notes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
