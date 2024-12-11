@@ -92,10 +92,6 @@ public class ConditionalStageCreator implements NextStageCreator {
     }
 
     private boolean evalCondition(Object value, Map<String, Object> condition) {
-        if (value == null) {
-            return false;
-        }
-
         var evalValue = value instanceof PropertyMappingResult mappingResult ? mappingResult.getValue() : value;
 
         if (condition.containsKey("eq")) {
@@ -116,15 +112,15 @@ public class ConditionalStageCreator implements NextStageCreator {
 
         if (condition.containsKey("in")) {
             Set<Object> inList = cast(condition.get("in"));
-            return inList.contains(evalValue);
+            return value != null && inList.contains(evalValue);
         }
 
         if (condition.containsKey("notIn")) {
             Set<Object> inList = cast(condition.get("in"));
-            return !inList.contains(evalValue);
+            return value == null || !inList.contains(evalValue);
         }
 
-        throw new OrchestrateException("Could not evaluate condition: " + condition);
+        return false;
     }
 
     private PathResult traversePath(Map<String, Object> properties, Path path) {
