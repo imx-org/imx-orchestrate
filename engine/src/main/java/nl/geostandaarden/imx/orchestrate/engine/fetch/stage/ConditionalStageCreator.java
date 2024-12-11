@@ -5,6 +5,7 @@ import static nl.geostandaarden.imx.orchestrate.model.ModelUtils.noopCombiner;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Getter;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
@@ -101,12 +102,26 @@ public class ConditionalStageCreator implements NextStageCreator {
             return condition.get("eq").equals(evalValue);
         }
 
+        if (condition.containsKey("neq")) {
+            return !condition.get("neq").equals(evalValue);
+        }
+
         if (condition.containsKey("gte") && evalValue instanceof Integer intValue) {
             return intValue >= ((Integer) condition.get("gte"));
         }
 
         if (condition.containsKey("lte") && evalValue instanceof Integer intValue) {
             return intValue <= ((Integer) condition.get("lte"));
+        }
+
+        if (condition.containsKey("in")) {
+            Set<Object> inList = cast(condition.get("in"));
+            return inList.contains(evalValue);
+        }
+
+        if (condition.containsKey("notIn")) {
+            Set<Object> inList = cast(condition.get("in"));
+            return !inList.contains(evalValue);
         }
 
         throw new OrchestrateException("Could not evaluate condition: " + condition);
