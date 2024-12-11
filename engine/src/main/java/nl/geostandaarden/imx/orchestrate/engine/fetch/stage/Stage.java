@@ -17,14 +17,28 @@ public final class Stage {
 
     private final CompoundNode selection;
 
+    private final boolean conditional;
+
+    @Singular
+    private final List<ObjectResult> nextResults;
+
     private final NextResultCombiner nextResultCombiner;
 
     @Singular
     @Getter(AccessLevel.NONE)
     private final List<NextStageCreator> nextStageCreators;
 
+    @Singular
+    @Getter(AccessLevel.NONE)
+    private final List<ConditionalStageCreator> conditionalStageCreators;
+
     public Flux<Stage> getNextStages(ObjectResult result) {
         return Flux.fromIterable(nextStageCreators) //
+                .flatMap(creator -> creator.create(result));
+    }
+
+    public Flux<Stage> getConditionalStages(ObjectResult result) {
+        return Flux.fromIterable(conditionalStageCreators) //
                 .flatMap(creator -> creator.create(result));
     }
 
@@ -36,5 +50,13 @@ public final class Stage {
     public Flux<Stage> getNextStages(BatchResult result) {
         return Flux.fromIterable(nextStageCreators) //
                 .flatMap(creator -> creator.create(result));
+    }
+
+    public NextResultCombiner getNextResultCombiner() {
+        if (nextResultCombiner == null) {
+            return new NoopResultCombiner();
+        }
+
+        return nextResultCombiner;
     }
 }
