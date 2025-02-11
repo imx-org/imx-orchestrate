@@ -1,5 +1,7 @@
 package nl.geostandaarden.imx.orchestrate.engine.fetch.stage;
 
+import static nl.geostandaarden.imx.orchestrate.engine.fetch.FetchUtils.cast;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +16,7 @@ import nl.geostandaarden.imx.orchestrate.engine.selection.BatchNode;
 import nl.geostandaarden.imx.orchestrate.engine.selection.CollectionNode;
 import nl.geostandaarden.imx.orchestrate.engine.selection.CompoundNode;
 import nl.geostandaarden.imx.orchestrate.engine.selection.ObjectNode;
+import nl.geostandaarden.imx.orchestrate.engine.selection.TreeResolver;
 import nl.geostandaarden.imx.orchestrate.model.InverseRelation;
 import nl.geostandaarden.imx.orchestrate.model.Path;
 import nl.geostandaarden.imx.orchestrate.model.Relation;
@@ -21,12 +24,14 @@ import nl.geostandaarden.imx.orchestrate.model.filters.FilterExpression;
 import reactor.core.publisher.Mono;
 
 @Getter
-@Builder
+@Builder(toBuilder = true)
 public class ResultKeyStageCreator implements NextStageCreator {
 
     private final Path resultPath;
 
     private final CompoundNode selection;
+
+    private final TreeResolver treeResolver;
 
     @Override
     public Mono<Stage> create(ObjectResult result) {
@@ -38,8 +43,10 @@ public class ResultKeyStageCreator implements NextStageCreator {
                         .objectKey(objectKey)
                         .build();
 
-                return Mono.just(new StagePlanner().plan(nextSelection, createNextResultCombiner(false)));
-            } else if (selection.getRelation() instanceof InverseRelation inverseRelation) {
+                return Mono.just(new StagePlanner(treeResolver).plan(nextSelection, createNextResultCombiner(false)));
+            }
+
+            if (selection.getRelation() instanceof InverseRelation inverseRelation) {
                 var filter = FilterExpression.builder()
                         .path(Path.fromString(
                                 inverseRelation.getOriginRelation().getName()))
@@ -54,14 +61,14 @@ public class ResultKeyStageCreator implements NextStageCreator {
                         .filter(filter)
                         .build();
 
-                return Mono.just(new StagePlanner().plan(nextSelection, createNextResultCombiner(false)));
+                return Mono.just(new StagePlanner(treeResolver).plan(nextSelection, createNextResultCombiner(false)));
             }
         }
 
         if (selection instanceof CollectionNode collectionNode) {
             if (selection.getRelation() instanceof Relation relation) {
                 // TODO: Make sure key is selected + support longer paths
-                var objectKeys = (List<Map<String, Object>>) result.getProperty(resultPath.getFirstSegment());
+                List<Map<String, Object>> objectKeys = cast(result.getProperty(resultPath.getFirstSegment()));
 
                 if (objectKeys == null || objectKeys.isEmpty()) {
                     return Mono.empty();
@@ -76,19 +83,22 @@ public class ResultKeyStageCreator implements NextStageCreator {
                             .objectKeys(objectKeys)
                             .build();
 
-                    return Mono.just(new StagePlanner().plan(nextSelection, createNextResultCombiner(true)));
-                } else {
-                    var nextSelection = ObjectNode.builder()
-                            .relation(relation)
-                            .childNodes(selection.getChildNodes())
-                            .objectType(collectionNode.getObjectType())
-                            .modelAlias(selection.getModelAlias())
-                            .objectKey(objectKeys.get(0))
-                            .build();
-
-                    return Mono.just(new StagePlanner().plan(nextSelection, createNextResultCombiner(true)));
+                    return Mono.just(
+                            new StagePlanner(treeResolver).plan(nextSelection, createNextResultCombiner(true)));
                 }
-            } else if (selection.getRelation() instanceof InverseRelation inverseRelation) {
+
+                var nextSelection = ObjectNode.builder()
+                        .relation(relation)
+                        .childNodes(selection.getChildNodes())
+                        .objectType(collectionNode.getObjectType())
+                        .modelAlias(selection.getModelAlias())
+                        .objectKey(objectKeys.get(0))
+                        .build();
+
+                return Mono.just(new StagePlanner(treeResolver).plan(nextSelection, createNextResultCombiner(true)));
+            }
+
+            if (selection.getRelation() instanceof InverseRelation inverseRelation) {
                 var filter = FilterExpression.builder()
                         .path(Path.fromString(
                                 inverseRelation.getOriginRelation().getName()))
@@ -99,7 +109,7 @@ public class ResultKeyStageCreator implements NextStageCreator {
                         .filter(filter)
                         .build();
 
-                return Mono.just(new StagePlanner().plan(nextSelection, createNextResultCombiner(true)));
+                return Mono.just(new StagePlanner(treeResolver).plan(nextSelection, createNextResultCombiner(true)));
             }
         }
 

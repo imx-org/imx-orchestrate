@@ -35,6 +35,13 @@ public class ObjectResult implements DataResult {
         return toBuilder().properties(properties).build();
     }
 
+    public ObjectResult replaceProperties(Map<String, Object> properties) {
+        return toBuilder() //
+                .clearProperties()
+                .properties(properties)
+                .build();
+    }
+
     public ObjectReference getObjectReference() {
         return ObjectReference.builder()
                 .objectType(type.getName())

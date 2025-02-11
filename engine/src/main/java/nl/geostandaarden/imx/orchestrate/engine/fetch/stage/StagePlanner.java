@@ -1,27 +1,75 @@
 package nl.geostandaarden.imx.orchestrate.engine.fetch.stage;
 
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
+
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.BatchRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionRequest;
+import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectRequest;
 import nl.geostandaarden.imx.orchestrate.engine.selection.AttributeNode;
 import nl.geostandaarden.imx.orchestrate.engine.selection.BatchNode;
 import nl.geostandaarden.imx.orchestrate.engine.selection.CollectionNode;
 import nl.geostandaarden.imx.orchestrate.engine.selection.CompoundNode;
 import nl.geostandaarden.imx.orchestrate.engine.selection.ObjectNode;
 import nl.geostandaarden.imx.orchestrate.engine.selection.TreeNode;
+import nl.geostandaarden.imx.orchestrate.engine.selection.TreeResolver;
+import nl.geostandaarden.imx.orchestrate.model.ConditionalMapping;
 import nl.geostandaarden.imx.orchestrate.model.InverseRelation;
+import nl.geostandaarden.imx.orchestrate.model.ObjectTypeMapping;
+import nl.geostandaarden.imx.orchestrate.model.ObjectTypeRef;
 import nl.geostandaarden.imx.orchestrate.model.Path;
 import nl.geostandaarden.imx.orchestrate.model.Relation;
 
+@RequiredArgsConstructor
 public final class StagePlanner {
 
-    private final List<ResultKeyStageCreator> nextStageCreators = new ArrayList<>();
+    private final TreeResolver treeResolver;
 
-    public Stage plan(ObjectNode selection) {
-        return plan(selection, null);
+    private final List<NextStageCreator> nextStageCreators = new ArrayList<>();
+
+    private final List<ConditionalStageCreator> conditionalStageCreators = new ArrayList<>();
+
+    public Stage plan(ObjectRequest request, ObjectTypeMapping typeMapping) {
+        var selection = request.getSelection();
+
+        if (!typeMapping.getConditionalMappings().isEmpty()) {
+            return plan(typeMapping.getSourceRoot(), selection.getObjectKey(), typeMapping.getConditionalMappings());
+        }
+
+        var subSelection = treeResolver.resolve(request.getSelection(), typeMapping);
+
+        return plan(subSelection, null);
+    }
+
+    public Stage plan(
+            ObjectTypeRef sourceRoot, Map<String, Object> objectKey, List<ConditionalMapping> conditionalMappings) {
+        Set<Path> sourcePaths = new HashSet<>();
+
+        conditionalMappings.forEach(conditionalMapping -> {
+            sourcePaths.addAll(treeResolver.resolveSourcePaths(conditionalMapping));
+
+            conditionalStageCreators.add(ConditionalStageCreator.builder() //
+                    .conditionalMapping(conditionalMapping)
+                    .sourceRoot(sourceRoot)
+                    .objectKey(objectKey)
+                    .treeResolver(treeResolver)
+                    .build());
+        });
+
+        var subSelection = treeResolver.createObjectNode(sourceRoot, unmodifiableSet(sourcePaths), null, objectKey);
+
+        return plan(subSelection, null).toBuilder() //
+                .conditional(true)
+                .build();
     }
 
     public Stage plan(ObjectNode selection, NextResultCombiner resultCombiners) {
@@ -29,12 +77,14 @@ public final class StagePlanner {
 
         return Stage.builder()
                 .selection(subSelection)
-                .nextStageCreators(Collections.unmodifiableList(nextStageCreators))
+                .nextStageCreators(unmodifiableList(nextStageCreators))
+                .conditionalStageCreators(unmodifiableList(conditionalStageCreators))
                 .nextResultCombiner(resultCombiners)
                 .build();
     }
 
-    public Stage plan(CollectionNode selection) {
+    public Stage plan(CollectionRequest request, ObjectTypeMapping typeMapping) {
+        var selection = treeResolver.resolve(request.getSelection(), typeMapping);
         return plan(selection, null);
     }
 
@@ -43,12 +93,14 @@ public final class StagePlanner {
 
         return Stage.builder()
                 .selection(subSelection)
-                .nextStageCreators(Collections.unmodifiableList(nextStageCreators))
+                .nextStageCreators(unmodifiableList(nextStageCreators))
+                .conditionalStageCreators(unmodifiableList(conditionalStageCreators))
                 .nextResultCombiner(resultCombiners)
                 .build();
     }
 
-    public Stage plan(BatchNode selection) {
+    public Stage plan(BatchRequest request, ObjectTypeMapping typeMapping) {
+        var selection = treeResolver.resolve(request.getSelection(), typeMapping);
         return plan(selection, null);
     }
 
@@ -57,7 +109,8 @@ public final class StagePlanner {
 
         return Stage.builder()
                 .selection(subSelection)
-                .nextStageCreators(Collections.unmodifiableList(nextStageCreators))
+                .nextStageCreators(unmodifiableList(nextStageCreators))
+                .conditionalStageCreators(unmodifiableList(conditionalStageCreators))
                 .nextResultCombiner(resultCombiners)
                 .build();
     }
@@ -110,6 +163,7 @@ public final class StagePlanner {
                     } else {
                         // TODO: Make sure foreign key is selected + handle inverse relations
                         nextStageCreators.add(ResultKeyStageCreator.builder()
+                                .treeResolver(treeResolver)
                                 .resultPath(childPath)
                                 .selection(compoundNode)
                                 .build());
@@ -122,6 +176,7 @@ public final class StagePlanner {
                                     AttributeNode.forAttribute(childType.getAttribute(property.getName()))));
 
                     nextStageCreators.add(ResultKeyStageCreator.builder()
+                            .treeResolver(treeResolver)
                             .resultPath(childPath)
                             .selection(compoundNode)
                             .build());
