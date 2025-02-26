@@ -28,7 +28,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <reactor.version>2024.0.3</reactor.version>
-        <slf4j.version>2.0.16</slf4j.version>
+        <slf4j.version>2.0.17</slf4j.version>
         <graphql-java.version>22.3</graphql-java.version>
         <java-dataloader.version>3.4.0</java-dataloader.version>
         <spring-boot.version>3.4.3</spring-boot.version>
