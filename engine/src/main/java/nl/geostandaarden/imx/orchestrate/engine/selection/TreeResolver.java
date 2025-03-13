@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import nl.geostandaarden.imx.orchestrate.model.AbstractRelation;
 import nl.geostandaarden.imx.orchestrate.model.Attribute;
+import nl.geostandaarden.imx.orchestrate.model.ConditionalMapping;
 import nl.geostandaarden.imx.orchestrate.model.ModelMapping;
 import nl.geostandaarden.imx.orchestrate.model.ObjectTypeMapping;
 import nl.geostandaarden.imx.orchestrate.model.ObjectTypeRef;
@@ -37,6 +38,13 @@ public final class TreeResolver {
         var sourcePaths = resolveSourcePaths(selection, typeMapping);
 
         return createBatchNode(typeMapping.getSourceRoot(), sourcePaths, null, selection.getObjectKeys());
+    }
+
+    public Set<Path> resolveSourcePaths(ConditionalMapping conditionalMapping) {
+        return conditionalMapping.getWhen().stream()
+                .flatMap(when -> when.getPathMappings().stream())
+                .map(PathMapping::getPath)
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     private Set<Path> resolveSourcePaths(CompoundNode selection, ObjectTypeMapping typeMapping) {
@@ -79,7 +87,7 @@ public final class TreeResolver {
         return paths;
     }
 
-    private ObjectNode createObjectNode(
+    public ObjectNode createObjectNode(
             ObjectTypeRef sourceTypeRef,
             Set<Path> sourcePaths,
             AbstractRelation relation,

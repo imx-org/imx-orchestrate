@@ -13,6 +13,7 @@ import nl.geostandaarden.imx.orchestrate.model.combiners.SumCombinerType;
 import nl.geostandaarden.imx.orchestrate.model.mappers.AgeMapperType;
 import nl.geostandaarden.imx.orchestrate.model.mappers.AppendMapperType;
 import nl.geostandaarden.imx.orchestrate.model.mappers.CelMapperType;
+import nl.geostandaarden.imx.orchestrate.model.mappers.DivideMapperType;
 import nl.geostandaarden.imx.orchestrate.model.mappers.IsEmptyMapperType;
 import nl.geostandaarden.imx.orchestrate.model.mappers.IsNotEmptyMapperType;
 import nl.geostandaarden.imx.orchestrate.model.mappers.PrependMapperType;
@@ -39,6 +40,7 @@ public final class ComponentRegistry {
                 new AppendMapperType(),
                 new AgeMapperType(),
                 new CelMapperType(),
+                new DivideMapperType(),
                 new IsEmptyMapperType(),
                 new IsNotEmptyMapperType(),
                 new PrependMapperType());

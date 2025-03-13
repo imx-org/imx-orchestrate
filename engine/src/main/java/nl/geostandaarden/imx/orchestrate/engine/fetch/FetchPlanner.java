@@ -28,12 +28,15 @@ public final class FetchPlanner {
     }
 
     public Flux<ObjectResult> fetch(ObjectRequest request) {
-        var typeMappings =
-                modelMapping.getObjectTypeMappings(request.getSelection().getObjectType());
+        var selection = request.getSelection();
+        var typeMappings = modelMapping.getObjectTypeMappings(selection.getObjectType());
 
         return Flux.fromIterable(typeMappings).flatMapSequential(typeMapping -> {
-            var selection = treeResolver.resolve(request.getSelection(), typeMapping);
-            var stage = new StagePlanner().plan(selection);
+            var stage = new StagePlanner(treeResolver).plan(request, typeMapping);
+
+            if (stage.isConditional()) {
+                return stageExecutor.execute(stage);
+            }
 
             var resultMapper = ObjectResultMapper.builder() //
                     .modelMapping(modelMapping)
@@ -41,17 +44,20 @@ public final class FetchPlanner {
 
             return stageExecutor //
                     .execute(stage)
-                    .map(result -> resultMapper.map(result, request.getSelection()));
+                    .map(result -> resultMapper.map(result, selection));
         });
     }
 
     public Flux<ObjectResult> fetch(CollectionRequest request) {
-        var typeMappings =
-                modelMapping.getObjectTypeMappings(request.getSelection().getObjectType());
+        var selection = request.getSelection();
+        var typeMappings = modelMapping.getObjectTypeMappings(selection.getObjectType());
 
         return Flux.fromIterable(typeMappings).flatMapSequential(typeMapping -> {
-            var selection = treeResolver.resolve(request.getSelection(), typeMapping);
-            var stage = new StagePlanner().plan(selection);
+            var stage = new StagePlanner(treeResolver).plan(request, typeMapping);
+
+            if (stage.isConditional()) {
+                return stageExecutor.execute(stage);
+            }
 
             var resultMapper = ObjectResultMapper.builder() //
                     .modelMapping(modelMapping)
@@ -59,17 +65,20 @@ public final class FetchPlanner {
 
             return stageExecutor //
                     .execute(stage)
-                    .map(result -> resultMapper.map(result, request.getSelection()));
+                    .map(result -> resultMapper.map(result, selection));
         });
     }
 
     public Flux<ObjectResult> fetch(BatchRequest request) {
-        var typeMappings =
-                modelMapping.getObjectTypeMappings(request.getSelection().getObjectType());
+        var selection = request.getSelection();
+        var typeMappings = modelMapping.getObjectTypeMappings(selection.getObjectType());
 
         return Flux.fromIterable(typeMappings).flatMapSequential(typeMapping -> {
-            var selection = treeResolver.resolve(request.getSelection(), typeMapping);
-            var stage = new StagePlanner().plan(selection);
+            var stage = new StagePlanner(treeResolver).plan(request, typeMapping);
+
+            if (stage.isConditional()) {
+                return stageExecutor.execute(stage);
+            }
 
             var resultMapper = ObjectResultMapper.builder() //
                     .modelMapping(modelMapping)
@@ -77,7 +86,7 @@ public final class FetchPlanner {
 
             return stageExecutor //
                     .execute(stage)
-                    .map(result -> resultMapper.map(result, request.getSelection()));
+                    .map(result -> resultMapper.map(result, selection));
         });
     }
 }

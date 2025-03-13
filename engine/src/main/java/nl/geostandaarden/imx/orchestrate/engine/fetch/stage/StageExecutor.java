@@ -21,6 +21,10 @@ public final class StageExecutor {
     public Flux<ObjectResult> execute(Stage stage) {
         var selection = stage.getSelection();
 
+        if (!stage.getNextResults().isEmpty()) {
+            return Flux.fromIterable(stage.getNextResults());
+        }
+
         if (selection instanceof ObjectNode objectNode) {
             return execute(stage, objectNode);
         }
@@ -57,6 +61,13 @@ public final class StageExecutor {
                         .reduce(result, (accResult, nextResultTuple) -> {
                             var nextResultCombiner = nextResultTuple.getT2();
                             return nextResultCombiner.combine(accResult, nextResultTuple.getT1());
+                        }))
+                .flatMap(result -> stage.getConditionalStages(result)
+                        .flatMap(nextStage -> execute(nextStage)
+                                .map(nextResult -> Tuples.of(nextResult, nextStage.getNextResultCombiner())))
+                        .reduce(result, (accResult, nextResultTuple) -> {
+                            var nextResultCombiner = nextResultTuple.getT2();
+                            return nextResultCombiner.combine(accResult, nextResultTuple.getT1());
                         }));
     }
 
@@ -81,6 +92,13 @@ public final class StageExecutor {
                         .reduce(result, (accResult, nextResultTuple) -> {
                             var nextResultCombiner = nextResultTuple.getT2();
                             return nextResultCombiner.combine(accResult, nextResultTuple.getT1());
+                        }))
+                .flatMap(result -> stage.getConditionalStages(result)
+                        .flatMap(nextStage -> execute(nextStage)
+                                .map(nextResult -> Tuples.of(nextResult, nextStage.getNextResultCombiner())))
+                        .reduce(result, (accResult, nextResultTuple) -> {
+                            var nextResultCombiner = nextResultTuple.getT2();
+                            return nextResultCombiner.combine(accResult, nextResultTuple.getT1());
                         }));
     }
 
@@ -100,6 +118,13 @@ public final class StageExecutor {
                         .properties(properties)
                         .build())
                 .flatMap(result -> stage.getNextStages(result)
+                        .flatMap(nextStage -> execute(nextStage)
+                                .map(nextResult -> Tuples.of(nextResult, nextStage.getNextResultCombiner())))
+                        .reduce(result, (accResult, nextResultTuple) -> {
+                            var nextResultCombiner = nextResultTuple.getT2();
+                            return nextResultCombiner.combine(accResult, nextResultTuple.getT1());
+                        }))
+                .flatMap(result -> stage.getConditionalStages(result)
                         .flatMap(nextStage -> execute(nextStage)
                                 .map(nextResult -> Tuples.of(nextResult, nextStage.getNextResultCombiner())))
                         .reduce(result, (accResult, nextResultTuple) -> {
