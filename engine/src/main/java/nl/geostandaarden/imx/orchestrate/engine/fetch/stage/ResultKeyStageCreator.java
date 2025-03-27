@@ -60,6 +60,23 @@ public class ResultKeyStageCreator implements NextStageCreator {
 
         if (selection instanceof CollectionNode collectionNode) {
             if (selection.getRelation() instanceof Relation relation) {
+                if (!relation.getFilterMappings().isEmpty()) {
+                    // TODO: Support combined filters
+                    var filterMapping = relation.getFilterMappings().get(0);
+                    var value = result.getProperty(filterMapping.getProperty());
+
+                    var filter = FilterExpression.builder()
+                            .path(filterMapping.getSourcePath())
+                            .value(value)
+                            .build();
+
+                    var nextSelection = collectionNode.toBuilder() //
+                            .filter(filter)
+                            .build();
+
+                    return Mono.just(new StagePlanner().plan(nextSelection, createNextResultCombiner(true)));
+                }
+
                 // TODO: Make sure key is selected + support longer paths
                 var objectKeys = (List<Map<String, Object>>) result.getProperty(resultPath.getFirstSegment());
 
