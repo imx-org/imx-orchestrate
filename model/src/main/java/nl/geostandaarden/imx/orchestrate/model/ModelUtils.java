@@ -1,6 +1,7 @@
 package nl.geostandaarden.imx.orchestrate.model;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -11,7 +12,9 @@ public final class ModelUtils {
 
     public static Map<String, Object> extractKey(ObjectType objectType, Map<String, Object> properties) {
         return objectType.getIdentityProperties().stream()
-                .collect(Collectors.toMap(Property::getName, property -> properties.get(property.getName())));
+                .collect(Collectors.toMap(
+                        Property::getName, property -> Optional.ofNullable(properties.get(property.getName()))
+                                .orElseThrow(() -> new ModelException("Property not found: " + property.getName()))));
     }
 
     public static <T> BinaryOperator<T> noopCombiner() {

@@ -10,10 +10,12 @@ import nl.geostandaarden.imx.orchestrate.engine.OrchestrateException;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.CollectionResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.DataResult;
 import nl.geostandaarden.imx.orchestrate.engine.exchange.ObjectResult;
+import nl.geostandaarden.imx.orchestrate.engine.selection.AttributeNode;
 import nl.geostandaarden.imx.orchestrate.engine.selection.BatchNode;
 import nl.geostandaarden.imx.orchestrate.engine.selection.CollectionNode;
 import nl.geostandaarden.imx.orchestrate.engine.selection.CompoundNode;
 import nl.geostandaarden.imx.orchestrate.engine.selection.ObjectNode;
+import nl.geostandaarden.imx.orchestrate.model.Attribute;
 import nl.geostandaarden.imx.orchestrate.model.InverseRelation;
 import nl.geostandaarden.imx.orchestrate.model.Path;
 import nl.geostandaarden.imx.orchestrate.model.Relation;
@@ -70,11 +72,17 @@ public class ResultKeyStageCreator implements NextStageCreator {
                             .value(value)
                             .build();
 
-                    var nextSelection = collectionNode.toBuilder() //
-                            .filter(filter)
-                            .build();
+                    var nextSelectionBuilder = collectionNode.toBuilder() //
+                            .filter(filter);
 
-                    return Mono.just(new StagePlanner().plan(nextSelection, createNextResultCombiner(true)));
+                    collectionNode.getObjectType().getIdentityProperties().stream()
+                            .filter(Attribute.class::isInstance)
+                            .map(Attribute.class::cast)
+                            .forEach(idAttribute -> nextSelectionBuilder.childNode(
+                                    idAttribute.getName(), AttributeNode.forAttribute(idAttribute)));
+
+                    return Mono.just(
+                            new StagePlanner().plan(nextSelectionBuilder.build(), createNextResultCombiner(true)));
                 }
 
                 // TODO: Make sure key is selected + support longer paths
