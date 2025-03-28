@@ -5,7 +5,7 @@
     <groupId>nl.geostandaarden.imx.orchestrate</groupId>
     <artifactId>orchestrate</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.15</version>
+    <version>0.1.16-SNAPSHOT</version>
 
     <licenses>
         <license>
@@ -19,7 +19,7 @@
         <connection>scm:git:${project.scm.url}</connection>
         <developerConnection>scm:git:${project.scm.url}</developerConnection>
         <url>https://github.com/imx-org/imx-orchestrate.git</url>
-        <tag>v0.1.15</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <properties>
